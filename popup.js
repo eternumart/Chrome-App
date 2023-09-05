@@ -209,7 +209,7 @@ function injectionPhotos() {
 }
 
 function saveData() {
-  if (document.querySelector("#formCanvas").contentWindow === null) {
+  if (!document.querySelector("#formCanvas")) {
     return;
   }
   const iFrameHTML = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
@@ -278,9 +278,9 @@ function saveData() {
       },
     },
     "Выводы по результатам предыдущего обследования": {
-      1: {
-        id: "",
-        Дата: "",
+      0: {
+        "id": "",
+        "Дата": "",
         "№": "",
         "Техническое состояние здания в целом": "",
       },
@@ -297,9 +297,11 @@ function saveData() {
       data["Технические заключения и проекты ремонтов"][i]["Наименование, содержание"] = repairProjectsTableRows[i].querySelector("#comp_12335").value;
     }
   }
-  for (let i = 1; i < conclusionsPrevSurveyRows.length; i++) {
-    debugger;
-    data["Выводы по результатам предыдущего обследования"][i][id] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(1)").firstElementChild.textContent;
+  for (let i = 0; i < conclusionsPrevSurveyRows.length; i++) {
+    if(!data["Выводы по результатам предыдущего обследования"][i]) {
+      data["Выводы по результатам предыдущего обследования"][i] = new Object;
+    }
+    data["Выводы по результатам предыдущего обследования"][i]["id"] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(1)").firstElementChild.textContent;
     data["Выводы по результатам предыдущего обследования"][i]["Дата"] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(2)").textContent;
     data["Выводы по результатам предыдущего обследования"][i]["№"] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(3)").textContent;
     data["Выводы по результатам предыдущего обследования"][i]["Техническое состояние здания в целом"] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(4)").textContent;
