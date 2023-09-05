@@ -1,0 +1,17 @@
+{
+    "name": "Input values replacer",
+    "description": "Replaces all input.value's on page from JSON",
+    "version": "1.0",
+    "manifest_version": 3,
+    "icons": {
+        "16": "icons/ico16.png"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "scripting",
+        "activeTab"
+    ],
+    "background": {}
+}

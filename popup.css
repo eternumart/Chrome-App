@@ -1,0 +1,20 @@
+.button {
+  border: none;
+  background: #084cdf;
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+  min-width: 150px;
+  margin-bottom: 20px;
+}
+
+.button:last-of-type {
+  margin-bottom: 0;
+}
+
+.button:hover {
+  transition: 0.3s;
+  background: #0d45a5;
+}
