@@ -178,7 +178,6 @@ function injectionPhotos() {
       const textareas = photoTable.querySelectorAll("textarea");
       const currentTextarea = textareas[textareas.length - 1];
       const currentFile = files[`${counter}`];
-      debugger;
       const prepareDate = inputDate.value.split("-");
       const downloadDate = `Дата загрузки: ${prepareDate[2]}.${prepareDate[1]}.${prepareDate[0]} г.`;
 
