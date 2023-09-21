@@ -1,5 +1,6 @@
 const buttonPhotos = document.querySelector("#photos");
 const buttonSave = document.querySelector("#save");
+const inputDate = document.querySelector("#form-date");
 buttonPhotos.addEventListener("click", uploadPhotos);
 buttonSave.addEventListener("click", injectionSave);
 
@@ -34,6 +35,9 @@ function injectionSave(evt) {
 function injectionPhotos() {
   // Variables
   const iFrameHTML = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
+  if (iFrameHTML.querySelector(".injection")) {
+    return;
+  }
   const iFrameHead = iFrameHTML.querySelector("head");
   const iframeForm = iFrameHTML.querySelector("#formData107");
   const saveButton = iFrameHTML.querySelector("#buttonFormSave");
@@ -45,6 +49,7 @@ function injectionPhotos() {
   const injectButton = document.createElement("button");
   const dragIco = document.createElement("div");
   const divTitle = document.createElement("span");
+  const inputDate = document.createElement("input");
   const stylesLayout = `<style>
   .injection {
     width: 270px;
@@ -106,6 +111,18 @@ function injectionPhotos() {
   .injection button:hover {
     background: #0d45a5;
   }
+  .injection input[type="date"] {
+    min-height: 45px;
+    color: #000;
+    font-family: Open Sans, Arial, sans-serif;
+    font-size: 16px;
+    padding-left: 10px;
+    border: 2px solid #084cdf;
+    border-radius: 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+    outline: none;
+}
   </style>`;
 
   // Listeners
@@ -119,15 +136,30 @@ function injectionPhotos() {
   divTitle.textContent = "I-N-J-E-C-T-E-D 😈";
   injectInput.type = "file";
   injectInput.setAttribute("multiple", "");
+  inputDate.type = "date";
   injectButton.textContent = "Вставить";
 
   iFrameHead.insertAdjacentHTML("beforeEnd", stylesLayout);
   divWrapper.appendChild(divTitle);
   divWrapper.appendChild(dragIco);
   divWrapper.appendChild(injectInput);
+  divWrapper.appendChild(inputDate);
   divWrapper.appendChild(injectButton);
   injectDiv.appendChild(divWrapper);
   iframeForm.appendChild(injectDiv);
+
+  const date = new Date();
+  let day = date.getDate();
+  let month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  if (day < 10) {
+    day = `0${day}`;
+  }
+  if (month < 10) {
+    month = `0${month}`;
+  }
+
+  inputDate.value = `${year}-${month}-${day}`;
 
   // Methods
   function downloadPhotos(evt) {
@@ -146,17 +178,8 @@ function injectionPhotos() {
       const textareas = photoTable.querySelectorAll("textarea");
       const currentTextarea = textareas[textareas.length - 1];
       const currentFile = files[`${counter}`];
-      const date = new Date();
-      let day = date.getDate();
-      let month = date.getMonth() + 1;
-      const year = date.getFullYear();
-      if (day < 10) {
-        day = `0${day}`;
-      }
-      if (month < 10) {
-        month = `0${month}`;
-      }
-      const downloadDate = `Дата загрузки: ${day}.${month}.${year} г.`;
+
+      const downloadDate = `Дата загрузки: ${inputDate.value} г.`;
 
       currentTextarea.value = downloadDate;
 
@@ -279,8 +302,8 @@ function saveData() {
     },
     "Выводы по результатам предыдущего обследования": {
       0: {
-        "id": "",
-        "Дата": "",
+        id: "",
+        Дата: "",
         "№": "",
         "Техническое состояние здания в целом": "",
       },
@@ -298,8 +321,8 @@ function saveData() {
     }
   }
   for (let i = 0; i < conclusionsPrevSurveyRows.length; i++) {
-    if(!data["Выводы по результатам предыдущего обследования"][i]) {
-      data["Выводы по результатам предыдущего обследования"][i] = new Object;
+    if (!data["Выводы по результатам предыдущего обследования"][i]) {
+      data["Выводы по результатам предыдущего обследования"][i] = new Object();
     }
     data["Выводы по результатам предыдущего обследования"][i]["id"] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(1)").firstElementChild.textContent;
     data["Выводы по результатам предыдущего обследования"][i]["Дата"] = conclusionsPrevSurveyRows[i].querySelector("td:nth-child(2)").textContent;

@@ -1,3 +1,8 @@
+html {
+  padding: 10px;
+  border-radius: 10px;
+}
+
 .button {
   border: none;
   background: #084cdf;
@@ -7,11 +12,6 @@
   cursor: pointer;
   transition: 0.3s;
   min-width: 150px;
-  margin-bottom: 20px;
-}
-
-.button:last-of-type {
-  margin-bottom: 0;
 }
 
 .button:hover {
