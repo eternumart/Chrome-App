@@ -12,7 +12,7 @@ html {
   cursor: pointer;
   transition: 0.3s;
   margin-bottom: 20px;
-  min-width: 150px;
+  width: 200px;
 }
 
 .button:hover {
