@@ -321,6 +321,10 @@ function saveData() {
   const resultsSewerTable = resultsSewerBlock.querySelector("tbody");
   const resultsSewerRows = resultsSewerTable.querySelectorAll("tr");
 
+  const signatoriesBlock = iFrameHTML.querySelector("#group_22133");
+  const signatoriesTable = signatoriesBlock.querySelector("tbody");
+  const signatoriesRows = signatoriesTable.querySelectorAll("tr");
+
   const data = {
     address: {
       area: area,
@@ -1160,7 +1164,7 @@ function saveData() {
         "Оценка пред.": results.querySelector("#comp_13401").value,
         Оценка: results.querySelector("#lookupTextcomp_12793").value,
       },
-      "Вентиляция": {
+      Вентиляция: {
         Состояние: results.querySelector("#lookupTextcomp_12608").value,
 
         "Выявленные дефекты": results.querySelector("#comp_12795").value,
@@ -1307,6 +1311,30 @@ function saveData() {
       "Выполнено обследование": results.querySelector("#lookupTextcomp_12347").value,
       "Рекомендации по утеплению стен": results.querySelector("#lookupTextcomp_12350").value,
     },
+    "Выводы по результатам обследования": {
+      "Техническое состояние (приведенная оценка) здания (в целом)": iframeForm.querySelector("#lookupTextcomp_12325").value,
+      "РЕКОМЕНДАЦИИ по ремонтно-восстановительным работам": iframeForm.querySelector("#comp_12606").value,
+    },
+    "Подписывающие лица": {
+      "Представители от": {
+        1: "",
+        2: "",
+        3: "",
+        4: "",
+      },
+      "Должность и наименование организации": {
+        1: "",
+        2: "",
+        3: "",
+        4: "",
+      },
+      "ФИО должностного лица": {
+        1: "",
+        2: "",
+        3: "",
+        4: "",
+      },
+    },
   };
 
   for (let i = 0; i < repairProjectsTableRows.length; i++) {
@@ -1451,6 +1479,16 @@ function saveData() {
     data["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["Оценка"] = resultsSewerRows[i].querySelector("#lookupTextcomp_12783").value;
   }
 
+  // Подписывающие лица
+  for (let i = 1; i < signatoriesRows.length; i++) {
+    if (!signatoriesRows[i].querySelector("#comp_12340")) {
+      continue;
+    }
+    data["Подписывающие лица"]["Представители от"][i] = signatoriesRows[i].querySelector("#comp_12340").value;
+    data["Подписывающие лица"]["Должность и наименование организации"][i] = signatoriesRows[i].querySelector("#comp_12341").value;
+    data["Подписывающие лица"]["ФИО должностного лица"][i] = signatoriesRows[i].querySelector("#comp_12342").value;
+  }
+
   localStorage.setItem("MJIDATA", JSON.stringify(data));
 }
 
@@ -1544,6 +1582,10 @@ function loadData() {
   const resultsSewerTable = resultsSewerBlock.querySelector("tbody");
   const resultsSewerRows = resultsSewerTable.querySelectorAll("tr");
 
+  const signatoriesBlock = iFrameHTML.querySelector("#group_22133");
+  const signatoriesTable = signatoriesBlock.querySelector("tbody");
+  const signatoriesRows = signatoriesTable.querySelectorAll("tr");
+
   // РЕЗУЛЬТАТЫ ВЫБОРОЧНОГО ОБСЛЕДОВАНИЯ
   // Крыша
   for (let i = 1; i < resultsRoofRows.length; i++) {
@@ -1552,23 +1594,23 @@ function loadData() {
     }
     resultsRoofRows[i].querySelector("#comp_12642").value = loadData["Результаты выборочного обследования"]["Крыша"][resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent]["Выявленные дефекты"];
     resultsRoofRows[i].querySelector("#comp_12644").value = loadData["Результаты выборочного обследования"]["Крыша"][resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent]["% деф. части"];
-    resultsRoofRows[i].querySelector("#lookupTextcomp_12645").value = loadData["Результаты выборочного обследования"]["Крыша"][resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent]["Оценка"];
+    clickGenerator(resultsRoofRows[i], "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent]["Оценка"]);
   }
 
   // Водоотвод
   results.querySelector("#comp_12647").value = loadData["Результаты выборочного обследования"]["Водоотвод"]["Выявленные дефекты"];
   results.querySelector("#comp_12649").value = loadData["Результаты выборочного обследования"]["Водоотвод"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12650").value = loadData["Результаты выборочного обследования"]["Водоотвод"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12650", loadData["Результаты выборочного обследования"]["Водоотвод"]["Оценка"]);
 
   // Межпанельные стыки
   results.querySelector("#comp_12652").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Выявленные дефекты"];
   results.querySelector("#comp_12654").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12655").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12655", loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Оценка"]);
 
   // Фасад
   results.querySelector("#comp_12657").value = loadData["Результаты выборочного обследования"]["Фасад"]["Выявленные дефекты"];
   results.querySelector("#comp_12659").value = loadData["Результаты выборочного обследования"]["Фасад"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12660").value = loadData["Результаты выборочного обследования"]["Фасад"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12660", loadData["Результаты выборочного обследования"]["Фасад"]["Оценка"]);
 
   // Балконы
   for (let i = 1; i < resultsBalconyRows.length; i++) {
@@ -1577,33 +1619,33 @@ function loadData() {
     }
     resultsBalconyRows[i].querySelector("#comp_12736").value = loadData["Результаты выборочного обследования"]["Балконы"][resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent]["Выявленные дефекты"];
     resultsBalconyRows[i].querySelector("#comp_12738").value = loadData["Результаты выборочного обследования"]["Балконы"][resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent]["% деф. части"];
-    resultsBalconyRows[i].querySelector("#lookupTextcomp_12739").value = loadData["Результаты выборочного обследования"]["Балконы"][resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent]["Оценка"];
+    clickGenerator(resultsBalconyRows[i], "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent]["Оценка"]);
   }
 
   // Стены
   results.querySelector("#comp_12624").value = loadData["Результаты выборочного обследования"]["Стены"]["Выявленные дефекты"];
   results.querySelector("#comp_12626").value = loadData["Результаты выборочного обследования"]["Стены"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12672").value = loadData["Результаты выборочного обследования"]["Стены"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12672", loadData["Результаты выборочного обследования"]["Стены"]["Оценка"]);
 
   // Подвал
   results.querySelector("#comp_12628").value = loadData["Результаты выборочного обследования"]["Подвал"]["Выявленные дефекты"];
   results.querySelector("#comp_12630").value = loadData["Результаты выборочного обследования"]["Подвал"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12631").value = loadData["Результаты выборочного обследования"]["Подвал"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12631", loadData["Результаты выборочного обследования"]["Подвал"]["Оценка"]);
 
   // Тех.подполье
   results.querySelector("#comp_12633").value = loadData["Результаты выборочного обследования"]["Тех.подполье"]["Выявленные дефекты"];
   results.querySelector("#comp_12635").value = loadData["Результаты выборочного обследования"]["Тех.подполье"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12636").value = loadData["Результаты выборочного обследования"]["Тех.подполье"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12636", loadData["Результаты выборочного обследования"]["Тех.подполье"]["Оценка"]);
 
   // Тех.этаж
   results.querySelector("#comp_12638").value = loadData["Результаты выборочного обследования"]["Тех.этаж"]["Выявленные дефекты"];
   results.querySelector("#comp_12640").value = loadData["Результаты выборочного обследования"]["Тех.этаж"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12673").value = loadData["Результаты выборочного обследования"]["Тех.этаж"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12673", loadData["Результаты выборочного обследования"]["Тех.этаж"]["Оценка"]);
 
   // Гараж стоянка (подземный)
   results.querySelector("#comp_12747").value = loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["Выявленные дефекты"];
   results.querySelector("#comp_12749").value = loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12750").value = loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12750", loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["Оценка"]);
 
   // Места общего пользования
   for (let i = 1; i < resultsMopRows.length; i++) {
@@ -1612,18 +1654,18 @@ function loadData() {
     }
     resultsMopRows[i].querySelector("#comp_12752").value = loadData["Результаты выборочного обследования"]["Места общего пользования"][resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent]["Выявленные дефекты"];
     resultsMopRows[i].querySelector("#comp_12754").value = loadData["Результаты выборочного обследования"]["Места общего пользования"][resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent]["% деф. части"];
-    resultsMopRows[i].querySelector("#lookupTextcomp_12755").value = loadData["Результаты выборочного обследования"]["Места общего пользования"][resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent]["Оценка"];
+    clickGenerator(resultsMopRows[i], "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent]["Оценка"]);
   }
 
   // Лестницы
   results.querySelector("#comp_12757").value = loadData["Результаты выборочного обследования"]["Лестницы"]["Выявленные дефекты"];
   results.querySelector("#comp_12759").value = loadData["Результаты выборочного обследования"]["Лестницы"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12674").value = loadData["Результаты выборочного обследования"]["Лестницы"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12674", loadData["Результаты выборочного обследования"]["Лестницы"]["Оценка"]);
 
   // Перекрытия
   results.querySelector("#comp_12761").value = loadData["Результаты выборочного обследования"]["Перекрытия"]["Выявленные дефекты"];
   results.querySelector("#comp_12763").value = loadData["Результаты выборочного обследования"]["Перекрытия"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12764").value = loadData["Результаты выборочного обследования"]["Перекрытия"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12764", loadData["Результаты выборочного обследования"]["Перекрытия"]["Оценка"]);
 
   // Система отопления
   for (let i = 1; i < resultsHeatSystemRows.length; i++) {
@@ -1632,7 +1674,7 @@ function loadData() {
     }
     resultsHeatSystemRows[i].querySelector("#comp_12766").value = loadData["Результаты выборочного обследования"]["Система отопления"][resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent]["Выявленные дефекты"];
     resultsHeatSystemRows[i].querySelector("#comp_12768").value = loadData["Результаты выборочного обследования"]["Система отопления"][resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent]["% деф. части"];
-    resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12769").value = loadData["Результаты выборочного обследования"]["Система отопления"][resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent]["Оценка"];
+    clickGenerator(resultsHeatSystemRows[i], "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent]["Оценка"]);
   }
 
   // ГВС
@@ -1642,7 +1684,7 @@ function loadData() {
     }
     resultsGvsRows[i].querySelector("#comp_12771").value = loadData["Результаты выборочного обследования"]["ГВС"][resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent]["Выявленные дефекты"];
     resultsGvsRows[i].querySelector("#comp_12773").value = loadData["Результаты выборочного обследования"]["ГВС"][resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent]["% деф. части"];
-    resultsGvsRows[i].querySelector("#lookupTextcomp_12675").value = loadData["Результаты выборочного обследования"]["ГВС"][resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent]["Оценка"];
+    clickGenerator(resultsGvsRows[i], "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent]["Оценка"]);
   }
 
   // ХВС
@@ -1652,7 +1694,7 @@ function loadData() {
     }
     resultsHvsRows[i].querySelector("#comp_12775").value = loadData["Результаты выборочного обследования"]["ХВС"][resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent]["Выявленные дефекты"];
     resultsHvsRows[i].querySelector("#comp_12777").value = loadData["Результаты выборочного обследования"]["ХВС"][resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent]["% деф. части"];
-    resultsHvsRows[i].querySelector("#lookupTextcomp_12778").value = loadData["Результаты выборочного обследования"]["ХВС"][resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent]["Оценка"];
+    clickGenerator(resultsHvsRows[i], "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent]["Оценка"]);
   }
 
   // Канализация
@@ -1662,103 +1704,157 @@ function loadData() {
     }
     resultsSewerRows[i].querySelector("#comp_12780").value = loadData["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["Выявленные дефекты"];
     resultsSewerRows[i].querySelector("#comp_12782").value = loadData["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["% деф. части"];
-    resultsSewerRows[i].querySelector("#lookupTextcomp_12783").value = loadData["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["Оценка"];
+    clickGenerator(resultsSewerRows[i], "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["Оценка"]);
   }
 
   // Мусоропроводы
   results.querySelector("#comp_12785").value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Выявленные дефекты"];
   results.querySelector("#comp_12787").value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["% деф. части"];
-  results.querySelector("#lookupTextcomp_12788").value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12788", loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Оценка"]);
 
   // Связь с ОДС
+  clickGenerator(results, "#lookupTextcomp_12607", loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Состояние"]);
   results.querySelector("#comp_12790").value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Выявленные дефекты"];
   results.querySelector("#comp_12791").value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12792").value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12793").value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12793", loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Оценка"]);
 
   // Вентиляция
+  clickGenerator(results, "#lookupTextcomp_12608", loadData["Результаты выборочного обследования"]["Вентиляция"]["Состояние"]);
   results.querySelector("#comp_12795").value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Выявленные дефекты"];
   results.querySelector("#comp_12796").value = loadData["Результаты выборочного обследования"]["Вентиляция"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12797").value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12798").value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12798", loadData["Результаты выборочного обследования"]["Вентиляция"]["Оценка"]);
 
   // Система промывки и прочистки стволов мусоропроводов
+  clickGenerator(results, "#lookupTextcomp_126090", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Состояние"]);
   results.querySelector("#comp_12800").value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Выявленные дефекты"];
   results.querySelector("#comp_12801").value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12802").value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12803").value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12803", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Оценка"]);
 
   // ОЗДС (охранно-защитная дератизационная система)
+  clickGenerator(results, "#lookupTextcomp_12610", loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Состояние"]);
   results.querySelector("#comp_12677").value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Выявленные дефекты"];
   results.querySelector("#comp_12678").value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12679").value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12680").value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12680", loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Оценка"]);
 
   // Газоходы
+  clickGenerator(results, "#lookupTextcomp_12612", loadData["Результаты выборочного обследования"]["Газоходы"]["Состояние"]);
   results.querySelector("#comp_12687").value = loadData["Результаты выборочного обследования"]["Газоходы"]["Выявленные дефекты"];
   results.querySelector("#comp_12688").value = loadData["Результаты выборочного обследования"]["Газоходы"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12689").value = loadData["Результаты выборочного обследования"]["Газоходы"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12690").value = loadData["Результаты выборочного обследования"]["Газоходы"]["Оценка"];
+  clickGenerator(results, "#ookupTextcomp_12690", loadData["Результаты выборочного обследования"]["Газоходы"]["Оценка"]);
 
   // Лифты
+  clickGenerator(results, "#lookupTextcomp_12613", loadData["Результаты выборочного обследования"]["Лифты"]["Состояние"]);
+  results.querySelector("#lookupTextcomp_12613").value = loadData["Результаты выборочного обследования"]["Лифты"]["Состояние"];
   results.querySelector("#comp_12692").value = loadData["Результаты выборочного обследования"]["Лифты"]["Выявленные дефекты"];
   results.querySelector("#comp_12693").value = loadData["Результаты выборочного обследования"]["Лифты"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12694").value = loadData["Результаты выборочного обследования"]["Лифты"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12695").value = loadData["Результаты выборочного обследования"]["Лифты"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12695", loadData["Результаты выборочного обследования"]["Лифты"]["Оценка"]);
 
   // Подъёмное устройство для маломобильной группы населения
+  clickGenerator(results, "#lookupTextcomp_12614", loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Состояние"]);
+  results.querySelector("#lookupTextcomp_12614").value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Состояние"];
   results.querySelector("#comp_12697").value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Выявленные дефекты"];
   results.querySelector("#comp_12698").value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12699").value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12700").value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12700", loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Оценка"]);
 
   // Устройство для автоматического опускания лифта
+  clickGenerator(results, "#lookupTextcomp_12615", loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Состояние"]);
   results.querySelector("#comp_12702").value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Выявленные дефекты"];
   results.querySelector("#comp_12703").value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12704").value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12705").value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12705", loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Оценка"]);
 
   // Система ЭС
+  clickGenerator(results, "#lookupTextcomp_12616", loadData["Результаты выборочного обследования"]["Система ЭС"]["Состояние"]);
+  results.querySelector("#lookupTextcomp_12616").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Состояние"];
   results.querySelector("#comp_12707").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Выявленные дефекты"];
   results.querySelector("#comp_12708").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["№ и дата последнего обслед."];
-  results.querySelector("#comp_12709").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Специализированная организация"];
   results.querySelector("#lookupTextcomp_12710").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Оценка"];
 
   // ВКВ (второй кабельный ввод)
+  clickGenerator(results, "#lookupTextcomp_12398", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Наличие"]);
+  clickGenerator(results, "#lookupTextcomp_12622", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Состояние"]);
+  results.querySelector("#lookupTextcomp_12622").value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Состояние"];
   results.querySelector("#comp_12712").value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Выявленные дефекты"];
   results.querySelector("#comp_12713").value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12714").value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12710").value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12715", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Оценка"]);
 
   // АВР (автоматическое включение резервного питания)
+  clickGenerator(results, "#lookupTextcomp_12399", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Наличие"]);
+  clickGenerator(results, "#lookupTextcomp_12617", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Состояние"]);
   results.querySelector("#comp_12717").value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Выявленные дефекты"];
   results.querySelector("#comp_12718").value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12719").value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12720").value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12720", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Оценка"]);
 
   // ППАиДУ
+  clickGenerator(results, "#lookupTextcomp_12400", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Тип"]);
+  clickGenerator(results, "#lookupTextcomp_12618", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Состояние"]);
   results.querySelector("#comp_12722").value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["Выявленные дефекты"];
   results.querySelector("#comp_12723").value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12724").value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12725").value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12725", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Оценка"]);
 
   // Система оповещения о пожаре
+  clickGenerator(results, "#lookupTextcomp_12401", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Наличие"]);
+  clickGenerator(results, "#lookupTextcomp_12619", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Состояние"]);
   results.querySelector("#comp_12727").value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Выявленные дефекты"];
   results.querySelector("#comp_12728").value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12729").value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12730").value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12730", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Оценка"]);
 
   // Система ГС
+  clickGenerator(results, "#lookupTextcomp_12402", loadData["Результаты выборочного обследования"]["Система ГС"]["Вводы"]);
+  clickGenerator(results, "#lookupTextcomp_12620", loadData["Результаты выборочного обследования"]["Система ГС"]["Состояние"]);
   results.querySelector("#comp_12732").value = loadData["Результаты выборочного обследования"]["Система ГС"]["Выявленные дефекты"];
   results.querySelector("#comp_12733").value = loadData["Результаты выборочного обследования"]["Система ГС"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12734").value = loadData["Результаты выборочного обследования"]["Система ГС"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12740").value = loadData["Результаты выборочного обследования"]["Система ГС"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12740", loadData["Результаты выборочного обследования"]["Система ГС"]["Оценка"]);
 
   // Система видеонаблюдения
+  clickGenerator(results, "#lookupTextcomp_12349", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Место"]);
+  clickGenerator(results, "#lookupTextcomp_12621", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Состояние"]);
   results.querySelector("#comp_12742").value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Выявленные дефекты"];
   results.querySelector("#comp_12743").value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["№ и дата последнего обслед."];
   results.querySelector("#comp_12744").value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Специализированная организация"];
-  results.querySelector("#lookupTextcomp_12745").value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Оценка"];
+  clickGenerator(results, "#lookupTextcomp_12745", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Оценка"]);
+
+  iframeForm.querySelector("#comp_12324").value = loadData["Результаты выборочного обследования"]["Дополнительные данные"];
+  iframeForm.querySelector("#lookupTextcomp_12350").value = loadData["Результаты выборочного обследования"]["Рекомендации по утеплению стен"];
+
+  // Подписывающие лица
+  for (let i = 1; i < signatoriesRows.length; i++) {
+    if (!signatoriesRows[i].querySelector("#comp_12340")) {
+      continue;
+    }
+    signatoriesRows[i].querySelector("#comp_12340").value = loadData["Подписывающие лица"]["Представители от"][i];
+    signatoriesRows[i].querySelector("#comp_12341").value = loadData["Подписывающие лица"]["Должность и наименование организации"][i];
+    signatoriesRows[i].querySelector("#comp_12342").value = loadData["Подписывающие лица"]["ФИО должностного лица"][i];
+  }
+
+  function clickGenerator(parent, id, value) {
+    try {
+      const element = parent.querySelector(id);
+      const dataElement = element.parentElement.nextElementSibling;
+      const listItems = dataElement.querySelectorAll("li");
+
+      listItems.forEach((item) => {
+        const a = item.querySelector("a");
+        if (a.textContent === value) {
+          a.click();
+        }
+      });
+    } catch {
+      return;
+    }
+  }
 
   console.log("Done!");
   localStorage.setItem("DataLoaded", JSON.stringify({ address: loadData.address.address }));
