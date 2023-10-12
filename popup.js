@@ -1455,7 +1455,6 @@ function saveData() {
 }
 
 function loadData() {
-  debugger;
   // Если никаких данных в localStorage нет - выходим из функции
   if (localStorage.getItem("MJIDATA") === null) {
     return;
