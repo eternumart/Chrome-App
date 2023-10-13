@@ -1254,7 +1254,7 @@ function saveData() {
         "№ и дата последнего обслед.": results.querySelector("#comp_12713").value,
         "Специализированная организация": results.querySelector("#comp_12714").value,
         "Оценка пред.": results.querySelector("#comp_13409").value,
-        Оценка: results.querySelector("#lookupTextcomp_12710").value,
+        Оценка: results.querySelector("#lookupTextcomp_12715").value,
       },
       "АВР (автоматическое включение резервного питания)": {
         Наличие: results.querySelector("#lookupTextcomp_12399").value,
@@ -1706,7 +1706,6 @@ function loadData() {
     resultsSewerRows[i].querySelector("#comp_12782").value = loadData["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["% деф. части"];
     clickGenerator(resultsSewerRows[i], "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent]["Оценка"]);
   }
-
   // Мусоропроводы
   results.querySelector("#comp_12785").value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Выявленные дефекты"];
   results.querySelector("#comp_12787").value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["% деф. части"];
@@ -1775,6 +1774,7 @@ function loadData() {
   results.querySelector("#lookupTextcomp_12616").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Состояние"];
   results.querySelector("#comp_12707").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Выявленные дефекты"];
   results.querySelector("#comp_12708").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["№ и дата последнего обслед."];
+  results.querySelector("#comp_12709").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Специализированная организация"];
   results.querySelector("#lookupTextcomp_12710").value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Оценка"];
 
   // ВКВ (второй кабельный ввод)
@@ -1827,7 +1827,8 @@ function loadData() {
   clickGenerator(results, "#lookupTextcomp_12745", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Оценка"]);
 
   iframeForm.querySelector("#comp_12324").value = loadData["Результаты выборочного обследования"]["Дополнительные данные"];
-  iframeForm.querySelector("#lookupTextcomp_12350").value = loadData["Результаты выборочного обследования"]["Рекомендации по утеплению стен"];
+  clickGenerator(iframeForm, "#lookupTextcomp_12350", loadData["Результаты выборочного обследования"]["Рекомендации по утеплению стен"]);
+  iframeForm.querySelector("#comp_12606").value = loadData["Выводы по результатам обследования"]["РЕКОМЕНДАЦИИ по ремонтно-восстановительным работам"];
 
   // Подписывающие лица
   for (let i = 1; i < signatoriesRows.length; i++) {
