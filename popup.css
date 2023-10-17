@@ -1,25 +1,25 @@
 html {
-  padding: 10px;
-  border-radius: 10px;
+	padding: 10px;
+	border-radius: 10px;
 }
 
 .button {
-  border: none;
-  background: #084cdf;
-  padding: 10px 20px;
-  border-radius: 10px;
-  color: #fff;
-  cursor: pointer;
-  transition: 0.3s;
-  margin-bottom: 20px;
-  width: 200px;
+	border: none;
+	background: #084cdf;
+	padding: 10px 20px;
+	border-radius: 10px;
+	color: #fff;
+	cursor: pointer;
+	transition: 0.3s;
+	margin-bottom: 20px;
+	width: 200px;
 }
 
 .button:hover {
-  transition: 0.3s;
-  background: #0d45a5;
+	transition: 0.3s;
+	background: #0d45a5;
 }
 
 .button:last-of-type {
-  margin-bottom: 0;
+	margin-bottom: 0;
 }
