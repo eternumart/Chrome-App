@@ -70,3 +70,27 @@
 		}
 	}
 }
+
+
+.header__button {
+	outline: none;
+	border: none;
+	width: 20px;
+	height: 20px;
+	transition: opacity .3s;
+
+	&:hover {
+		opacity: .7;
+		transition: opacity .3s;
+	}
+
+	&#cleanButton {
+		background: url("");
+	}
+	&#minimizeButton {
+		background: url("");
+	}
+	&#closeButton {
+		background: url("");
+	}
+}

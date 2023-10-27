@@ -1,22 +1,180 @@
-const buttonPhotos = document.querySelector("#photos");
-const buttonSave = document.querySelector("#save");
-const inputDate = document.querySelector("#form-date");
-const buttonLoad = document.querySelector("#load");
-const copyedLabel = document.querySelector("#copyed");
-buttonPhotos.addEventListener("click", uploadPhotos);
-buttonSave.addEventListener("click", injectionSave);
-buttonLoad.addEventListener("click", injectionLoad);
+document.addEventListener("DOMContentLoaded", initialization);
 
-function setCopyedLabel() {
-	console.log("ye rfvjy");
-	try {
-		const copyed = JSON.parse(localStorage.getItem("MGIDATA"));
-		const copyedAddress = copyed.address;
-		copyedLabel.textContent = copyedAddress;
-		console.log(copyed);
-	} catch {
+function initialization(evt) {
+	evt.preventDefault();
+
+	chrome.tabs.query({ active: true }, (tabs) => {
+		const tab = tabs[0];
+		if (tab) {
+			chrome.scripting.executeScript({
+				target: { tabId: tab.id, allFrames: true },
+				func: app,
+			});
+		}
+	});
+}
+
+function app() {
+	debugger;
+	// Предотвращение двойного старта
+	if (localStorage.getItem("appStarted")) {
 		return;
 	}
+	localStorage.setItem("appStarted", "true");
+
+	let html, wholeAddress, isIFrame, iFrame;
+
+	try {
+		iFrame = document.querySelector("#formCanvas");
+		isIFrame = true;
+		console.log("isIFrame = true");
+	} catch {
+		isIFrame = false;
+		console.log("isIFrame = false");
+	}
+
+	if (!isIFrame) {
+		html = document;
+		wholeAddress = document.querySelector("#comboboxTextcomp_12339").value;
+	} else {
+		html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
+		wholeAddress = document.querySelector("#title").textContent;
+	}
+
+	function createPopup(params) {
+		const htmlHead = html.querySelector("head");
+		const htmlBody = html.querySelector("body");
+		try {
+			let iframeForm = htmlBody.querySelector("#formData107"); // for photo save
+		} catch {
+			console.log("Страница не подходит для вставки фото");
+		}
+		console.log(htmlBody);
+
+		const injectDiv = document.createElement("div");
+		const divWrapper = document.createElement("div");
+		const injectInput = document.createElement("input");
+		const injectButton = document.createElement("button");
+		const dragIco = document.createElement("div");
+		const divTitle = document.createElement("span");
+		const inputDate = document.createElement("input");
+		const stylesLayout = `<style>
+	  .injection {
+		width: 270px;
+		position: absolute;
+		z-index: 999;
+		background: #fff;
+		padding: 30px;
+		border-radius: 20px;
+		box-shadow: 0px 0px 10px grey;
+		top: 20px;
+		right: 20px;
+	  }
+	  .injection__content {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	  }
+	  .injection__content div {
+		position: absolute;
+		right: -10px;
+		top: -10px;
+		width: 20px;
+		height: 20px;
+		background: url("https://img.icons8.com/?size=512&id=LSSRyyQ8tv5H&format=png");
+		background-size: contain;
+		background-repeat: no-repeat;
+		cursor: grab;
+	  }
+	  .injection__content span {
+		font-size: 25px;
+		line-height: 1;
+		margin-bottom: 10px;
+	  }
+	  .injection input[type=file]::file-selector-button {
+		border: none;
+		background: #084cdf;
+		padding: 10px 20px;
+		min-height: 45px;
+		border-radius: 10px;
+		margin-right: 15px;
+		color: #fff;
+		cursor: pointer;
+		transition: background 0.2s ease-in-out;
+	  }
+	  .injection input[type=file]::file-selector-button:hover {
+		background: #0d45a5;
+	  }
+	  .injection button {
+		border: none;
+		background: #084cdf;
+		padding: 10px 20px;
+		border-radius: 10px;
+		color: #fff;
+		min-height: 45px;
+		cursor: pointer;
+		transition: background 0.2s ease-in-out;
+	  }
+	  .injection button:hover {
+		background: #0d45a5;
+	  }
+	  .injection input[type="date"] {
+		min-height: 45px;
+		color: #000;
+		font-family: Open Sans, Arial, sans-serif;
+		font-size: 16px;
+		padding-left: 10px;
+		border: 2px solid #084cdf;
+		border-radius: 10px;
+		box-sizing: border-box;
+		cursor: pointer;
+		outline: none;
+	}
+	  	</style>`;
+
+		// Listeners
+		injectButton.addEventListener("click", downloadPhotos);
+		dragIco.addEventListener("mousedown", startDraggingDiv);
+		html.addEventListener("mouseup", stopDraggingDiv);
+
+		// Main
+		injectDiv.classList.add("injection");
+		divWrapper.classList.add("injection__content");
+		divTitle.textContent = "I-N-J-E-C-T-E-D 😈";
+		injectInput.type = "file";
+		injectInput.setAttribute("multiple", "");
+		inputDate.type = "date";
+		injectButton.textContent = "Вставить";
+
+		htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
+		divWrapper.appendChild(divTitle);
+		divWrapper.appendChild(dragIco);
+		divWrapper.appendChild(injectInput);
+		divWrapper.appendChild(inputDate);
+		divWrapper.appendChild(injectButton);
+		injectDiv.appendChild(divWrapper);
+		htmlBody.appendChild(injectDiv);
+
+		const date = new Date();
+		let day = date.getDate();
+		let month = date.getMonth() + 1;
+		const year = date.getFullYear();
+		if (day < 10) {
+			day = `0${day}`;
+		}
+		if (month < 10) {
+			month = `0${month}`;
+		}
+
+		inputDate.value = `${year}-${month}-${day}`;
+	}
+
+	function downloadPhotos() {}
+	function startDraggingDiv() {}
+	function stopDraggingDiv() {}
+
+	createPopup();
 }
 
 function uploadPhotos(evt) {
@@ -61,16 +219,30 @@ function injectionLoad(evt) {
 	});
 }
 
+function injectionClear(evt) {
+	evt.preventDefault();
+
+	chrome.tabs.query({ active: true }, (tabs) => {
+		const tab = tabs[0];
+		if (tab) {
+			chrome.scripting.executeScript({
+				target: { tabId: tab.id, allFrames: true },
+				func: clearData,
+			});
+		}
+	});
+}
+
 function injectionPhotos() {
 	// Variables
-	const iFrameHTML = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
-	if (iFrameHTML.querySelector(".injection")) {
+	const html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
+	if (html.querySelector(".injection")) {
 		return;
 	}
-	const iFrameHead = iFrameHTML.querySelector("head");
-	let iframeForm = iFrameHTML.querySelector("#formData107"); // for photo save
-	const saveButton = iFrameHTML.querySelector("#buttonFormSave");
-	const addImgBtnContainer = iFrameHTML.querySelector("#\\32 1184 > caption");
+	const iFrameHead = html.querySelector("head");
+	let iframeForm = html.querySelector("#formData107"); // for photo save
+	const saveButton = html.querySelector("#buttonFormSave");
+	const addImgBtnContainer = html.querySelector("#\\32 1184 > caption");
 	const addImgButton = addImgBtnContainer.querySelector(".button");
 	const injectDiv = document.createElement("div");
 	const divWrapper = document.createElement("div");
@@ -157,7 +329,7 @@ function injectionPhotos() {
 	// Listeners
 	injectButton.addEventListener("click", downloadPhotos);
 	dragIco.addEventListener("mousedown", startDraggingDiv);
-	iFrameHTML.addEventListener("mouseup", stopDraggingDiv);
+	html.addEventListener("mouseup", stopDraggingDiv);
 
 	// Main
 	injectDiv.classList.add("injection");
@@ -201,7 +373,7 @@ function injectionPhotos() {
 			// 1. Клик по кнопке добавления поля
 			addImgButton.click();
 
-			const photoTable = iFrameHTML.querySelector("#\\32 1184");
+			const photoTable = html.querySelector("#\\32 1184");
 			const downloadInputs = photoTable.querySelectorAll(".fileLoad");
 			const downloadInput = downloadInputs[downloadInputs.length - 1];
 			const textareas = photoTable.querySelectorAll("textarea");
@@ -246,12 +418,12 @@ function injectionPhotos() {
 
 	function startDraggingDiv(evt) {
 		dragIco.style.cursor = "grabbing";
-		iFrameHTML.addEventListener("mousemove", dragDiv);
+		html.addEventListener("mousemove", dragDiv);
 	}
 
 	function stopDraggingDiv(evt) {
 		dragIco.style.cursor = "grab";
-		iFrameHTML.removeEventListener("mousemove", dragDiv);
+		html.removeEventListener("mousemove", dragDiv);
 	}
 
 	function dragDiv(evt) {
@@ -261,19 +433,19 @@ function injectionPhotos() {
 }
 
 function saveData() {
-	let iFrameHTML, wholeAddress;
+	let html, wholeAddress;
 
 	if (!document.querySelector("#formCanvas")) {
-		iFrameHTML = document;
+		html = document;
 		wholeAddress = document.querySelector("#comboboxTextcomp_12339").value;
 	} else {
-		iFrameHTML = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
+		html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
 		wholeAddress = document.querySelector("#title").textContent;
 	}
 
-	let iFrameHead = iFrameHTML.querySelector("head");
-	let iFrameBody = iFrameHTML.querySelector("body");
-	let iframeForm = iFrameHTML.querySelector("#formData181");
+	let iFrameHead = html.querySelector("head");
+	let iFrameBody = html.querySelector("body");
+	let iframeForm = html.querySelector("#formData181");
 	const area = wholeAddress.split(",")[0];
 	const district = wholeAddress.split(",")[1];
 	const address = iFrameBody.querySelector("#comboboxTextcomp_12339").value;
@@ -334,7 +506,7 @@ function saveData() {
 	const resultsSewerTable = resultsSewerBlock.querySelector("tbody");
 	const resultsSewerRows = resultsSewerTable.querySelectorAll("tr");
 
-	const signatoriesBlock = iFrameHTML.querySelector("#group_22133");
+	const signatoriesBlock = html.querySelector("#group_22133");
 	const signatoriesTable = signatoriesBlock.querySelector("tbody");
 	const signatoriesRows = signatoriesTable.querySelectorAll("tr");
 
@@ -1521,20 +1693,20 @@ function loadData() {
 		}
 	}
 
-	let iFrameHTML, wholeAddress;
+	let html, wholeAddress;
 
 	// Проверка есть ли iFrame
 	if (!document.querySelector("#formCanvas")) {
-		iFrameHTML = document;
+		html = document;
 		wholeAddress = document.querySelector("#comboboxTextcomp_12339").value;
 	} else {
-		iFrameHTML = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
+		html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
 		wholeAddress = document.querySelector("#title").textContent;
 	}
 
-	let iFrameHead = iFrameHTML.querySelector("head");
-	let iFrameBody = iFrameHTML.querySelector("body");
-	let iframeForm = iFrameHTML.querySelector("#formData181");
+	let iFrameHead = html.querySelector("head");
+	let iFrameBody = html.querySelector("body");
+	let iframeForm = html.querySelector("#formData181");
 	const area = wholeAddress.split(",")[0];
 	const district = wholeAddress.split(",")[1];
 	const address = iFrameBody.querySelector("#comboboxTextcomp_12339").value;
@@ -1595,7 +1767,7 @@ function loadData() {
 	const resultsSewerTable = resultsSewerBlock.querySelector("tbody");
 	const resultsSewerRows = resultsSewerTable.querySelectorAll("tr");
 
-	const signatoriesBlock = iFrameHTML.querySelector("#group_22133");
+	const signatoriesBlock = html.querySelector("#group_22133");
 	const signatoriesTable = signatoriesBlock.querySelector("tbody");
 	const signatoriesRows = signatoriesTable.querySelectorAll("tr");
 
