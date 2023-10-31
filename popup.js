@@ -15,12 +15,11 @@ function initialization(evt) {
 }
 
 function app() {
-	debugger;
 	// Предотвращение двойного старта
 	if (localStorage.getItem("appStarted")) {
 		return;
 	}
-	localStorage.setItem("appStarted", "true");
+	//localStorage.setItem("appStarted", "true");
 
 	let html, wholeAddress, isIFrame, iFrame;
 
@@ -49,112 +48,351 @@ function app() {
 		} catch {
 			console.log("Страница не подходит для вставки фото");
 		}
-		console.log(htmlBody);
+		const popupLayout = `
+		<div class="app">
+      <div class="header">
+        <div class="header__title-wrapper">
+          <div class="header__logo">
+            <svg
+              width="24"
+              height="20"
+              viewBox="0 0 24 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M13.8099 0H23.3333V20H13.8099L22.747 11.0196C23.3052 10.4587 23.3052 9.54127 22.747 8.98039L13.8099 0ZM0 0H9.52339L0.586308 8.98039C0.0281374 9.54127 0.0281374 10.4587 0.586308 11.0196L9.52339 20H0V0Z"
+                fill="#1F5473"
+              />
+              <path
+                d="M8.07028 6.50342H10.1732C9.79199 6.73415 9.58506 7.10533 9.44982 7.53032H8.07028C7.87424 7.53032 7.69635 7.61149 7.56657 7.74191C7.43678 7.87232 7.356 8.05198 7.356 8.24806V11.8422C7.356 12.0392 7.43678 12.218 7.56657 12.3484C7.69635 12.4788 7.87515 12.56 8.07028 12.56H9.44982C9.58415 12.985 9.79199 13.3561 10.1732 13.5869H8.07028C7.59198 13.5869 7.15815 13.3908 6.84412 13.0752C6.53009 12.7597 6.33496 12.3228 6.33496 11.8431V8.24897C6.33496 7.76835 6.53009 7.33242 6.84412 7.01687C7.15815 6.6995 7.59289 6.50342 8.07028 6.50342Z"
+                fill="#1A1A18"
+              />
+              <path
+                d="M11.7424 6.50342H13.8453C13.4641 6.73415 13.2572 7.10533 13.1219 7.53032H11.7424C11.5464 7.53032 11.3685 7.61149 11.2387 7.74191C11.1089 7.87232 11.0281 8.05198 11.0281 8.24806V11.8422C11.0281 12.0392 11.1089 12.218 11.2387 12.3484C11.3685 12.4788 11.5473 12.56 11.7424 12.56H13.1219C13.2563 12.985 13.4641 13.3561 13.8453 13.5869H11.7424C11.2641 13.5869 10.8303 13.3908 10.5162 13.0752C10.2022 12.7597 10.0071 12.3228 10.0071 11.8431V8.24897C10.0071 7.76835 10.2022 7.33242 10.5162 7.01687C10.8303 6.6995 11.265 6.50342 11.7424 6.50342Z"
+                fill="#E2000F"
+              />
+              <path
+                d="M15.0616 6.50342H14.458C14.3337 6.58367 14.2184 6.68035 14.1168 6.7907C13.9262 6.9959 13.7801 7.24852 13.6938 7.53032H15.0616C15.2576 7.53032 15.4355 7.61149 15.5653 7.74191C15.6951 7.87232 15.7759 8.05198 15.7759 8.24806V9.29594H14.3237V10.2371H15.7759V11.8422C15.7759 12.0392 15.6951 12.218 15.5653 12.3484C15.4355 12.4788 15.2576 12.56 15.0616 12.56H13.6938C13.7801 12.8418 13.9262 13.0944 14.1168 13.2996C14.2184 13.4099 14.3337 13.5066 14.458 13.5869H15.0616C15.5399 13.5869 15.9737 13.3908 16.2878 13.0752C16.6018 12.7597 16.7969 12.3228 16.7969 11.8431V8.24897C16.7969 7.76835 16.6018 7.33242 16.2878 7.01687C15.9737 6.6995 15.5399 6.50342 15.0616 6.50342Z"
+                fill="#1A1A18"
+              />
+            </svg>
+          </div>
+          <h1 class="header__title">МЖИ менеджер</h1>
+        </div>
+        <div class="header__drag-button">
+          <svg
+            width="20"
+            height="6"
+            viewBox="0 0 20 6"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <line y1="3.5" x2="20" y2="3.5" stroke="#787878" />
+            <line
+              x1="20"
+              y1="0.5"
+              x2="4.37114e-08"
+              y2="0.500002"
+              stroke="#787878"
+            />
+          </svg>
+        </div>
+        <div class="header__buttons">
+          <button class="header__button" id="cleanButton"></button>
+          <button class="header__button" id="minimizeButton"></button>
+          <button class="header__button" id="closeButton"></button>
+        </div>
+      </div>
 
-		const injectDiv = document.createElement("div");
-		const divWrapper = document.createElement("div");
-		const injectInput = document.createElement("input");
-		const injectButton = document.createElement("button");
-		const dragIco = document.createElement("div");
-		const divTitle = document.createElement("span");
-		const inputDate = document.createElement("input");
+      <div class="tabs">
+        <button class="tabs__button" id="main">Основное</button>
+        <button class="tabs__button tabs__button_active" id="photo">
+          Фото
+        </button>
+      </div>
+
+      <div class="main">
+        <div class="content" id="main">
+          <button class="main__button" id="copy">Копирование отчета</button>
+          <button class="main__button" id="clean">Очистка отчета</button>
+          <button class="main__button" id="paste">Вставка отчета</button>
+        </div>
+        <div class="content content_active" id="photo">
+          <form class="form" action="submit">
+            <div class="form__field">
+              <label class="form__label" for="file"
+                >Выбрать фото для загрузки</label
+              >
+              <input
+                class="form__input"
+                type="file"
+                name="file"
+                id="file"
+                multiple
+              />
+            </div>
+            <div class="form__field">
+              <label class="form__label" for="date"
+                >Выбор даты загрузки фото</label
+              >
+              <input class="form__input" type="date" name="date" id="date" />
+            </div>
+
+            <input class="form__button" type="button" value="Загрузить" />
+          </form>
+        </div>
+      </div>
+    </div>`;
 		const stylesLayout = `<style>
-	  .injection {
-		width: 270px;
-		position: absolute;
-		z-index: 999;
-		background: #fff;
-		padding: 30px;
-		border-radius: 20px;
-		box-shadow: 0px 0px 10px grey;
-		top: 20px;
-		right: 20px;
-	  }
-	  .injection__content {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	  }
-	  .injection__content div {
-		position: absolute;
-		right: -10px;
-		top: -10px;
-		width: 20px;
-		height: 20px;
-		background: url("https://img.icons8.com/?size=512&id=LSSRyyQ8tv5H&format=png");
-		background-size: contain;
-		background-repeat: no-repeat;
-		cursor: grab;
-	  }
-	  .injection__content span {
-		font-size: 25px;
-		line-height: 1;
-		margin-bottom: 10px;
-	  }
-	  .injection input[type=file]::file-selector-button {
-		border: none;
-		background: #084cdf;
-		padding: 10px 20px;
-		min-height: 45px;
-		border-radius: 10px;
-		margin-right: 15px;
-		color: #fff;
-		cursor: pointer;
-		transition: background 0.2s ease-in-out;
-	  }
-	  .injection input[type=file]::file-selector-button:hover {
-		background: #0d45a5;
-	  }
-	  .injection button {
-		border: none;
-		background: #084cdf;
-		padding: 10px 20px;
-		border-radius: 10px;
-		color: #fff;
-		min-height: 45px;
-		cursor: pointer;
-		transition: background 0.2s ease-in-out;
-	  }
-	  .injection button:hover {
-		background: #0d45a5;
-	  }
-	  .injection input[type="date"] {
-		min-height: 45px;
-		color: #000;
-		font-family: Open Sans, Arial, sans-serif;
-		font-size: 16px;
-		padding-left: 10px;
-		border: 2px solid #084cdf;
-		border-radius: 10px;
-		box-sizing: border-box;
-		cursor: pointer;
-		outline: none;
-	}
+		* {
+			padding: 0;
+			margin: 0;
+			box-sizing: border-box;
+		  }
+		  
+		  .app {
+			font-family: Inter;
+			z-index: 999;
+			background: #fff;
+			position: absolute;
+			width: 410px;
+			top: 50px;
+			right: 20px;
+			border-radius: 10px;
+			box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+		  }
+		  
+		  .header {
+			position: relative;
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 14px 10px;
+			border-bottom: 1px solid #e9e9e9;
+		  }
+		  
+		  .header__title-wrapper {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		  }
+		  
+		  .header__logo {
+			width: 24px;
+		  }
+		  
+		  .header__title {
+			color: #1a1a18;
+			
+			font-size: 20px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+		  }
+		  
+		  .header__drag-button {
+			position: absolute;
+			top: 2px;
+			left: calc(50% - (20px / 2));
+			height: 6px;
+			display: flex;
+			align-items: center;
+			cursor: grab;
+		  }
+		  
+		  .header__buttons {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		  }
+		  
+		  .header__button {
+			outline: none;
+			border: none;
+			width: 20px;
+			height: 20px;
+			transition: opacity 0.3s;
+			background-size: contain;
+			background-repeat: no-repeat;
+			background-position: bottom;
+			background-color: transparent;
+			cursor: pointer;
+		  }
+		  .header__button:hover {
+			opacity: 0.7;
+			transition: opacity 0.3s;
+		  }
+		  .header__button#cleanButton {
+			background-image: url(./images/cleanCache-button.svg);
+		  }
+		  .header__button#minimizeButton {
+			background-image: url(./images/minimize-ico.svg);
+		  }
+		  .header__button#closeButton {
+			background-image: url(./images/close-ico.svg);
+		  }
+		  
+		  .tabs {
+			display: flex;
+			width: 100%;
+			border-bottom: 1px solid #e9e9e9;
+			margin-bottom: 20px;
+		  }
+		  
+		  .tabs__button {
+			outline: none;
+			border: none;
+			transition: 0.3s;
+			cursor: pointer;
+			background: #e9e9e9;
+			width: 50%;
+			padding: 8px;
+			color: #1a1a18;
+			text-align: center;
+			
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+		  }
+		  
+		  .tabs__button:hover {
+			opacity: 0.7;
+			transition: 0.3s;
+		  }
+		  
+		  .tabs__button_active {
+			background: #1f5473;
+			color: #fff;
+		  }
+		  
+		  .main {
+			padding: 0 10px 20px 10px;
+		  }
+		  .content {
+			position: absolute;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			transition: 0.3s;
+		  }
+		  .content_active {
+			position: relative;
+			opacity: 1;
+			visibility: visible;
+			pointer-events: auto;
+			transition: 0.3s;
+		  }
+		  
+		  .content#main {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
+		  }
+		  
+		  .main__button {
+			outline: none;
+			border: none;
+			color: #1a1a18;
+			
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			background: #e9e9e9;
+			padding: 10px 0;
+			transition: opacity 0.3s;
+		  }
+		  .main__button:hover {
+			  transition: opacity 0.3s;
+			  opacity: 0.7;
+			  cursor: pointer;
+		  }
+		  
+		  .form__field {
+			  display: flex;
+			  flex-direction: column;
+			  gap: 10px;
+			  width: 100%;
+			  margin-bottom: 20px;
+		  }
+		  
+		  .form__label {
+			  color: #1A1A18;
+		  font-size: 12px;
+		  font-style: normal;
+		  font-weight: 400;
+		  line-height: 100%;
+		  }
+		  
+		  .form__input[type=file]::file-selector-button {
+			  	width: 190px;
+			  	border: none;
+			  	background: #1F5473;
+			  	padding: 10px 30px;
+		  		margin-right: 10px;
+			  	color: #fff;
+			  cursor: pointer;
+			  transition: opacity 0.3s;
+			  font-size: 14px;
+			  font-style: normal;
+			  font-weight: 400;
+			  line-height: 100%;
+			}
+			.form__input[type=file]::file-selector-button:hover {
+			  transition: opacity 0.3s;
+			  opacity: 0.7;
+			}
+			.form__input[type=date] {
+			  width: 190px;
+			  border: 1px solid #1F5473;
+			  padding: 11px 10px;
+			  color: #1A1A18;
+		  font-size: 12px;
+		  font-style: normal;
+		  font-weight: 400;
+		  line-height: 100%;
+		  outline: none;
+			}
+		  
+			.form__button {
+			  width: 190px;
+			  outline: none;
+			  border: none;
+			  background: #1F5473;
+			  color: #FFF;
+			  transition: opacity 0.3s;
+		  
+		  
+		  font-size: 14px;
+		  font-style: normal;
+		  font-weight: 400;
+		  line-height: 100%;
+		  cursor: pointer;
+		  padding: 10px 30px;
+			}
+		  
+			.form__button:hover {
+			  transition: opacity 0.3s;
+			  opacity: 0.7;
+			}	
 	  	</style>`;
 
+		htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
+		htmlBody.insertAdjacentHTML("afterBegin", popupLayout);
+
+		const app = htmlBody.querySelector(".app");
+		const photosButton = app.querySelector(".form__button");
+		const dragIco = app.querySelector(".header__drag-button");
+
 		// Listeners
-		injectButton.addEventListener("click", downloadPhotos);
+		photosButton.addEventListener("click", downloadPhotos);
 		dragIco.addEventListener("mousedown", startDraggingDiv);
 		html.addEventListener("mouseup", stopDraggingDiv);
-
-		// Main
-		injectDiv.classList.add("injection");
-		divWrapper.classList.add("injection__content");
-		divTitle.textContent = "I-N-J-E-C-T-E-D 😈";
-		injectInput.type = "file";
-		injectInput.setAttribute("multiple", "");
-		inputDate.type = "date";
-		injectButton.textContent = "Вставить";
-
-		htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
-		divWrapper.appendChild(divTitle);
-		divWrapper.appendChild(dragIco);
-		divWrapper.appendChild(injectInput);
-		divWrapper.appendChild(inputDate);
-		divWrapper.appendChild(injectButton);
-		injectDiv.appendChild(divWrapper);
-		htmlBody.appendChild(injectDiv);
 
 		const date = new Date();
 		let day = date.getDate();
@@ -170,9 +408,21 @@ function app() {
 		inputDate.value = `${year}-${month}-${day}`;
 	}
 
-	function downloadPhotos() {}
-	function startDraggingDiv() {}
-	function stopDraggingDiv() {}
+	function startDraggingDiv(evt) {
+		debugger;
+		dragIco.style.cursor = "grabbing";
+		html.addEventListener("mousemove", dragDiv);
+	}
+
+	function stopDraggingDiv(evt) {
+		dragIco.style.cursor = "grab";
+		html.removeEventListener("mousemove", dragDiv);
+	}
+
+	function dragDiv(evt) {
+		injectDiv.style.top = `${evt.pageY - 25}px`;
+		injectDiv.style.left = `${evt.pageX - 300}px`;
+	}
 
 	createPopup();
 }
