@@ -18,22 +18,22 @@ function app() {
 	let html, wholeAddress, isIFrame, iFrame, currentPage, form;
 
 	// Предотвращение двойного старта
-
-	if (localStorage.getItem("appStarted")) {
-		localStorage.removeItem("appStarted");
-		return;
-	} else {
+	if (!localStorage.getItem("appStarted")) {
 		localStorage.setItem("appStarted", true);
+	} else {
+		try{
+			if(document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".app") || document.querySelector(".app")){
+				return;
+			}
+		} catch {}
 	}
 
 	// Определение наличия iFrame
 	try {
 		iFrame = document.querySelector("#formCanvas");
 		isIFrame = true;
-		console.log("isIFrame = true");
 	} catch {
 		isIFrame = false;
-		console.log("isIFrame = false");
 	}
 
 	if (!isIFrame) {
@@ -464,6 +464,7 @@ function app() {
 		minimizeButton.removeEventListener("click", minimizeApp);
 		closeButton.removeEventListener("click", closeApp);
 		dragIco.removeEventListener("mousedown", startDraggingDiv);
+		localStorage.removeItem("appStarted");
 		app.remove();
 	}
 
@@ -529,13 +530,13 @@ function app() {
 
 	function saveData() {
 		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
-		if(currentPage !== "main") {
+		if (currentPage !== "main") {
 			copyButton.classList.add("main__button_error");
-			copyButton.textContent = "Ошибка!"
-			setTimeout(()=>{
+			copyButton.textContent = "Ошибка!";
+			setTimeout(() => {
 				copyButton.classList.remove("main__button_error");
-				copyButton.textContent = "Копирование отчета"
-			},1500)
+				copyButton.textContent = "Копирование отчета";
+			}, 1500);
 			return;
 		}
 		const area = wholeAddress.split(",")[0];
@@ -1778,13 +1779,13 @@ function app() {
 
 	function loadData() {
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
-		if(currentPage !== "main") {
+		if (currentPage !== "main") {
 			pasteButton.classList.add("main__button_error");
-			pasteButton.textContent = "Ошибка!"
-			setTimeout(()=>{
+			pasteButton.textContent = "Ошибка!";
+			setTimeout(() => {
 				pasteButton.classList.remove("main__button_error");
-				pasteButton.textContent = "Вставка отчета"
-			},1500)
+				pasteButton.textContent = "Вставка отчета";
+			}, 1500);
 			return;
 		}
 		// Если никаких данных в localStorage нет - выходим из функции
@@ -2146,13 +2147,13 @@ function app() {
 
 	function clearData() {
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
-		if(currentPage !== "main") {
+		if (currentPage !== "main") {
 			clearDataButton.classList.add("main__button_error");
-			clearDataButton.textContent = "Ошибка!"
-			setTimeout(()=>{
+			clearDataButton.textContent = "Ошибка!";
+			setTimeout(() => {
 				clearDataButton.classList.remove("main__button_error");
-				clearDataButton.textContent = "Очистка отчета"
-			},1500)
+				clearDataButton.textContent = "Очистка отчета";
+			}, 1500);
 			return;
 		}
 		const repairProjectsTable = form.querySelector("#group_22130");
@@ -2498,24 +2499,24 @@ function app() {
 	function downloadPhotos(evt) {
 		evt.preventDefault();
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
-		if(currentPage === "main") {
+		if (currentPage === "main") {
 			submitButton.classList.add("form__button_error");
-			submitButton.value = "Ошибка!"
-			setTimeout(()=>{
+			submitButton.value = "Ошибка!";
+			setTimeout(() => {
 				submitButton.classList.remove("form__button_error");
-				submitButton.value = "Загрузить"
-			},1500)
+				submitButton.value = "Загрузить";
+			}, 1500);
 			return;
 		}
 		const files = formInput.files;
 		let counter = 0;
-		if(files.length < 1) {
+		if (files.length < 1) {
 			submitButton.classList.add("form__button_error");
-			submitButton.value = "Ошибка!"
-			setTimeout(()=>{
+			submitButton.value = "Ошибка!";
+			setTimeout(() => {
 				submitButton.classList.remove("form__button_error");
-				submitButton.value = "Загрузить"
-			},1500)
+				submitButton.value = "Загрузить";
+			}, 1500);
 			return;
 		}
 		const interval = setInterval(upload, 3000);
