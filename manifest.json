@@ -15,7 +15,7 @@
 	"content_scripts": [
 		{
 			"matches": ["http://185.173.2.132:7777/*"],
-			"css": ["injection.css"]
+			"css": ["popup.css"]
 		}
 	]
 }

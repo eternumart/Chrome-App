@@ -121,7 +121,7 @@ function app() {
 						<input class="form__input" type="date" name="date" id="date" />
 					</div>
 
-					<input class="form__button" type="button" value="Загрузить" />
+					<input class="form__button" type="submit" value="Загрузить" />
 				</form>
 			</div>
 		</div>
@@ -367,21 +367,22 @@ function app() {
 			  border: none;
 			  background: #1F5473;
 			  color: #FFF;
-			  transition: opacity 0.3s;
-		  
-		  
-		  font-size: 14px;
-		  font-style: normal;
-		  font-weight: 400;
-		  line-height: 100%;
-		  cursor: pointer;
-		  padding: 10px 30px;
+			  transition: 0.3s;
+		  		font-size: 14px;
+		  		font-style: normal;
+		  		font-weight: 400;
+		  		line-height: 100%;
+		  		cursor: pointer;
+		  		padding: 10px 30px;
 			}
 		  
 			.form__button:hover {
-			  transition: opacity 0.3s;
+			  transition: 0.3s;
 			  opacity: 0.7;
-			}	
+			}
+			.form__button_done {
+				background: #00931a !important;
+			}
 	  	</style>`;
 
 	// Определение страницы встраивания
@@ -407,6 +408,9 @@ function app() {
 	const copyButton = app.querySelector("#copy");
 	const clearDataButton = app.querySelector("#clean");
 	const pasteButton = app.querySelector("#paste");
+	const photoDownload = app.querySelector(".form");
+	const formInput = app.querySelector("#file");
+	const submitButton = app.querySelector(".form__button");
 
 	// Listeners
 	dragIco.addEventListener("mousedown", startDraggingDiv);
@@ -417,6 +421,7 @@ function app() {
 	clearDataButton.addEventListener("click", clearData);
 	copyButton.addEventListener("click", saveData);
 	pasteButton.addEventListener("click", loadData);
+	photoDownload.addEventListener("submit", downloadPhotos);
 	tabs.forEach((tab) => {
 		tab.addEventListener("click", () => {
 			changeTab(tab);
@@ -2452,5 +2457,69 @@ function app() {
 			clearDataButton.textContent = "Очистка отчета";
 			clearDataButton.classList.remove("main__button_done");
 		}, 1500);
+	}
+
+	function downloadPhotos(evt) {
+		evt.preventDefault();
+		if (currentPage === "main") {
+			return;
+		}
+		const files = formInput.files;
+		let counter = 0;
+		const interval = setInterval(upload, 3000);
+		const saveButton = html.querySelector("#buttonFormSave");
+		const addImgBtnContainer = html.querySelector("#\\32 1184 > caption");
+		const addImgButton = addImgBtnContainer.querySelector(".button");
+
+		function upload() {
+			// 1. Клик по кнопке добавления поля
+			addImgButton.click();
+
+			const photoTable = html.querySelector("#\\32 1184");
+			const downloadInputs = photoTable.querySelectorAll(".fileLoad");
+			const downloadInput = downloadInputs[downloadInputs.length - 1];
+			const textareas = photoTable.querySelectorAll("textarea");
+			const currentTextarea = textareas[textareas.length - 1];
+			const currentFile = files[`${counter}`];
+			const prepareDate = inputDate.value.split("-");
+			const downloadDate = `Дата загрузки: ${prepareDate[2]}.${prepareDate[1]}.${prepareDate[0]} г.`;
+
+			currentTextarea.value = downloadDate;
+
+			// Копируем данные файла из расширения
+			const myFile = new File(["file"], `${currentFile.name}`, {
+				type: `${currentFile.type}`,
+				size: currentFile.size,
+				webkitRelativePath: `${currentFile.webkitRelativePath}`,
+				lastModified: `${currentFile.lastModified}`,
+				lastModifiedDate: `${currentFile.lastModifiedDate}`,
+			});
+
+			if (myFile.lastModified < 1) {
+				return;
+			}
+
+			// 2. Выделяем инпут для подгрузки фото и вставляем в него данные
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(currentFile);
+			downloadInput.files = dataTransfer.files;
+			console.log(downloadInput.files);
+			downloadInput.dispatchEvent(new Event("change"));
+
+			counter++;
+			// 3. Сохраняем после добавления всех файлов
+			if (counter >= files.length) {
+				clearInterval(interval);
+				setTimeout(() => {
+					saveButton.click();
+					submitButton.value = "Сохранено";
+					submitButton.classList.add("form__button_done");
+					setTimeout(() => {
+						submitButton.value = "Загрузить";
+						submitButton.classList.remove("form__button_done");
+					}, 1500);
+				}, 3000);
+			}
+		}
 	}
 }
