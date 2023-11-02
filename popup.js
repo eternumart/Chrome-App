@@ -15,13 +15,16 @@ function initialization(evt) {
 }
 
 function app() {
-	// Предотвращение двойного старта
-	if (sessionStorage.getItem("appStarted")) {
-		return;
-	}
-	sessionStorage.setItem("appStarted", "true");
-
 	let html, wholeAddress, isIFrame, iFrame, currentPage, form;
+
+	// Предотвращение двойного старта
+
+	if (localStorage.getItem("appStarted")) {
+		localStorage.removeItem("appStarted");
+		return;
+	} else {
+		localStorage.setItem("appStarted", true);
+	}
 
 	// Определение наличия iFrame
 	try {
@@ -34,11 +37,15 @@ function app() {
 	}
 
 	if (!isIFrame) {
-		html = document;
-		wholeAddress = document.querySelector("#comboboxTextcomp_12339").value;
+		try {
+			html = document;
+			wholeAddress = document.querySelector("#comboboxTextcomp_12339").value;
+		} catch {}
 	} else {
-		html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
-		wholeAddress = document.querySelector("#title").textContent;
+		try {
+			html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
+			wholeAddress = document.querySelector("#title").textContent;
+		} catch {}
 	}
 
 	// Встраивание приложения в страницу
@@ -457,7 +464,6 @@ function app() {
 		minimizeButton.removeEventListener("click", minimizeApp);
 		closeButton.removeEventListener("click", closeApp);
 		dragIco.removeEventListener("mousedown", startDraggingDiv);
-		sessionStorage.removeItem("appStarted");
 		app.remove();
 	}
 
@@ -522,6 +528,16 @@ function app() {
 	}
 
 	function saveData() {
+		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
+		if(currentPage !== "main") {
+			copyButton.classList.add("main__button_error");
+			copyButton.textContent = "Ошибка!"
+			setTimeout(()=>{
+				copyButton.classList.remove("main__button_error");
+				copyButton.textContent = "Копирование отчета"
+			},1500)
+			return;
+		}
 		const area = wholeAddress.split(",")[0];
 		const district = wholeAddress.split(",")[1];
 		const address = htmlBody.querySelector("#comboboxTextcomp_12339").value;
@@ -1761,6 +1777,16 @@ function app() {
 	}
 
 	function loadData() {
+		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
+		if(currentPage !== "main") {
+			pasteButton.classList.add("main__button_error");
+			pasteButton.textContent = "Ошибка!"
+			setTimeout(()=>{
+				pasteButton.classList.remove("main__button_error");
+				pasteButton.textContent = "Вставка отчета"
+			},1500)
+			return;
+		}
 		// Если никаких данных в localStorage нет - выходим из функции
 		if (localStorage.getItem("MJIDATA") === null) {
 			pasteButton.classList.add("main__button_error");
@@ -2119,6 +2145,16 @@ function app() {
 	}
 
 	function clearData() {
+		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
+		if(currentPage !== "main") {
+			clearDataButton.classList.add("main__button_error");
+			clearDataButton.textContent = "Ошибка!"
+			setTimeout(()=>{
+				clearDataButton.classList.remove("main__button_error");
+				clearDataButton.textContent = "Очистка отчета"
+			},1500)
+			return;
+		}
 		const repairProjectsTable = form.querySelector("#group_22130");
 		const repairProjectsTableRows = repairProjectsTable.querySelectorAll("tr");
 		const conclusionsPrevSurvey = form.querySelector("#gridSql_22131").querySelector(".data");
@@ -2461,11 +2497,27 @@ function app() {
 
 	function downloadPhotos(evt) {
 		evt.preventDefault();
-		if (currentPage === "main") {
+		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
+		if(currentPage === "main") {
+			submitButton.classList.add("form__button_error");
+			submitButton.value = "Ошибка!"
+			setTimeout(()=>{
+				submitButton.classList.remove("form__button_error");
+				submitButton.value = "Загрузить"
+			},1500)
 			return;
 		}
 		const files = formInput.files;
 		let counter = 0;
+		if(files.length < 1) {
+			submitButton.classList.add("form__button_error");
+			submitButton.value = "Ошибка!"
+			setTimeout(()=>{
+				submitButton.classList.remove("form__button_error");
+				submitButton.value = "Загрузить"
+			},1500)
+			return;
+		}
 		const interval = setInterval(upload, 3000);
 		const saveButton = html.querySelector("#buttonFormSave");
 		const addImgBtnContainer = html.querySelector("#\\32 1184 > caption");
