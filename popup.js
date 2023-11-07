@@ -8,30 +8,39 @@ function initialization(evt) {
 		if (tab) {
 			chrome.scripting.executeScript({
 				target: { tabId: tab.id, allFrames: true },
-				func: app,
+				func: launchApp,
 			});
 		}
 	});
 }
 
-function app() {
-	let html, wholeAddress, isIFrame, iFrame, currentPage, form;
+function launchApp() {
+	let html, wholeAddress, isIFrame, iFrame, form, currentPage, auth, app, tabs, tabsContent;
+
+	const authData = {
+		login: "admin",
+		password: "admin",
+	};
 
 	// Предотвращение двойного старта
-	if (!localStorage.getItem("appStarted")) {
-		localStorage.setItem("appStarted", true);
+	if (!localStorage.getItem("status")) {
+		setToStorage(false, true, null);
 	} else {
-		try{
-			if(document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".app") || document.querySelector(".app")){
+		try {
+			if (document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".app") || document.querySelector(".app")) {
 				return;
 			}
-		} catch {}
+		} catch {
+			return;
+		}
 	}
 
 	// Определение наличия iFrame
 	try {
 		iFrame = document.querySelector("#formCanvas");
-		isIFrame = true;
+		if (iFrame) {
+			isIFrame = true;
+		}
 	} catch {
 		isIFrame = false;
 	}
@@ -51,7 +60,58 @@ function app() {
 	// Встраивание приложения в страницу
 	const htmlHead = html.querySelector("head");
 	const htmlBody = html.querySelector("body");
-	const popupLayout = `<div class="app">
+
+	// Определение страницы встраивания
+	if (htmlBody.querySelector("#formData107")) {
+		form = htmlBody.querySelector("#formData107");
+		currentPage = "photo";
+		createPopup(currentPage);
+	} else {
+		form = htmlBody.querySelector("#formData181");
+		currentPage = "main";
+		createPopup(currentPage);
+	}
+	setToStorage(true, true, null);
+	checkAuth();
+
+	const dragIco = app.querySelector(".header__drag-button");
+	const inputDate = app.querySelector("#date");
+	const cleanButton = app.querySelector("#cleanButton");
+	const minimizeButton = app.querySelector("#minimizeButton");
+	const closeButton = app.querySelector("#closeButton");
+	const copyButton = app.querySelector("#copy");
+	const clearDataButton = app.querySelector("#clean");
+	const pasteButton = app.querySelector("#paste");
+	const photoDownload = app.querySelector(".form");
+	const formInput = app.querySelector("#file");
+	const submitButton = app.querySelector(".form__button");
+	const authForm = app.querySelector(".auth");
+	const login = authForm.querySelector("#login");
+	const password = authForm.querySelector("#password");
+	const authErrors = authForm.querySelectorAll(".auth__error");
+
+	// Listeners
+	dragIco.addEventListener("mousedown", startDraggingDiv);
+	dragIco.addEventListener("dragstart", removeDefaultDrag);
+	cleanButton.addEventListener("click", clearCache);
+	minimizeButton.addEventListener("click", minimizeApp);
+	closeButton.addEventListener("click", closeApp);
+	clearDataButton.addEventListener("click", clearData);
+	copyButton.addEventListener("click", saveData);
+	pasteButton.addEventListener("click", loadData);
+	photoDownload.addEventListener("submit", downloadPhotos);
+	authForm.addEventListener("submit", authorization);
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			changeTab(tab);
+		});
+	});
+
+	setInitialDate(inputDate);
+
+	// Функционал приложения
+	function createPopup(currentPage) {
+		const popupLayout = `<div class="app app_not-auth">
 		<div class="header">
 			<div class="header__title-wrapper">
 				<div class="header__logo">
@@ -106,6 +166,20 @@ function app() {
 			</div>
 		</div>
 
+		<div class="auth">
+			<form action="submit" class="auth__form">
+				<div class="auth__input-wrapper">
+					<input type="text" class="auth__input" placeholder="Логин" id="login" required />
+					<span class="auth__error">Не верный логин</span>
+				</div>
+				<div class="auth__input-wrapper">
+					<input type="password" class="auth__input" placeholder="Пароль" id="password" required />
+					<span class="auth__error">Или пароль</span>
+				</div>
+				<input type="submit" class="auth__button" value="Войти" />
+			</form>
+		</div>
+
 		<div class="tabs">
 			<button class="tabs__button" id="main">Основное</button>
 			<button class="tabs__button" id="photo">Фото</button>
@@ -132,8 +206,8 @@ function app() {
 				</form>
 			</div>
 		</div>
-		</div>`;
-	const stylesLayout = `<style>
+	</div>`;
+		const stylesLayout = `<style>
 		* {
 			padding: 0;
 			margin: 0;
@@ -153,8 +227,8 @@ function app() {
 		  }
 		  .app_minimized {
 			top: unset !important;
-    		bottom: 0 !important;
-    		left: unset !important;
+			bottom: 0 !important;
+			left: unset !important;
 			max-height: 48px;
 			width: auto;
 		  }
@@ -164,6 +238,21 @@ function app() {
 		  }
 		  .app_minimized #minimizeButton {
 			transform: rotate(180deg);
+		  }
+		  .app_not-auth {
+			width: 330px;
+		  }
+		  .app_not-auth #cleanButton {
+			display: none;
+		  }
+		  .app_not-auth .tabs {
+			display: none !important;
+		  }
+		  .app_not-auth .main {
+			display: none !important;
+		  }
+		  .app_not-auth .auth {
+			display: block !important;
 		  }
 		  
 		  .header {
@@ -188,7 +277,6 @@ function app() {
 		  
 		  .header__title {
 			color: #1a1a18;
-			
 			font-size: 20px;
 			font-style: normal;
 			font-weight: 400;
@@ -198,7 +286,7 @@ function app() {
 		  .header__drag-button {
 			position: absolute;
 			top: 2px;
-			left: calc(50% - (20px / 2));
+			left: calc(50% - 10px);
 			height: 6px;
 			display: flex;
 			align-items: center;
@@ -222,37 +310,97 @@ function app() {
 			cursor: pointer;
 			align-items: flex-end;
 		  }
+		  
 		  .header__button:hover {
 			opacity: 0.7;
 			transition: opacity 0.3s;
 		  }
-
-		  	.app_minimized .header {
-				gap: 20px;
-			}
-
-			.animation {
-				animation: colorChange;
-				animation-duration: 1s;
-				animation-timing-function: ease-in-out;
-				animation-fill-mode: both;
-				animation-direction: normal;
-				animation-iteration-count: 1;
-			
-			}
-			
-			@keyframes colorChange {
-				0% {
-					fill: #787878;
-				}
-				50% {
-					fill: #008000;
-				}
-				100% {
-					fill: #787878;
-				}
-			}
 		  
+		  .auth {
+			padding: 20px 10px;
+			display: none;
+		  }
+		  .auth__form {
+			display: flex;
+			width: 100%;
+			justify-content: center;
+			flex-direction: column;
+			gap: 10px;
+		  }
+		  .auth__input-wrapper {
+			display: flex;
+			align-items: center;
+			position: relative;
+		  }
+		  .auth__input {
+			width: 100%;
+			padding: 10px;
+			border: 1px solid #1f5473;
+			color: #1a1a18;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			height: 34px;
+			outline: none;
+		  }
+		  .auth__error {
+			color: #9f0000;
+			font-size: 14px;
+			position: absolute;
+			right: 10px;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s;
+		  }
+		  .auth__error_visible {
+			opacity: 1;
+			transition: opacity 0.3s;
+		  }
+		  .auth__button {
+			background: #1f5473;
+			border: none;
+			outline: none;
+			padding: 10px 30px;
+			text-align: center;
+			color: #fff;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			height: 34px;
+			cursor: pointer;
+			transition: opacity 0.3s;
+		  }
+		  .auth__button:hover {
+			opacity: 0.7;
+			transition: opacity 0.3s;
+		  }
+		  
+		  .app_minimized .header {
+			gap: 20px;
+		  }
+		  
+		  .animation {
+			animation: colorChange;
+			animation-duration: 1s;
+			animation-timing-function: ease-in-out;
+			animation-fill-mode: both;
+			animation-direction: normal;
+			animation-iteration-count: 1;
+		  }
+		  
+		  @keyframes colorChange {
+			0% {
+			  fill: #787878;
+			}
+			50% {
+			  fill: #008000;
+			}
+			100% {
+			  fill: #787878;
+			}
+		  }
 		  .tabs {
 			display: flex;
 			width: 100%;
@@ -270,7 +418,6 @@ function app() {
 			padding: 8px;
 			color: #1a1a18;
 			text-align: center;
-			
 			font-size: 14px;
 			font-style: normal;
 			font-weight: 400;
@@ -290,9 +437,11 @@ function app() {
 		  .main {
 			padding: 0 10px 20px 10px;
 		  }
+		  
 		  .content_deactive {
 			display: none !important;
-		  }		  
+		  }
+		  
 		  .content#main {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
@@ -311,137 +460,157 @@ function app() {
 			padding: 10px 0;
 			transition: opacity 0.3s;
 		  }
+		  
 		  .main__button:hover {
-			  transition: opacity 0.3s;
-			  opacity: 0.7;
-			  cursor: pointer;
+			transition: opacity 0.3s;
+			opacity: 0.7;
+			cursor: pointer;
 		  }
+		  
 		  .main__button_done {
 			color: #00931a !important;
 		  }
+		  
 		  .main__button_error {
 			color: #9f0000 !important;
 		  }
+		  
 		  .form__field {
-			  display: flex;
-			  flex-direction: column;
-			  gap: 10px;
-			  width: 100%;
-			  margin-bottom: 20px;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			width: 100%;
+			margin-bottom: 20px;
 		  }
 		  
 		  .form__label {
-			  color: #1A1A18;
-		  font-size: 12px;
-		  font-style: normal;
-		  font-weight: 400;
-		  line-height: 100%;
+			color: #1a1a18;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
 		  }
 		  
 		  .form__input[type=file]::file-selector-button {
-			  	width: 190px;
-			  	border: none;
-			  	background: #1F5473;
-			  	padding: 10px 30px;
-		  		margin-right: 10px;
-			  	color: #fff;
-			  cursor: pointer;
-			  transition: opacity 0.3s;
-			  font-size: 14px;
-			  font-style: normal;
-			  font-weight: 400;
-			  line-height: 100%;
-			}
-			.form__input[type=file]::file-selector-button:hover {
-			  transition: opacity 0.3s;
-			  opacity: 0.7;
-			}
-			.form__input[type=date] {
-			  width: 190px;
-			  border: 1px solid #1F5473;
-			  padding: 11px 10px;
-			  color: #1A1A18;
-		  font-size: 12px;
-		  font-style: normal;
-		  font-weight: 400;
-		  line-height: 100%;
-		  outline: none;
-			}
+			width: 190px;
+			border: none;
+			background: #1f5473;
+			padding: 10px 30px;
+			margin-right: 10px;
+			color: #fff;
+			cursor: pointer;
+			transition: opacity 0.3s;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+		  }
 		  
-			.form__button {
-			  width: 190px;
-			  outline: none;
-			  border: none;
-			  background: #1F5473;
-			  color: #FFF;
-			  transition: 0.3s;
-		  		font-size: 14px;
-		  		font-style: normal;
-		  		font-weight: 400;
-		  		line-height: 100%;
-		  		cursor: pointer;
-		  		padding: 10px 30px;
-			}
+		  .form__input[type=file]::file-selector-button:hover {
+			transition: opacity 0.3s;
+			opacity: 0.7;
+		  }
 		  
-			.form__button:hover {
-			  transition: 0.3s;
-			  opacity: 0.7;
-			}
-			.form__button_done {
-				background: #00931a !important;
-			}
+		  .form__input[type=date] {
+			width: 190px;
+			border: 1px solid #1f5473;
+			padding: 11px 10px;
+			color: #1a1a18;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			outline: none;
+		  }
+		  
+		  .form__button {
+			width: 190px;
+			outline: none;
+			border: none;
+			background: #1f5473;
+			color: #fff;
+			transition: 0.3s;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			cursor: pointer;
+			padding: 10px 30px;
+		  }
+		  
+		  .form__button:hover {
+			transition: 0.3s;
+			opacity: 0.7;
+		  }
+		  
+		  .form__button_done {
+			background: #00931a !important;
+		  }
 	  	</style>`;
 
-	// Определение страницы встраивания
-	if (htmlBody.querySelector("#formData107")) {
-		form = htmlBody.querySelector("#formData107");
-		currentPage = "photo";
-	} else {
-		form = htmlBody.querySelector("#formData181");
-		currentPage = "main";
+		htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
+		htmlBody.insertAdjacentHTML("afterBegin", popupLayout);
+
+		app = htmlBody.querySelector(".app");
+		tabs = app.querySelectorAll(".tabs__button");
+		tabsContent = app.querySelectorAll(".content");
+
+		// Установка табов и контента под текущую страницу
+		currentPage === "main" ? tabs[0].classList.add("tabs__button_active") : tabs[1].classList.add("tabs__button_active");
+		currentPage === "main" ? tabsContent[1].classList.add("content_deactive") : tabsContent[0].classList.add("content_deactive");
 	}
 
-	htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
-	htmlBody.insertAdjacentHTML("afterBegin", popupLayout);
+	function authorization(evt) {
+		evt.preventDefault();
+		if (login.value === authData.login && password.value === authData.password) {
+			app.classList.remove("app_not-auth");
+			setToStorage(null, null, true);
+		} else {
+			authErrors.forEach((error) => {
+				error.classList.add("auth__error_visible");
+				setToStorage(null, null, false);
+			});
+		}
+	}
 
-	const app = htmlBody.querySelector(".app");
-	const dragIco = app.querySelector(".header__drag-button");
-	const tabs = app.querySelectorAll(".tabs__button");
-	const tabsContent = app.querySelectorAll(".content");
-	const inputDate = app.querySelector("#date");
-	const cleanButton = app.querySelector("#cleanButton");
-	const minimizeButton = app.querySelector("#minimizeButton");
-	const closeButton = app.querySelector("#closeButton");
-	const copyButton = app.querySelector("#copy");
-	const clearDataButton = app.querySelector("#clean");
-	const pasteButton = app.querySelector("#paste");
-	const photoDownload = app.querySelector(".form");
-	const formInput = app.querySelector("#file");
-	const submitButton = app.querySelector(".form__button");
+	function checkAuth() {
+		if (localStorage.getItem("status")) {
+			const authStatus = JSON.parse(localStorage.getItem("status")).authorized;
 
-	// Listeners
-	dragIco.addEventListener("mousedown", startDraggingDiv);
-	dragIco.addEventListener("dragstart", removeDefaultDrag);
-	cleanButton.addEventListener("click", clearCache);
-	minimizeButton.addEventListener("click", minimizeApp);
-	closeButton.addEventListener("click", closeApp);
-	clearDataButton.addEventListener("click", clearData);
-	copyButton.addEventListener("click", saveData);
-	pasteButton.addEventListener("click", loadData);
-	photoDownload.addEventListener("submit", downloadPhotos);
-	tabs.forEach((tab) => {
-		tab.addEventListener("click", () => {
-			changeTab(tab);
-		});
-	});
+			if (authStatus) {
+				app.classList.remove("app_not-auth");
+			}
+		}
+	}
 
-	// Установка табов и контента под текущую страницу
-	currentPage === "main" ? tabs[0].classList.add("tabs__button_active") : tabs[1].classList.add("tabs__button_active");
-	currentPage === "main" ? tabsContent[1].classList.add("content_deactive") : tabsContent[0].classList.add("content_deactive");
+	function setToStorage(layout, init, authorized) {
+		let status;
+		if (localStorage.getItem("status")) {
+			status = JSON.parse(localStorage.getItem("status"));
+			if (layout !== null) {
+				status.layout = layout;
+			}
+			if (init !== null) {
+				status.init = init;
+			}
+			if (authorized !== null) {
+				status.authorized = authorized;
+			}
+		} else {
+			status = {};
+			if (layout !== null) {
+				status.layout = layout;
+			}
+			if (init !== null) {
+				status.init = init;
+			}
+			if (authorized !== null) {
+				status.authorized = authorized;
+			}
+		}
+		localStorage.setItem("status", JSON.stringify(status));
+	}
 
-	setInitialDate(inputDate);
-
-	// Функционал приложения
 	function clearCache() {
 		cleanButton.firstElementChild.firstElementChild.classList.add("animation");
 		localStorage.removeItem("MJIDATA");
@@ -464,8 +633,9 @@ function app() {
 		minimizeButton.removeEventListener("click", minimizeApp);
 		closeButton.removeEventListener("click", closeApp);
 		dragIco.removeEventListener("mousedown", startDraggingDiv);
-		localStorage.removeItem("appStarted");
+		setToStorage(false, false, null);
 		app.remove();
+		htmlHead.querySelector("style").remove();
 	}
 
 	function setInitialDate(tag) {
@@ -503,7 +673,6 @@ function app() {
 	function startDraggingDiv(event) {
 		dragIco.style.cursor = "grabbing";
 		let shiftX = event.clientX - app.getBoundingClientRect().left;
-		let shiftY = event.clientY - app.getBoundingClientRect().top;
 
 		html.addEventListener("mousemove", onMouseMove);
 		html.addEventListener("mouseup", () => {
@@ -528,17 +697,26 @@ function app() {
 		return false;
 	}
 
+	function buttonError(button, currentPage, needPage, stdValue) {
+		if (currentPage !== needPage) {
+			button.classList.add("main__button_error");
+			button.textContent = "Ошибка!";
+			setTimeout(() => {
+				button.classList.remove("main__button_error");
+				button.textContent = stdValue;
+			}, 1500);
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 	function saveData() {
 		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
-		if (currentPage !== "main") {
-			copyButton.classList.add("main__button_error");
-			copyButton.textContent = "Ошибка!";
-			setTimeout(() => {
-				copyButton.classList.remove("main__button_error");
-				copyButton.textContent = "Копирование отчета";
-			}, 1500);
+		if (!buttonError(copyButton, currentPage, "main", "Копирование отчета")) {
 			return;
 		}
+
 		const area = wholeAddress.split(",")[0];
 		const district = wholeAddress.split(",")[1];
 		const address = htmlBody.querySelector("#comboboxTextcomp_12339").value;
@@ -1779,15 +1957,10 @@ function app() {
 
 	function loadData() {
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
-		if (currentPage !== "main") {
-			pasteButton.classList.add("main__button_error");
-			pasteButton.textContent = "Ошибка!";
-			setTimeout(() => {
-				pasteButton.classList.remove("main__button_error");
-				pasteButton.textContent = "Вставка отчета";
-			}, 1500);
+		if (!buttonError(pasteButton, currentPage, "main", "Вставка отчета")) {
 			return;
 		}
+
 		// Если никаких данных в localStorage нет - выходим из функции
 		if (localStorage.getItem("MJIDATA") === null) {
 			pasteButton.classList.add("main__button_error");
@@ -2147,15 +2320,10 @@ function app() {
 
 	function clearData() {
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
-		if (currentPage !== "main") {
-			clearDataButton.classList.add("main__button_error");
-			clearDataButton.textContent = "Ошибка!";
-			setTimeout(() => {
-				clearDataButton.classList.remove("main__button_error");
-				clearDataButton.textContent = "Очистка отчета";
-			}, 1500);
+		if (!buttonError(clearDataButton, currentPage, "main", "Очистка отчета")) {
 			return;
 		}
+
 		const repairProjectsTable = form.querySelector("#group_22130");
 		const repairProjectsTableRows = repairProjectsTable.querySelectorAll("tr");
 		const conclusionsPrevSurvey = form.querySelector("#gridSql_22131").querySelector(".data");
@@ -2499,15 +2667,10 @@ function app() {
 	function downloadPhotos(evt) {
 		evt.preventDefault();
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
-		if (currentPage === "main") {
-			submitButton.classList.add("form__button_error");
-			submitButton.value = "Ошибка!";
-			setTimeout(() => {
-				submitButton.classList.remove("form__button_error");
-				submitButton.value = "Загрузить";
-			}, 1500);
+		if (!buttonError(submitButton, currentPage, "photo", "Загрузить")) {
 			return;
 		}
+
 		const files = formInput.files;
 		let counter = 0;
 		if (files.length < 1) {
