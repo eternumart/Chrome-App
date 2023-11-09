@@ -20,11 +20,12 @@ function launchApp() {
 	const authData = {
 		login: "admin",
 		password: "admin",
+		uid: ""
 	};
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
-		setToStorage(false, true, null);
+		setToStorage(false, true, null, null);
 	} else {
 		try {
 			if (document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".app") || document.querySelector(".app")) {
@@ -71,7 +72,7 @@ function launchApp() {
 		currentPage = "main";
 		createPopup(currentPage);
 	}
-	setToStorage(true, true, null);
+	setToStorage(true, true, null, null);
 	checkAuth();
 
 	const dragIco = app.querySelector(".header__drag-button");
@@ -564,14 +565,23 @@ function launchApp() {
 		evt.preventDefault();
 		if (login.value === authData.login && password.value === authData.password) {
 			app.classList.remove("app_not-auth");
-			setToStorage(null, null, true);
+			const uid = generateID();
+			authData.uid = uid;
+			setToStorage(null, null, true, uid);
 		} else {
 			authErrors.forEach((error) => {
 				error.classList.add("auth__error_visible");
-				setToStorage(null, null, false);
+				setToStorage(null, null, false, null);
 			});
 		}
 	}
+
+	function generateID() {
+		const time = Date.now();
+		const randomNumber = Math.floor(Math.random() * 1000000001);
+		const uniqueId = `${time}_${randomNumber}`;
+		return uniqueId;
+	} 
 
 	function checkAuth() {
 		if (localStorage.getItem("status")) {
@@ -583,7 +593,7 @@ function launchApp() {
 		}
 	}
 
-	function setToStorage(layout, init, authorized) {
+	function setToStorage(layout, init, authorized, uid) {
 		let status;
 		if (localStorage.getItem("status")) {
 			status = JSON.parse(localStorage.getItem("status"));
@@ -596,6 +606,9 @@ function launchApp() {
 			if (authorized !== null) {
 				status.authorized = authorized;
 			}
+			if(uid !== null) {
+				status.uid = uid;
+			}
 		} else {
 			status = {};
 			if (layout !== null) {
@@ -606,6 +619,9 @@ function launchApp() {
 			}
 			if (authorized !== null) {
 				status.authorized = authorized;
+			}
+			if(uid !== null) {
+				status.uid = uid;
 			}
 		}
 		localStorage.setItem("status", JSON.stringify(status));
