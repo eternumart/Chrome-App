@@ -3,6 +3,9 @@
 	margin: 0;
 	box-sizing: border-box;
 }
+body {
+	width: 300px;
+}
 
 .app {
 	font-family: Inter;
@@ -117,7 +120,7 @@
 
 .auth {
 	padding: 20px 10px;
-	display: none;
+	//display: none;
 
 	&__form {
 		display: flex;

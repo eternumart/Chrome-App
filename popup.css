@@ -4,6 +4,10 @@
   box-sizing: border-box;
 }
 
+body {
+  width: 300px;
+}
+
 .app {
   font-family: Inter;
   z-index: 999;
@@ -108,7 +112,6 @@
 
 .auth {
   padding: 20px 10px;
-  display: none;
 }
 .auth__form {
   display: flex;

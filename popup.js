@@ -1,8 +1,4 @@
-document.addEventListener("DOMContentLoaded", initialization);
-
-function initialization(evt) {
-	evt.preventDefault();
-
+function initialization() {
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {
@@ -14,14 +10,76 @@ function initialization(evt) {
 	});
 }
 
+const authForm = document.querySelector(".auth");
+const login = authForm.querySelector("#login");
+const password = authForm.querySelector("#password");
+const key = authForm.querySelector("#key");
+const authErrors = authForm.querySelectorAll(".auth__error");
+const maskOptions = {
+	mask: "XXXX-XXXX-XXXX-XXXX",
+};
+IMask(key, maskOptions);
+
+authForm.addEventListener("submit", authorization);
+
+const authData = {
+	login: "admin",
+	password: "admin",
+	uid: "",
+};
+
+const fakeData = {
+	login: "admin",
+	password: "admin",
+	key: "HjDf-AS1w-Tt00-14Gt",
+};
+
+function authorization(evt) {
+	evt.preventDefault();
+	if (login.value === authData.login && password.value === authData.password) {
+		const uid = generateID();
+		authData.uid = uid;
+		toServerTest(fakeData);
+	} else {
+		authErrors.forEach((error) => {
+			error.classList.add("auth__error_visible");
+			setToStorage(null, null, false, null);
+		});
+	}
+}
+
+function generateID() {
+	const time = Date.now();
+	const randomNumber = Math.floor(Math.random() * 1000000001);
+	const uniqueId = `${time}_${randomNumber}`;
+	return uniqueId;
+}
+
+function toServerTest(someData) {
+	fetch("http://192.168.0.60:3000/status", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json;charset=utf-8",
+		},
+		body: JSON.stringify(someData),
+	})
+		.then(checkResponse)
+		.then((res) => {
+			if (res.loginIsPossible) {
+				initialization();
+			}
+		});
+}
+
+function checkResponse(res) {
+	if (res.ok) {
+		return res.json();
+	}
+	return Promise.reject(`Ошибка: ${res.status}`);
+}
+
 function launchApp() {
 	let html, wholeAddress, isIFrame, iFrame, form, currentPage, auth, app, tabs, tabsContent;
-
-	const authData = {
-		login: "admin",
-		password: "admin",
-		uid: ""
-	};
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
@@ -90,6 +148,12 @@ function launchApp() {
 	const login = authForm.querySelector("#login");
 	const password = authForm.querySelector("#password");
 	const authErrors = authForm.querySelectorAll(".auth__error");
+
+	const fakeData = {
+		login: "admin",
+		password: "admin",
+		key: "HjDf-AS1w-Tt00-14Gt",
+	};
 
 	// Listeners
 	dragIco.addEventListener("mousedown", startDraggingDiv);
@@ -568,6 +632,7 @@ function launchApp() {
 			const uid = generateID();
 			authData.uid = uid;
 			setToStorage(null, null, true, uid);
+			toServerTest(fakeData);
 		} else {
 			authErrors.forEach((error) => {
 				error.classList.add("auth__error_visible");
@@ -581,7 +646,7 @@ function launchApp() {
 		const randomNumber = Math.floor(Math.random() * 1000000001);
 		const uniqueId = `${time}_${randomNumber}`;
 		return uniqueId;
-	} 
+	}
 
 	function checkAuth() {
 		if (localStorage.getItem("status")) {
@@ -606,7 +671,7 @@ function launchApp() {
 			if (authorized !== null) {
 				status.authorized = authorized;
 			}
-			if(uid !== null) {
+			if (uid !== null) {
 				status.uid = uid;
 			}
 		} else {
@@ -620,7 +685,7 @@ function launchApp() {
 			if (authorized !== null) {
 				status.authorized = authorized;
 			}
-			if(uid !== null) {
+			if (uid !== null) {
 				status.uid = uid;
 			}
 		}
