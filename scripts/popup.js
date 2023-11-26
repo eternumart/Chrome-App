@@ -1,3 +1,169 @@
+const formsTabs = document.querySelectorAll(".tabs__button");
+const formsAll = document.querySelectorAll(".auth__form");
+const loginForm = document.querySelector(".auth__form_login");
+const loginFormLogin = loginForm.querySelector("#login");
+const loginFormPassword = loginForm.querySelector("#password");
+const loginFormErrors = loginForm.querySelectorAll(".auth__error");
+const activateForm = document.querySelector(".auth__form_active");
+const activateFormLogin = activateForm.querySelector("#login");
+const activateFormPassword = activateForm.querySelector("#password");
+const activateFormKey = activateForm.querySelector("#key");
+const activateFormButton = activateForm.querySelector(".auth__button");
+const activateFormErrors = activateForm.querySelectorAll(".auth__error");
+
+// Временный конфиг для API обращений
+const serverConfig = {
+	ip: {
+		buhgalteriya: "192.168.13.16",
+		servernaya: "192.168.0.60",
+		home: "192.168.0.110",
+		officeWiFi: "172.24.208.1",
+	},
+	port: 3000,
+};
+
+const currentDEVIP = serverConfig.ip.home;
+
+activateFormButton.addEventListener("click", () => {
+	activate();
+});
+loginForm.addEventListener("submit", logIn);
+formsTabs.forEach((tab) => {
+	tab.addEventListener("click", () => {
+		changeTab(tab);
+	});
+});
+
+function changeTab(clickedTab) {
+	formsTabs.forEach((tab) => {
+		if (tab === clickedTab) {
+			tab.classList.add("tabs__button_active");
+		} else {
+			tab.classList.remove("tabs__button_active");
+		}
+	});
+	formsAll.forEach((form) => {
+		if (clickedTab.id === form.id) {
+			form.classList.add("auth__form_active");
+		} else {
+			form.classList.remove("auth__form_active");
+		}
+	});
+}
+
+async function activate(evt) {
+	evt.preventDefault();
+	debugger;
+	const usid = generateID();
+	const loginValue = activateFormLogin.value;
+	const passValue = activateFormPassword.value;
+	const keyValue = activateFormKey.value;
+
+	const activation = await checkActivation(loginValue, passValue, keyValue);
+	if (!activation) {
+		activateFormErrors[2].classList.add("auth__error_visible");
+	}
+	setUsid(usid);
+	initialization();
+}
+
+function logIn(evt) {
+	evt.preventDefault();
+}
+
+function generateID() {
+	const time = Date.now();
+	const randomNumber = Math.floor(Math.random() * 1000000001);
+	const usid = `${time}_${randomNumber}`;
+	return usid;
+}
+
+async function checkActivation(log, pass, key) {
+	let result;
+	const data = {
+		login: log,
+		pass: pass,
+		key: key,
+	};
+	debugger;
+	chrome.runtime.sendMessage(
+		{
+			contentScriptQuery: "postData",
+			data: data,
+			url: `http://${currentDEVIP}:${serverConfig.port}/activation`,
+		},
+		function (res) {
+			debugger;
+			if (res != undefined && res != "") {
+				callback(res);
+				result = res;
+			} else {
+				debugger;
+				callback(null);
+			}
+		}
+	);
+
+	// const result = await sendData(data, "activation");
+	return result;
+}
+
+async function setUsid(usidValue) {
+	const data = {
+		usid: usidValue,
+	};
+
+	chrome.runtime.sendMessage(
+		{
+			contentScriptQuery: "postData",
+			data: usid,
+			url: `http://${currentDEVIP}:${serverConfig.port}/setusid`,
+		},
+		function (res) {
+			debugger;
+			if (res != undefined && res != "") {
+				callback(res);
+				result = res;
+			} else {
+				debugger;
+				callback(null);
+			}
+		}
+	);
+
+	sendData(data, "setUsid");
+	localStorage.setItem("usid", usid);
+}
+
+chrome.runtime.sendMessage(
+	{
+		contentScriptQuery: "fetchUrl",
+		url: `http://${currentDEVIP}/activation`,
+	},
+	(response) => parsePrice(response.text())
+);
+
+// async function sendData(data, path) {
+// 	fetch(`http://${currentDEVIP}:${serverConfig.port}/${path}`, {
+// 		method: "POST",
+// 		headers: {
+// 			"Content-Type": "application/json;charset=utf-8",
+// 		},
+// 		body: JSON.stringify(data),
+// 	})
+// 		.then(checkResponse)
+// 		.then((res) => {
+// 			return res;
+// 		});
+// }
+
+function checkResponse(res) {
+	if (res.ok) {
+		return res.json();
+	}
+	return Promise.reject(`Ошибка: ${res.status}`);
+}
+
 function initialization() {
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
@@ -10,76 +176,8 @@ function initialization() {
 	});
 }
 
-const authForm = document.querySelector(".auth");
-const login = authForm.querySelector("#login");
-const password = authForm.querySelector("#password");
-const key = authForm.querySelector("#key");
-const authErrors = authForm.querySelectorAll(".auth__error");
-const maskOptions = {
-	mask: "XXXX-XXXX-XXXX-XXXX",
-};
-IMask(key, maskOptions);
-
-authForm.addEventListener("submit", authorization);
-
-const authData = {
-	login: "admin",
-	password: "admin",
-	uid: "",
-};
-
-const fakeData = {
-	login: "admin",
-	password: "admin",
-	key: "HjDf-AS1w-Tt00-14Gt",
-};
-
-function authorization(evt) {
-	evt.preventDefault();
-	if (login.value === authData.login && password.value === authData.password) {
-		const uid = generateID();
-		authData.uid = uid;
-		toServerTest(fakeData);
-	} else {
-		authErrors.forEach((error) => {
-			error.classList.add("auth__error_visible");
-			setToStorage(null, null, false, null);
-		});
-	}
-}
-
-function generateID() {
-	const time = Date.now();
-	const randomNumber = Math.floor(Math.random() * 1000000001);
-	const uniqueId = `${time}_${randomNumber}`;
-	return uniqueId;
-}
-
-function toServerTest(someData) {
-	fetch("http://192.168.0.60:3000/status", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json;charset=utf-8",
-		},
-		body: JSON.stringify(someData),
-	})
-		.then(checkResponse)
-		.then((res) => {
-			if (res.loginIsPossible) {
-				initialization();
-			}
-		});
-}
-
-function checkResponse(res) {
-	if (res.ok) {
-		return res.json();
-	}
-	return Promise.reject(`Ошибка: ${res.status}`);
-}
-
 function launchApp() {
-	let html, wholeAddress, isIFrame, iFrame, form, currentPage, auth, app, tabs, tabsContent;
+	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
@@ -143,17 +241,6 @@ function launchApp() {
 	const pasteButton = app.querySelector("#paste");
 	const photoDownload = app.querySelector(".form");
 	const formInput = app.querySelector("#file");
-	const submitButton = app.querySelector(".form__button");
-	const authForm = app.querySelector(".auth");
-	const login = authForm.querySelector("#login");
-	const password = authForm.querySelector("#password");
-	const authErrors = authForm.querySelectorAll(".auth__error");
-
-	const fakeData = {
-		login: "admin",
-		password: "admin",
-		key: "HjDf-AS1w-Tt00-14Gt",
-	};
 
 	// Listeners
 	dragIco.addEventListener("mousedown", startDraggingDiv);
@@ -165,7 +252,6 @@ function launchApp() {
 	copyButton.addEventListener("click", saveData);
 	pasteButton.addEventListener("click", loadData);
 	photoDownload.addEventListener("submit", downloadPhotos);
-	authForm.addEventListener("submit", authorization);
 	tabs.forEach((tab) => {
 		tab.addEventListener("click", () => {
 			changeTab(tab);
@@ -201,7 +287,7 @@ function launchApp() {
 						/>
 					</svg>
 				</div>
-				<h1 class="header__title">МЖИ менеджер v1.5.0</h1>
+				<h1 class="header__title">МЖИ менеджер v2.0.0</h1>
 			</div>
 			<div class="header__drag-button">
 				<svg width="20" height="6" viewBox="0 0 20 6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -231,20 +317,6 @@ function launchApp() {
 			</div>
 		</div>
 
-		<div class="auth">
-			<form action="submit" class="auth__form">
-				<div class="auth__input-wrapper">
-					<input type="text" class="auth__input" placeholder="Логин" id="login" required />
-					<span class="auth__error">Не верный логин</span>
-				</div>
-				<div class="auth__input-wrapper">
-					<input type="password" class="auth__input" placeholder="Пароль" id="password" required />
-					<span class="auth__error">Или пароль</span>
-				</div>
-				<input type="submit" class="auth__button" value="Войти" />
-			</form>
-		</div>
-
 		<div class="tabs">
 			<button class="tabs__button" id="main">Основное</button>
 			<button class="tabs__button" id="photo">Фото</button>
@@ -271,7 +343,7 @@ function launchApp() {
 				</form>
 			</div>
 		</div>
-	</div>`;
+		</div>`;
 		const stylesLayout = `<style>
 		* {
 			padding: 0;
@@ -623,39 +695,6 @@ function launchApp() {
 		// Установка табов и контента под текущую страницу
 		currentPage === "main" ? tabs[0].classList.add("tabs__button_active") : tabs[1].classList.add("tabs__button_active");
 		currentPage === "main" ? tabsContent[1].classList.add("content_deactive") : tabsContent[0].classList.add("content_deactive");
-	}
-
-	function authorization(evt) {
-		evt.preventDefault();
-		if (login.value === authData.login && password.value === authData.password) {
-			app.classList.remove("app_not-auth");
-			const uid = generateID();
-			authData.uid = uid;
-			setToStorage(null, null, true, uid);
-			toServerTest(fakeData);
-		} else {
-			authErrors.forEach((error) => {
-				error.classList.add("auth__error_visible");
-				setToStorage(null, null, false, null);
-			});
-		}
-	}
-
-	function generateID() {
-		const time = Date.now();
-		const randomNumber = Math.floor(Math.random() * 1000000001);
-		const uniqueId = `${time}_${randomNumber}`;
-		return uniqueId;
-	}
-
-	function checkAuth() {
-		if (localStorage.getItem("status")) {
-			const authStatus = JSON.parse(localStorage.getItem("status")).authorized;
-
-			if (authStatus) {
-				app.classList.remove("app_not-auth");
-			}
-		}
 	}
 
 	function setToStorage(layout, init, authorized, uid) {

@@ -1,14 +1,9 @@
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-body {
+.manager-app {
   width: 300px;
+  margin: 0;
 }
 
-.app {
+.mji-manager-app {
   font-family: Inter;
   z-index: 999;
   background: #fff;
@@ -19,33 +14,33 @@ body {
   border-radius: 10px;
   box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
 }
-.app_minimized {
+.mji-manager-app_minimized {
   top: unset !important;
   bottom: 0 !important;
   left: unset !important;
   max-height: 48px;
   width: auto;
 }
-.app_minimized .header__drag-button,
-.app_minimized #cleanButton {
+.mji-manager-app_minimized .header__drag-button,
+.mji-manager-app_minimized #cleanButton {
   display: none;
 }
-.app_minimized #minimizeButton {
+.mji-manager-app_minimized #minimizeButton {
   transform: rotate(180deg);
 }
-.app_not-auth {
+.mji-manager-app_not-auth {
   width: 330px;
 }
-.app_not-auth #cleanButton {
+.mji-manager-app_not-auth #cleanButton {
   display: none;
 }
-.app_not-auth .tabs {
+.mji-manager-app_not-auth .tabs {
   display: none !important;
 }
-.app_not-auth .main {
+.mji-manager-app_not-auth .main {
   display: none !important;
 }
-.app_not-auth .auth {
+.mji-manager-app_not-auth .auth {
   display: block !important;
 }
 
@@ -114,11 +109,14 @@ body {
   padding: 20px 10px;
 }
 .auth__form {
-  display: flex;
+  display: none;
   width: 100%;
   justify-content: center;
   flex-direction: column;
   gap: 10px;
+}
+.auth__form_active {
+  display: flex;
 }
 .auth__input-wrapper {
   display: flex;
@@ -136,6 +134,7 @@ body {
   line-height: 100%;
   height: 34px;
   outline: none;
+  box-sizing: border-box;
 }
 .auth__error {
   color: #9f0000;
