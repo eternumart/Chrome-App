@@ -26,6 +26,8 @@ console.log("background.js working...");
 // });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	console.log(request.json(), sender, sendResponse)
+	debugger
 	if (request.contentScriptQuery == "fetchUrl") {
 		// WARNING: SECURITY PROBLEM - a malicious web page may abuse
 		// the message handler to get access to arbitrary cross-origin

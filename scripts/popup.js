@@ -22,7 +22,7 @@ const serverConfig = {
 	port: 3000,
 };
 
-const currentDEVIP = serverConfig.ip.home;
+const currentDEVIP = serverConfig.ip.servernaya;
 
 activateFormButton.addEventListener("click", () => {
 	activate();
@@ -140,7 +140,7 @@ chrome.runtime.sendMessage(
 		contentScriptQuery: "fetchUrl",
 		url: `http://${currentDEVIP}/activation`,
 	},
-	(response) => parsePrice(response.text())
+	(response) => console.log(response)
 );
 
 // async function sendData(data, path) {
