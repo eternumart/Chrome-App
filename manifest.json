@@ -8,7 +8,7 @@
 		"512": "icons/ico512.png"
 	},
 	"action": {
-		"default_popup": "popup.html"
+		"default_popup": "mji-app.html"
 	},
 	"permissions": ["scripting", "activeTab", "storage", "webRequest", "debugger"],
 	"host_permissions": ["http://*/*", "https://*/*"],

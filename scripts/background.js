@@ -26,15 +26,59 @@ console.log("background.js working...");
 // });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	console.log(request.json(), sender, sendResponse)
-	debugger
-	if (request.contentScriptQuery == "fetchUrl") {
+	if (request.contentScriptQuery == "activation") {
 		// WARNING: SECURITY PROBLEM - a malicious web page may abuse
 		// the message handler to get access to arbitrary cross-origin
 		// resources.
-		fetch(request.url)
-			.then((response) => response.text())
-			.then((text) => sendResponse(text));
+		console.log(`${request.url}`);
+		fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: "somedata" }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				return res;
+			});
+		return true; // Will respond asynchronously.
+	}
+	if (request.contentScriptQuery == "checkActivation") {
+		console.log(`${request.url}`);
+		fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				sendResponse(res);
+			});
+		return true; // Will respond asynchronously.
+	}
+	if (request.contentScriptQuery == "setUsid") {
+		fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				sendResponse(res);
+			});
 		return true; // Will respond asynchronously.
 	}
 });
+
+function checkResponse(res) {
+	if (res.ok) {
+		console.log("res OK");
+		return res.json();
+	}
+	return Promise.reject(`Ошибка: ${res.status}`);
+}

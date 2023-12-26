@@ -1,14 +1,16 @@
 const formsTabs = document.querySelectorAll(".tabs__button");
 const formsAll = document.querySelectorAll(".auth__form");
+
 const loginForm = document.querySelector(".auth__form_login");
 const loginFormLogin = loginForm.querySelector("#login");
 const loginFormPassword = loginForm.querySelector("#password");
 const loginFormErrors = loginForm.querySelectorAll(".auth__error");
-const activateForm = document.querySelector(".auth__form_active");
+
+const activateForm = document.querySelector(".auth__form_first");
 const activateFormLogin = activateForm.querySelector("#login");
 const activateFormPassword = activateForm.querySelector("#password");
 const activateFormKey = activateForm.querySelector("#key");
-const activateFormButton = activateForm.querySelector(".auth__button");
+const activateFormButton = activateForm.querySelector("#activate-btn");
 const activateFormErrors = activateForm.querySelectorAll(".auth__error");
 
 // Временный конфиг для API обращений
@@ -25,9 +27,10 @@ const serverConfig = {
 const currentDEVIP = serverConfig.ip.servernaya;
 
 activateFormButton.addEventListener("click", () => {
+	console.log("activate ... ");
 	activate();
 });
-loginForm.addEventListener("submit", logIn);
+//loginForm.addEventListener("submit", logIn);
 formsTabs.forEach((tab) => {
 	tab.addEventListener("click", () => {
 		changeTab(tab);
@@ -35,6 +38,7 @@ formsTabs.forEach((tab) => {
 });
 
 function changeTab(clickedTab) {
+	debugger;
 	formsTabs.forEach((tab) => {
 		if (tab === clickedTab) {
 			tab.classList.add("tabs__button_active");
@@ -51,8 +55,7 @@ function changeTab(clickedTab) {
 	});
 }
 
-async function activate(evt) {
-	evt.preventDefault();
+async function activate() {
 	debugger;
 	const usid = generateID();
 	const loginValue = activateFormLogin.value;
@@ -63,13 +66,13 @@ async function activate(evt) {
 	if (!activation) {
 		activateFormErrors[2].classList.add("auth__error_visible");
 	}
-	setUsid(usid);
-	initialization();
+	if (activation.data) {
+		setUsid(loginValue, passValue, keyValue, usid);
+		initialization();
+	}
 }
 
-function logIn(evt) {
-	evt.preventDefault();
-}
+function logIn() {}
 
 function generateID() {
 	const time = Date.now();
@@ -85,20 +88,18 @@ async function checkActivation(log, pass, key) {
 		pass: pass,
 		key: key,
 	};
-	debugger;
 	chrome.runtime.sendMessage(
 		{
-			contentScriptQuery: "postData",
+			contentScriptQuery: "checkActivation",
 			data: data,
-			url: `http://${currentDEVIP}:${serverConfig.port}/activation`,
+			url: `http://${currentDEVIP}:${serverConfig.port}/checkActivation`,
 		},
 		function (res) {
-			debugger;
+			console.log(res);
 			if (res != undefined && res != "") {
 				callback(res);
 				result = res;
 			} else {
-				debugger;
 				callback(null);
 			}
 		}
@@ -108,15 +109,19 @@ async function checkActivation(log, pass, key) {
 	return result;
 }
 
-async function setUsid(usidValue) {
+async function setUsid(log, pass, key, usid) {
+	debugger;
 	const data = {
-		usid: usidValue,
+		login: log,
+		password: pass,
+		key: key,
+		usid: usid,
 	};
 
 	chrome.runtime.sendMessage(
 		{
-			contentScriptQuery: "postData",
-			data: usid,
+			contentScriptQuery: "setUsid",
+			data: data,
 			url: `http://${currentDEVIP}:${serverConfig.port}/setusid`,
 		},
 		function (res) {
@@ -131,40 +136,24 @@ async function setUsid(usidValue) {
 		}
 	);
 
-	sendData(data, "setUsid");
-	localStorage.setItem("usid", usid);
+	//localStorage.setItem("usid", usid);
 }
 
-chrome.runtime.sendMessage(
-	{
-		contentScriptQuery: "fetchUrl",
-		url: `http://${currentDEVIP}/activation`,
-	},
-	(response) => console.log(response)
-);
-
-// async function sendData(data, path) {
-// 	fetch(`http://${currentDEVIP}:${serverConfig.port}/${path}`, {
-// 		method: "POST",
-// 		headers: {
-// 			"Content-Type": "application/json;charset=utf-8",
-// 		},
-// 		body: JSON.stringify(data),
-// 	})
-// 		.then(checkResponse)
-// 		.then((res) => {
-// 			return res;
-// 		});
-// }
-
-function checkResponse(res) {
-	if (res.ok) {
-		return res.json();
-	}
-	return Promise.reject(`Ошибка: ${res.status}`);
+async function activation(log, pass, key) {
+	debugger;
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "activation",
+		url: `http://${currentDEVIP}:${serverConfig.port}/activation`,
+		data: {
+			login: log,
+			pass: pass,
+			key: key,
+		},
+	});
 }
 
 function initialization() {
+	debugger;
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {

@@ -1,13 +1,7 @@
-.manager-app {
-  width: 300px;
-  margin: 0;
-}
-
 .mji-manager-app {
   font-family: Inter;
   z-index: 999;
   background: #fff;
-  position: fixed;
   width: 410px;
   top: 50px;
   right: 20px;

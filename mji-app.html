@@ -9,10 +9,10 @@
 	<body class="mji-manager-app">
 		<div class="auth">
 			<div class="tabs">
-				<button class="tabs__button tabs__button_active tabs__button_login" id="logIn">Войти</button>
-				<button class="tabs__button tabs__button_activate" id="activate">Активировать</button>
+				<button class="tabs__button tabs__button_active tabs__button_login" id="login-form">Войти</button>
+				<button class="tabs__button tabs__button_activate" id="activate-form">Активировать</button>
 			</div>
-			<form action="submit" class="auth__form auth__form_first" id="activate">
+			<form class="auth__form auth__form_first" id="activate-form">
 				<div class="auth__input-wrapper">
 					<input type="text" class="auth__input" placeholder="Логин" id="login" required />
 					<span class="auth__error">Не верный логин</span>
@@ -25,9 +25,9 @@
 					<input type="text" class="auth__input" placeholder="Ключ" id="key" required />
 					<span class="auth__error">Не верный ключ</span>
 				</div>
-				<input type="submit" class="auth__button" value="Активировать" />
+				<input class="auth__button" id="activate-btn" value="Активировать" />
 			</form>
-			<form action="submit" class="auth__form auth__form_login auth__form_active" id="logIn">
+			<form class="auth__form auth__form_login auth__form_active" id="login-form">
 				<div class="auth__input-wrapper">
 					<input type="email" class="auth__input" placeholder="Логин" id="login" required />
 					<span class="auth__error">Не верный логин</span>
@@ -36,10 +36,10 @@
 					<input type="password" class="auth__input" placeholder="Пароль" id="password" required />
 					<span class="auth__error">Или пароль</span>
 				</div>
-				<input type="submit" class="auth__button" value="Войти" />
+				<input class="auth__button" id="login-btn" value="Войти" />
 			</form>
 		</div>
 		
-		<script src="./scripts/popup.js"></script>
+		<script src="./scripts/popup.js" type="module"></script>
 	</body>
 </html>
