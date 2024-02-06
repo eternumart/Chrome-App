@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
 .mji-manager-app {
   font-family: Inter;
   z-index: 999;
@@ -7,6 +8,7 @@
   right: 20px;
   border-radius: 10px;
   box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+  padding: 20px 10px;
 }
 .mji-manager-app_minimized {
   top: unset !important;
@@ -37,8 +39,7 @@
 .mji-manager-app_not-auth .auth {
   display: block !important;
 }
-
-.header {
+.mji-manager-app .header {
   position: relative;
   width: 100%;
   display: flex;
@@ -47,26 +48,22 @@
   padding: 14px 10px;
   border-bottom: 1px solid #e9e9e9;
 }
-
-.header__title-wrapper {
+.mji-manager-app .header__title-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
-.header__logo {
+.mji-manager-app .header__logo {
   width: 24px;
 }
-
-.header__title {
+.mji-manager-app .header__title {
   color: #1a1a18;
   font-size: 20px;
   font-style: normal;
   font-weight: 400;
   line-height: 100%;
 }
-
-.header__drag-button {
+.mji-manager-app .header__drag-button {
   position: absolute;
   top: 2px;
   left: calc(50% - 10px);
@@ -75,14 +72,12 @@
   align-items: center;
   cursor: grab;
 }
-
-.header__buttons {
+.mji-manager-app .header__buttons {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
-.header__button {
+.mji-manager-app .header__button {
   outline: none;
   border: none;
   display: flex;
@@ -93,31 +88,29 @@
   cursor: pointer;
   align-items: flex-end;
 }
-
-.header__button:hover {
+.mji-manager-app .header__button:hover {
   opacity: 0.7;
   transition: opacity 0.3s;
 }
-
-.auth {
-  padding: 20px 10px;
+.mji-manager-app .auth_hidden {
+  display: none;
 }
-.auth__form {
+.mji-manager-app .auth__form {
   display: none;
   width: 100%;
   justify-content: center;
   flex-direction: column;
   gap: 10px;
 }
-.auth__form_active {
+.mji-manager-app .auth__form_active {
   display: flex;
 }
-.auth__input-wrapper {
+.mji-manager-app .auth__input-wrapper {
   display: flex;
   align-items: center;
   position: relative;
 }
-.auth__input {
+.mji-manager-app .auth__input {
   width: 100%;
   padding: 10px;
   border: 1px solid #1f5473;
@@ -130,7 +123,7 @@
   outline: none;
   box-sizing: border-box;
 }
-.auth__error {
+.mji-manager-app .auth__error {
   color: #9f0000;
   font-size: 14px;
   position: absolute;
@@ -139,11 +132,11 @@
   pointer-events: none;
   transition: opacity 0.3s;
 }
-.auth__error_visible {
+.mji-manager-app .auth__error_visible {
   opacity: 1;
   transition: opacity 0.3s;
 }
-.auth__button {
+.mji-manager-app .auth__button {
   background: #1f5473;
   border: none;
   outline: none;
@@ -158,16 +151,14 @@
   cursor: pointer;
   transition: opacity 0.3s;
 }
-.auth__button:hover {
+.mji-manager-app .auth__button:hover {
   opacity: 0.7;
   transition: opacity 0.3s;
 }
-
-.app_minimized .header {
+.mji-manager-app .app_minimized .header {
   gap: 20px;
 }
-
-.animation {
+.mji-manager-app .animation {
   animation: colorChange;
   animation-duration: 1s;
   animation-timing-function: ease-in-out;
@@ -175,7 +166,6 @@
   animation-direction: normal;
   animation-iteration-count: 1;
 }
-
 @keyframes colorChange {
   0% {
     fill: #787878;
@@ -187,14 +177,13 @@
     fill: #787878;
   }
 }
-.tabs {
+.mji-manager-app .tabs {
   display: flex;
   width: 100%;
   border-bottom: 1px solid #e9e9e9;
   margin-bottom: 20px;
 }
-
-.tabs__button {
+.mji-manager-app .tabs__button {
   outline: none;
   border: none;
   transition: 0.3s;
@@ -209,32 +198,26 @@
   font-weight: 400;
   line-height: 100%;
 }
-
-.tabs__button:hover {
+.mji-manager-app .tabs__button:hover {
   opacity: 0.7;
   transition: 0.3s;
 }
-
-.tabs__button_active {
+.mji-manager-app .tabs__button_active {
   background: #1f5473;
   color: #fff;
 }
-
-.main {
+.mji-manager-app .main {
   padding: 0 10px 20px 10px;
 }
-
-.content_deactive {
+.mji-manager-app .content_deactive {
   display: none !important;
 }
-
-.content#main {
+.mji-manager-app .content#main {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-
-.main__button {
+.mji-manager-app .main__button {
   outline: none;
   border: none;
   color: #1a1a18;
@@ -246,38 +229,32 @@
   padding: 10px 0;
   transition: opacity 0.3s;
 }
-
-.main__button:hover {
+.mji-manager-app .main__button:hover {
   transition: opacity 0.3s;
   opacity: 0.7;
   cursor: pointer;
 }
-
-.main__button_done {
+.mji-manager-app .main__button_done {
   color: #00931a !important;
 }
-
-.main__button_error {
+.mji-manager-app .main__button_error {
   color: #9f0000 !important;
 }
-
-.form__field {
+.mji-manager-app .form__field {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
   margin-bottom: 20px;
 }
-
-.form__label {
+.mji-manager-app .form__label {
   color: #1a1a18;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
   line-height: 100%;
 }
-
-.form__input[type=file]::file-selector-button {
+.mji-manager-app .form__input[type=file]::file-selector-button {
   width: 190px;
   border: none;
   background: #1f5473;
@@ -291,13 +268,11 @@
   font-weight: 400;
   line-height: 100%;
 }
-
-.form__input[type=file]::file-selector-button:hover {
+.mji-manager-app .form__input[type=file]::file-selector-button:hover {
   transition: opacity 0.3s;
   opacity: 0.7;
 }
-
-.form__input[type=date] {
+.mji-manager-app .form__input[type=date] {
   width: 190px;
   border: 1px solid #1f5473;
   padding: 11px 10px;
@@ -308,8 +283,7 @@
   line-height: 100%;
   outline: none;
 }
-
-.form__button {
+.mji-manager-app .form__button {
   width: 190px;
   outline: none;
   border: none;
@@ -323,12 +297,49 @@
   cursor: pointer;
   padding: 10px 30px;
 }
-
-.form__button:hover {
+.mji-manager-app .form__button:hover {
   transition: 0.3s;
   opacity: 0.7;
 }
-
-.form__button_done {
+.mji-manager-app .form__button .form__button_done {
   background: #00931a !important;
+}
+.mji-manager-app .logged {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mji-manager-app .logged_hidden {
+  display: none;
+}
+.mji-manager-app .logged__top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.mji-manager-app .logged__user, .mji-manager-app .logged__login {
+  margin: 0 5px 0 0;
+  font-family: Inter;
+  font-size: 18px;
+}
+.mji-manager-app .logged__login {
+  color: #1f5473;
+  font-weight: 800;
+}
+.mji-manager-app .logged__bottom button {
+  outline: none;
+  border: none;
+  background: #1f5473;
+  color: #fff;
+  transition: 0.3s;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
+  cursor: pointer;
+  padding: 10px 30px;
+}
+.mji-manager-app .logged__bottom button:hover {
+  transition: 0.3s;
+  opacity: 0.7;
 }/*# sourceMappingURL=popup.css.map */

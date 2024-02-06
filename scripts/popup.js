@@ -1,10 +1,15 @@
 const formsTabs = document.querySelectorAll(".tabs__button");
 const formsAll = document.querySelectorAll(".auth__form");
+const authContainer = document.querySelector(".auth");
+const loggedContainer = document.querySelector(".logged");
+const loggedLogin = loggedContainer.querySelector(".logged__login");
+const loggedExitButton = loggedContainer.querySelector(".logged__button");
 
 const loginForm = document.querySelector(".auth__form_login");
 const loginFormLogin = loginForm.querySelector("#login");
 const loginFormPassword = loginForm.querySelector("#password");
 const loginFormErrors = loginForm.querySelectorAll(".auth__error");
+const loginFormButton = loginForm.querySelector("#login-btn");
 
 const activateForm = document.querySelector(".auth__form_first");
 const activateFormLogin = activateForm.querySelector("#login");
@@ -16,6 +21,7 @@ const activateFormErrors = activateForm.querySelectorAll(".auth__error");
 // Временный конфиг для API обращений
 const serverConfig = {
 	ip: {
+		server: "192.168.0.99",
 		buhgalteriya: "192.168.13.16",
 		servernaya: "192.168.0.60",
 		home: "192.168.0.110",
@@ -24,7 +30,10 @@ const serverConfig = {
 	port: 3000,
 };
 
-const currentDEVIP = serverConfig.ip.servernaya;
+const currentDEVIP = serverConfig.ip.server;
+
+loggedExitButton.addEventListener("click", signOut);
+loginFormButton.addEventListener("click", logIn);
 
 activateFormButton.addEventListener("click", () => {
 	console.log("activate ... ");
@@ -37,8 +46,17 @@ formsTabs.forEach((tab) => {
 	});
 });
 
+checkLogin();
+
+function signOut() {
+	authContainer.classList.remove("auth_hidden");
+	loggedContainer.classList.add("logged_hidden");
+	loggedLogin.textContent = "#####"
+
+	chrome.storage.local.clear();
+}
+
 function changeTab(clickedTab) {
-	debugger;
 	formsTabs.forEach((tab) => {
 		if (tab === clickedTab) {
 			tab.classList.add("tabs__button_active");
@@ -56,7 +74,6 @@ function changeTab(clickedTab) {
 }
 
 async function activate() {
-	debugger;
 	const usid = generateID();
 	const loginValue = activateFormLogin.value;
 	const passValue = activateFormPassword.value;
@@ -72,7 +89,44 @@ async function activate() {
 	}
 }
 
-function logIn() {}
+async function logIn() {
+	let loginIsPossible;
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		loginIsPossible = request.loginIsPossible;
+
+		if (loginIsPossible) {
+			chrome.storage.local.set({ logged: `${loginFormLogin.value}` }).then(() => {
+			});
+			checkLogin();
+		}
+	});
+
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "logIn",
+		data: {
+			login: loginFormLogin.value,
+			password: loginFormPassword.value,
+		},
+		url: `http://${currentDEVIP}:${serverConfig.port}/logIn`,
+	});
+}
+
+function changePopupState() {
+	authContainer.classList.toggle("auth_hidden");
+	loggedContainer.classList.toggle("logged_hidden");
+}
+
+function checkLogin() {
+	chrome.storage.local.get(["logged"]).then((result) => {
+		if (result.logged !== undefined) {
+			changePopupState();
+			initialization();
+			loggedLogin.textContent = result.logged;
+		} else {
+			return;
+		}
+	});
+}
 
 function generateID() {
 	const time = Date.now();
@@ -109,30 +163,53 @@ async function checkActivation(log, pass, key) {
 	return result;
 }
 
-async function setUsid(log, pass, key, usid) {
-	debugger;
-	const data = {
-		login: log,
-		password: pass,
-		key: key,
-		usid: usid,
-	};
+async function checkUsid(login, usid) {
+	let usidInBase;
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		usidInBase = request.usid;
+
+		if (usidInBase) {
+			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {
+			});
+		}
+	});
+
+	chrome.runtime.sendMessage(
+		{
+			contentScriptQuery: "checkUsid",
+			data: {
+				login: login,
+				usid: usid,
+			},
+			url: `http://${currentDEVIP}:${serverConfig.port}/checkusid`,
+		}
+	);
+
+	chrome.storage.local.get(["usid"]).then((result)=>{
+		
+	})
+}
+
+async function setUsid(login) {
+	const usid = generateID();
+	let usidInBase;
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		usidInBase = request.usid;
+
+		if (usidInBase) {
+			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {
+			});
+		}
+	});
 
 	chrome.runtime.sendMessage(
 		{
 			contentScriptQuery: "setUsid",
-			data: data,
+			data: {
+				login: login,
+				usid: usid,
+			},
 			url: `http://${currentDEVIP}:${serverConfig.port}/setusid`,
-		},
-		function (res) {
-			debugger;
-			if (res != undefined && res != "") {
-				callback(res);
-				result = res;
-			} else {
-				debugger;
-				callback(null);
-			}
 		}
 	);
 
@@ -140,7 +217,6 @@ async function setUsid(log, pass, key, usid) {
 }
 
 async function activation(log, pass, key) {
-	debugger;
 	chrome.runtime.sendMessage({
 		contentScriptQuery: "activation",
 		url: `http://${currentDEVIP}:${serverConfig.port}/activation`,
@@ -153,7 +229,6 @@ async function activation(log, pass, key) {
 }
 
 function initialization() {
-	debugger;
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {
@@ -218,7 +293,6 @@ function launchApp() {
 		createPopup(currentPage);
 	}
 	setToStorage(true, true, null, null);
-	checkAuth();
 
 	const dragIco = app.querySelector(".header__drag-button");
 	const inputDate = app.querySelector("#date");
@@ -251,7 +325,7 @@ function launchApp() {
 
 	// Функционал приложения
 	function createPopup(currentPage) {
-		const popupLayout = `<div class="app app_not-auth">
+		const popupLayout = `<div class="app">
 		<div class="header">
 			<div class="header__title-wrapper">
 				<div class="header__logo">

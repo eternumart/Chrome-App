@@ -25,7 +25,7 @@ console.log("background.js working...");
 // 	}
 // });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
 	if (request.contentScriptQuery == "activation") {
 		// WARNING: SECURITY PROBLEM - a malicious web page may abuse
 		// the message handler to get access to arbitrary cross-origin
@@ -73,11 +73,36 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			});
 		return true; // Will respond asynchronously.
 	}
+	if (request.contentScriptQuery == "logIn") {
+		await fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				chrome.runtime.sendMessage(res)
+			});
+	}
+	if (request.contentScriptQuery == "checkusid") {
+		await fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				chrome.runtime.sendMessage(res)
+			});
+	}
 });
 
 function checkResponse(res) {
 	if (res.ok) {
-		console.log("res OK");
 		return res.json();
 	}
 	return Promise.reject(`Ошибка: ${res.status}`);
