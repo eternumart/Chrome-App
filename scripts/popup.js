@@ -19,18 +19,32 @@ const activateFormButton = activateForm.querySelector("#activate-btn");
 const activateFormErrors = activateForm.querySelectorAll(".auth__error");
 
 // Временный конфиг для API обращений
-const serverConfig = {
-	ip: {
-		server: "192.168.0.99",
-		buhgalteriya: "192.168.13.16",
-		servernaya: "192.168.0.60",
-		home: "192.168.0.110",
-		officeWiFi: "172.24.208.1",
+const server = {
+	local: {
+		ip: "192.168.0.99",
+		port: "3000",
 	},
-	port: 3000,
+	out: {
+		ip: "82.149.216.198",
+		port: "57861",
+	},
 };
 
-const currentDEVIP = serverConfig.ip.server;
+let currentIP = ""
+
+async function getCurrentIP() {
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		currentIP = `${request}`;
+		console.log(currentIP)
+	});
+
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "checkIP",
+		data: server,
+	});
+}
+
+await getCurrentIP();
 
 loggedExitButton.addEventListener("click", signOut);
 loginFormButton.addEventListener("click", logIn);
@@ -51,7 +65,7 @@ checkLogin();
 function signOut() {
 	authContainer.classList.remove("auth_hidden");
 	loggedContainer.classList.add("logged_hidden");
-	loggedLogin.textContent = "#####"
+	loggedLogin.textContent = "#####";
 
 	chrome.storage.local.clear();
 }
@@ -95,8 +109,7 @@ async function logIn() {
 		loginIsPossible = request.loginIsPossible;
 
 		if (loginIsPossible) {
-			chrome.storage.local.set({ logged: `${loginFormLogin.value}` }).then(() => {
-			});
+			chrome.storage.local.set({ logged: `${loginFormLogin.value}` }).then(() => {});
 			checkLogin();
 		}
 	});
@@ -107,7 +120,7 @@ async function logIn() {
 			login: loginFormLogin.value,
 			password: loginFormPassword.value,
 		},
-		url: `http://${currentDEVIP}:${serverConfig.port}/logIn`,
+		url: `http://${currentIP}/logIn`,
 	});
 }
 
@@ -146,7 +159,7 @@ async function checkActivation(log, pass, key) {
 		{
 			contentScriptQuery: "checkActivation",
 			data: data,
-			url: `http://${currentDEVIP}:${serverConfig.port}/checkActivation`,
+			url: `http://${currentIP}/checkActivation`,
 		},
 		function (res) {
 			console.log(res);
@@ -169,25 +182,20 @@ async function checkUsid(login, usid) {
 		usidInBase = request.usid;
 
 		if (usidInBase) {
-			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {
-			});
+			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {});
 		}
 	});
 
-	chrome.runtime.sendMessage(
-		{
-			contentScriptQuery: "checkUsid",
-			data: {
-				login: login,
-				usid: usid,
-			},
-			url: `http://${currentDEVIP}:${serverConfig.port}/checkusid`,
-		}
-	);
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "checkUsid",
+		data: {
+			login: login,
+			usid: usid,
+		},
+		url: `http://${currentIP}/checkusid`,
+	});
 
-	chrome.storage.local.get(["usid"]).then((result)=>{
-		
-	})
+	chrome.storage.local.get(["usid"]).then((result) => {});
 }
 
 async function setUsid(login) {
@@ -197,21 +205,18 @@ async function setUsid(login) {
 		usidInBase = request.usid;
 
 		if (usidInBase) {
-			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {
-			});
+			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {});
 		}
 	});
 
-	chrome.runtime.sendMessage(
-		{
-			contentScriptQuery: "setUsid",
-			data: {
-				login: login,
-				usid: usid,
-			},
-			url: `http://${currentDEVIP}:${serverConfig.port}/setusid`,
-		}
-	);
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "setUsid",
+		data: {
+			login: login,
+			usid: usid,
+		},
+		url: `http://${currentIP}/setusid`,
+	});
 
 	//localStorage.setItem("usid", usid);
 }
@@ -219,7 +224,7 @@ async function setUsid(login) {
 async function activation(log, pass, key) {
 	chrome.runtime.sendMessage({
 		contentScriptQuery: "activation",
-		url: `http://${currentDEVIP}:${serverConfig.port}/activation`,
+		url: `http://${currentIP}/activation`,
 		data: {
 			login: log,
 			pass: pass,

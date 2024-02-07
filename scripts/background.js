@@ -69,7 +69,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		})
 			.then(checkResponse)
 			.then((res) => {
-				sendResponse(res);
+				chrome.runtime.sendMessage(res);
 			});
 		return true; // Will respond asynchronously.
 	}
@@ -83,7 +83,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		})
 			.then(checkResponse)
 			.then((res) => {
-				chrome.runtime.sendMessage(res)
+				chrome.runtime.sendMessage(res);
 			});
 	}
 	if (request.contentScriptQuery == "checkusid") {
@@ -96,8 +96,27 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		})
 			.then(checkResponse)
 			.then((res) => {
-				chrome.runtime.sendMessage(res)
+				chrome.runtime.sendMessage(res);
 			});
+	}
+	if (request.contentScriptQuery == "checkIP") {
+		const variants = request.data;
+
+		fetch(`${variants.local.ip}:${variants.local.port}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+		}).then((res) => {
+			if (res.ok) {
+				onsole.log("seems you're in the office")
+				chrome.runtime.sendMessage(`${variants.local.ip}:${variants.local.port}`);
+			}
+		})
+		.catch(err => {
+			console.log("seems you're out of office")
+			chrome.runtime.sendMessage(`${variants.out.ip}:${variants.out.port}`);
+		})
 	}
 });
 
