@@ -35,7 +35,6 @@ let currentIP = ""
 async function getCurrentIP() {
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		currentIP = `${request}`;
-		console.log(currentIP)
 	});
 
 	chrome.runtime.sendMessage({
@@ -50,7 +49,7 @@ loggedExitButton.addEventListener("click", signOut);
 loginFormButton.addEventListener("click", logIn);
 
 activateFormButton.addEventListener("click", () => {
-	console.log("activate ... ");
+	console.log("Activation ... ");
 	activate();
 });
 //loginForm.addEventListener("submit", logIn);
@@ -103,7 +102,9 @@ async function activate() {
 	}
 }
 
-async function logIn() {
+async function logIn(evt) {
+	debugger
+	evt.preventDefault();
 	let loginIsPossible;
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		loginIsPossible = request.loginIsPossible;

@@ -1,29 +1,4 @@
-console.log("background.js working...");
-
-// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-// 	if (request.contentScriptQuery == "getdata") {
-// 		var url = request.url;
-// 		fetch(url)
-// 			.then((response) => response.text())
-// 			.then((response) => sendResponse(response))
-// 			.catch();
-// 		return true;
-// 	}
-// 	if (request.contentScriptQuery == "postData") {
-// 		fetch(request.url, {
-// 			method: "POST",
-// 			headers: {
-// 				Accept: "application/json, application/xml, text/plain, text/html, *.*",
-// 				"Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-// 			},
-// 			body: "result=" + request.data,
-// 		})
-// 			.then((response) => response.json())
-// 			.then((response) => sendResponse(response))
-// 			.catch((error) => console.log("Error:", error));
-// 		return true;
-// 	}
-// });
+console.log("MJI-Manager started succsessfully");
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
 	if (request.contentScriptQuery == "activation") {
@@ -102,21 +77,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	if (request.contentScriptQuery == "checkIP") {
 		const variants = request.data;
 
-		fetch(`${variants.local.ip}:${variants.local.port}`, {
+		fetch(`http://${variants.local.ip}:${variants.local.port}`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json;charset=utf-8",
 			},
-		}).then((res) => {
-			if (res.ok) {
-				onsole.log("seems you're in the office")
+		})
+			.then((res) => {
 				chrome.runtime.sendMessage(`${variants.local.ip}:${variants.local.port}`);
-			}
-		})
-		.catch(err => {
-			console.log("seems you're out of office")
-			chrome.runtime.sendMessage(`${variants.out.ip}:${variants.out.port}`);
-		})
+			})
+			.catch((err) => {
+				chrome.runtime.sendMessage(`${variants.out.ip}:${variants.out.port}`);
+			});
 	}
 });
 
