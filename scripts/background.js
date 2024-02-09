@@ -2,25 +2,6 @@ console.log("MJI-Manager started succsessfully");
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
 	if (request.contentScriptQuery == "activation") {
-		// WARNING: SECURITY PROBLEM - a malicious web page may abuse
-		// the message handler to get access to arbitrary cross-origin
-		// resources.
-		console.log(`${request.url}`);
-		fetch(`${request.url}`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json;charset=utf-8",
-			},
-			body: JSON.stringify({ data: "somedata" }),
-		})
-			.then(checkResponse)
-			.then((res) => {
-				return res;
-			});
-		return true; // Will respond asynchronously.
-	}
-	if (request.contentScriptQuery == "checkActivation") {
-		console.log(`${request.url}`);
 		fetch(`${request.url}`, {
 			method: "POST",
 			headers: {
@@ -30,7 +11,26 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		})
 			.then(checkResponse)
 			.then((res) => {
-				sendResponse(res);
+				chrome.runtime.sendMessage({
+					data: res,
+					contentScriptQuery: "activation",
+				});
+			});
+	}
+	if (request.contentScriptQuery == "checkActivation") {
+		fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				chrome.runtime.sendMessage({
+					data: res,
+					contentScriptQuery: "checkActivation",
+				});
 			});
 		return true; // Will respond asynchronously.
 	}
@@ -58,7 +58,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		})
 			.then(checkResponse)
 			.then((res) => {
-				chrome.runtime.sendMessage(res);
+				chrome.runtime.sendMessage({
+					data: res,
+					contentScriptQuery: "logIn",
+				});
 			});
 	}
 	if (request.contentScriptQuery == "checkusid") {
@@ -82,13 +85,27 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			headers: {
 				"Content-Type": "application/json;charset=utf-8",
 			},
-		})
-			.then((res) => {
-				chrome.runtime.sendMessage(`${variants.local.ip}:${variants.local.port}`);
-			})
-			.catch((err) => {
-				chrome.runtime.sendMessage(`${variants.out.ip}:${variants.out.port}`);
-			});
+		}).then((res) => {
+			if (res.ok) {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "checkIP",
+					url: res.url,
+				});
+			}
+		});
+		fetch(`http://${variants.out.ip}:${variants.out.port}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+		}).then((res) => {
+			if (res.ok) {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "checkIP",
+					url: res.url,
+				});
+			}
+		});
 	}
 });
 

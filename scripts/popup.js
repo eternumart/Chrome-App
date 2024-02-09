@@ -18,6 +18,14 @@ const activateFormKey = activateForm.querySelector("#key");
 const activateFormButton = activateForm.querySelector("#activate-btn");
 const activateFormErrors = activateForm.querySelectorAll(".auth__error");
 
+const fakeBase = {
+	login: "Admin",
+	password: "Es12345678",
+	key: "jL0zf-JglWM-iEvWJ-8F1uo",
+	usid: "1703663820788_18283173",
+	activation: true,
+};
+
 // Временный конфиг для API обращений
 const server = {
 	local: {
@@ -30,11 +38,17 @@ const server = {
 	},
 };
 
-let currentIP = ""
+let currentState = false;
+let currentIP = "";
 
-async function getCurrentIP() {
+function getCurrentIP() {
+	if (currentIP !== "") {
+		return;
+	}
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-		currentIP = `${request}`;
+		if (request.contentScriptQuery == "checkIP") {
+			currentIP = `${request.url}`;
+		}
 	});
 
 	chrome.runtime.sendMessage({
@@ -43,16 +57,15 @@ async function getCurrentIP() {
 	});
 }
 
-await getCurrentIP();
+getCurrentIP();
 
 loggedExitButton.addEventListener("click", signOut);
-loginFormButton.addEventListener("click", logIn);
-
-activateFormButton.addEventListener("click", () => {
-	console.log("Activation ... ");
-	activate();
+loginFormButton.addEventListener("click", () => {
+	logIn(loginFormLogin.value, loginFormPassword.value);
 });
-//loginForm.addEventListener("submit", logIn);
+
+activateFormButton.addEventListener("click", activate);
+
 formsTabs.forEach((tab) => {
 	tab.addEventListener("click", () => {
 		changeTab(tab);
@@ -65,7 +78,6 @@ function signOut() {
 	authContainer.classList.remove("auth_hidden");
 	loggedContainer.classList.add("logged_hidden");
 	loggedLogin.textContent = "#####";
-
 	chrome.storage.local.clear();
 }
 
@@ -86,48 +98,73 @@ function changeTab(clickedTab) {
 	});
 }
 
-async function activate() {
-	const usid = generateID();
-	const loginValue = activateFormLogin.value;
-	const passValue = activateFormPassword.value;
-	const keyValue = activateFormKey.value;
+function activate() {
+	debugger;
+	const checkActiv = checkActivation();
+	setTimeout(() => {
+		if (checkActiv) {
+			chrome.storage.local.set({ logged: `${activateFormLogin.value}` }).then(() => {});
+			checkLogin();
+		}
 
-	const activation = await checkActivation(loginValue, passValue, keyValue);
-	if (!activation) {
-		activateFormErrors[2].classList.add("auth__error_visible");
-	}
-	if (activation.data) {
-		setUsid(loginValue, passValue, keyValue, usid);
-		initialization();
-	}
+		const usid = generateID();
+		let activated;
+
+		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+			if (request.contentScriptQuery == "activation") {
+				activated = request.data;
+			}
+
+			if (activated) {
+				chrome.storage.local.set({ logged: `${activateFormLogin.value}` }).then(() => {});
+				checkLogin();
+			}
+		});
+
+		chrome.runtime.sendMessage({
+			contentScriptQuery: "activation",
+			data: {
+				login: activateFormLogin.value,
+				password: activateFormPassword.value,
+				key: activateFormKey.value,
+				usid: usid,
+			},
+			url: `${currentIP}activation`,
+		});
+	}, 2000);
 }
 
-async function logIn(evt) {
-	debugger
-	evt.preventDefault();
+function logIn(log, pass) {
 	let loginIsPossible;
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-		loginIsPossible = request.loginIsPossible;
+		if (request.contentScriptQuery == "logIn") {
+			loginIsPossible = request.data.loginIsPossible;
 
-		if (loginIsPossible) {
-			chrome.storage.local.set({ logged: `${loginFormLogin.value}` }).then(() => {});
-			checkLogin();
+			if (loginIsPossible) {
+				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
+				checkLogin();
+			}
 		}
 	});
 
 	chrome.runtime.sendMessage({
 		contentScriptQuery: "logIn",
 		data: {
-			login: loginFormLogin.value,
-			password: loginFormPassword.value,
+			login: log,
+			password: pass,
 		},
-		url: `http://${currentIP}/logIn`,
+		url: `${currentIP}logIn`,
 	});
 }
 
 function changePopupState() {
-	authContainer.classList.toggle("auth_hidden");
-	loggedContainer.classList.toggle("logged_hidden");
+	if (!currentState) {
+		authContainer.classList.toggle("auth_hidden");
+		loggedContainer.classList.toggle("logged_hidden");
+		currentState = true;
+	} else {
+		return;
+	}
 }
 
 function checkLogin() {
@@ -149,35 +186,24 @@ function generateID() {
 	return usid;
 }
 
-async function checkActivation(log, pass, key) {
-	let result;
-	const data = {
-		login: log,
-		pass: pass,
-		key: key,
-	};
-	chrome.runtime.sendMessage(
-		{
-			contentScriptQuery: "checkActivation",
-			data: data,
-			url: `http://${currentIP}/checkActivation`,
-		},
-		function (res) {
-			console.log(res);
-			if (res != undefined && res != "") {
-				callback(res);
-				result = res;
-			} else {
-				callback(null);
-			}
+function checkActivation() {
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		if (request.contentScriptQuery == "checkActivation") {
+			return request.data.activated;
 		}
-	);
+	});
 
-	// const result = await sendData(data, "activation");
-	return result;
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "checkActivation",
+		data: {
+			login: activateFormLogin.value,
+			password: activateFormPassword.value,
+		},
+		url: `${currentIP}checkActivation`,
+	});
 }
 
-async function checkUsid(login, usid) {
+function checkUsid(login, usid) {
 	let usidInBase;
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		usidInBase = request.usid;
@@ -193,13 +219,13 @@ async function checkUsid(login, usid) {
 			login: login,
 			usid: usid,
 		},
-		url: `http://${currentIP}/checkusid`,
+		url: `${currentIP}/checkusid`,
 	});
 
 	chrome.storage.local.get(["usid"]).then((result) => {});
 }
 
-async function setUsid(login) {
+function setUsid(login) {
 	const usid = generateID();
 	let usidInBase;
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -216,22 +242,10 @@ async function setUsid(login) {
 			login: login,
 			usid: usid,
 		},
-		url: `http://${currentIP}/setusid`,
+		url: `${currentIP}/setusid`,
 	});
 
 	//localStorage.setItem("usid", usid);
-}
-
-async function activation(log, pass, key) {
-	chrome.runtime.sendMessage({
-		contentScriptQuery: "activation",
-		url: `http://${currentIP}/activation`,
-		data: {
-			login: log,
-			pass: pass,
-			key: key,
-		},
-	});
 }
 
 function initialization() {
@@ -254,7 +268,7 @@ function launchApp() {
 		setToStorage(false, true, null, null);
 	} else {
 		try {
-			if (document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".app") || document.querySelector(".app")) {
+			if (document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".mji-manager-app") || document.querySelector(".mji-manager-app")) {
 				return;
 			}
 		} catch {
@@ -331,7 +345,7 @@ function launchApp() {
 
 	// Функционал приложения
 	function createPopup(currentPage) {
-		const popupLayout = `<div class="app">
+		const popupLayout = `<div class="mji-manager-app">
 		<div class="header">
 			<div class="header__title-wrapper">
 				<div class="header__logo">
@@ -414,13 +428,13 @@ function launchApp() {
 		</div>
 		</div>`;
 		const stylesLayout = `<style>
-		* {
+		.mji-manager-app * {
 			padding: 0;
 			margin: 0;
 			box-sizing: border-box;
 		  }
 		  
-		  .app {
+		  .mji-manager-app {
 			font-family: Inter;
 			z-index: 999;
 			background: #fff;
@@ -757,7 +771,7 @@ function launchApp() {
 		htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
 		htmlBody.insertAdjacentHTML("afterBegin", popupLayout);
 
-		app = htmlBody.querySelector(".app");
+		app = htmlBody.querySelector(".mji-manager-app");
 		tabs = app.querySelectorAll(".tabs__button");
 		tabsContent = app.querySelectorAll(".content");
 
