@@ -92,7 +92,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					url: res.url,
 				});
 			}
+		}).catch(err => {
+			console.log(err)
 		});
+
 		fetch(`http://${variants.out.ip}:${variants.out.port}`, {
 			method: "GET",
 			headers: {
@@ -105,6 +108,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					url: res.url,
 				});
 			}
+		}).catch(err => {
+			console.log(err)
 		});
 	}
 });

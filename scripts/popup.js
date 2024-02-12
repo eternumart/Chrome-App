@@ -10,6 +10,7 @@ const loginFormLogin = loginForm.querySelector("#login");
 const loginFormPassword = loginForm.querySelector("#password");
 const loginFormErrors = loginForm.querySelectorAll(".auth__error");
 const loginFormButton = loginForm.querySelector("#login-btn");
+const loginFormActivationError = loginForm.querySelector("#error-activation")
 
 const activateForm = document.querySelector(".auth__form_first");
 const activateFormLogin = activateForm.querySelector("#login");
@@ -17,16 +18,32 @@ const activateFormPassword = activateForm.querySelector("#password");
 const activateFormKey = activateForm.querySelector("#key");
 const activateFormButton = activateForm.querySelector("#activate-btn");
 const activateFormErrors = activateForm.querySelectorAll(".auth__error");
+const activateFormKeyError = activateForm.querySelector("#error-key")
+
+const loader = document.querySelector(".loader");
 
 const fakeBase = {
-	login: "Admin",
-	password: "Es12345678",
-	key: "jL0zf-JglWM-iEvWJ-8F1uo",
-	usid: "1703663820788_18283173",
-	activation: true,
+	"sli@sste.ru": {
+		login: "sli@sste.ru",
+		password: "Es12345678",
+		key: "jL0zf-JglWM-iEvWJ-8F1uo",
+		usid: "1703663820788_18283173",
+	},
+	"ada@sste.ru": {
+		login: "ada@sste.ru",
+		password: "12345",
+		key: "jL4zf-JglWM-iEvWJ-9F1u0",
+		usid: "1703663820900_72245271",
+	},
+	"avd@sste.ru": {
+		login: "avd@sste.ru",
+		password: "12345",
+		key: "",
+		usid: ""
+	}
 };
 
-// Временный конфиг для API обращений
+// Конфиг Out & Local
 const server = {
 	local: {
 		ip: "192.168.0.99",
@@ -40,6 +57,24 @@ const server = {
 
 let currentState = false;
 let currentIP = "";
+
+getCurrentIP();
+checkLogin();
+
+loggedExitButton.addEventListener("click", signOut);
+loginFormButton.addEventListener("click", () => {
+	logIn(loginFormLogin.value, loginFormPassword.value, loginForm);
+});
+
+activateFormButton.addEventListener("click", () => {
+	initActivation(activateFormLogin.value, activateFormPassword.value, activateForm);
+});
+
+formsTabs.forEach((tab) => {
+	tab.addEventListener("click", () => {
+		changeTab(tab);
+	});
+});
 
 function getCurrentIP() {
 	if (currentIP !== "") {
@@ -56,23 +91,6 @@ function getCurrentIP() {
 		data: server,
 	});
 }
-
-getCurrentIP();
-
-loggedExitButton.addEventListener("click", signOut);
-loginFormButton.addEventListener("click", () => {
-	logIn(loginFormLogin.value, loginFormPassword.value);
-});
-
-activateFormButton.addEventListener("click", activate);
-
-formsTabs.forEach((tab) => {
-	tab.addEventListener("click", () => {
-		changeTab(tab);
-	});
-});
-
-checkLogin();
 
 function signOut() {
 	authContainer.classList.remove("auth_hidden");
@@ -98,51 +116,79 @@ function changeTab(clickedTab) {
 	});
 }
 
-function activate() {
-	debugger;
-	const checkActiv = checkActivation();
-	setTimeout(() => {
-		if (checkActiv) {
-			chrome.storage.local.set({ logged: `${activateFormLogin.value}` }).then(() => {});
-			checkLogin();
+function initActivation(log, pass, form) {
+	initLoader(form, true);
+
+	const usid = generateID();
+
+	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+		if (request.contentScriptQuery == "checkActivation") {
+			if (request.data.boolean == true) {
+				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
+				checkLogin(log);
+				initLoader(form, false);
+			}
 		}
 
-		const usid = generateID();
-		let activated;
-
-		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-			if (request.contentScriptQuery == "activation") {
-				activated = request.data;
+		if (request.contentScriptQuery == "activation") {
+			if (request.data.boolean == true && request.data.key === "valid") {
+				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
+				checkLogin(log);
+				initLoader(form, false);
 			}
-
-			if (activated) {
-				chrome.storage.local.set({ logged: `${activateFormLogin.value}` }).then(() => {});
-				checkLogin();
+			if(request.data.key === "in use") {
+				activateFormKeyError.classList.add("auth__error_visible");
+				initLoader(form, false);
 			}
-		});
+		}
 
+	});
+
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "checkActivation",
+		data: {
+			login: log,
+			password: pass,
+		},
+		url: `${currentIP}checkActivation`,
+	});
+
+	if (!currentState) {
 		chrome.runtime.sendMessage({
 			contentScriptQuery: "activation",
 			data: {
-				login: activateFormLogin.value,
-				password: activateFormPassword.value,
+				login: log,
+				password: pass,
 				key: activateFormKey.value,
 				usid: usid,
 			},
 			url: `${currentIP}activation`,
 		});
-	}, 2000);
+	}
 }
 
-function logIn(log, pass) {
-	let loginIsPossible;
+function initLoader(form, flag) {
+	if (flag) {
+		loader.classList.add("loader_loading");
+		form.classList.remove("auth__form_active");
+	} else {
+		loader.classList.remove("loader_loading");
+		form.classList.add("auth__form_active");
+	}
+}
+
+function logIn(log, pass, form) {
+	initLoader(form, true);
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "logIn") {
-			loginIsPossible = request.data.loginIsPossible;
-
-			if (loginIsPossible) {
+			if (request.data.loginIsPossible === true && request.data.activation === "Активация пройдена") {
 				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
-				checkLogin();
+				checkLogin(log);
+				initLoader(form, false);
+			} else {
+				loginFormActivationError.classList.add("auth__error_visible");
+				loginFormActivationError.textContent = request.data.activation;
+				initLoader(form, false);
 			}
 		}
 	});
@@ -167,12 +213,17 @@ function changePopupState() {
 	}
 }
 
-function checkLogin() {
-	chrome.storage.local.get(["logged"]).then((result) => {
+function checkLogin(log) {
+	chrome.storage.local.get(["logged"]).then((result) => { 
 		if (result.logged !== undefined) {
+			if (log !== undefined && log !== result.logged) {
+				loggedLogin.textContent = log;
+			} else {
+				loggedLogin.textContent = result.logged;
+			}
 			changePopupState();
 			initialization();
-			loggedLogin.textContent = result.logged;
+
 		} else {
 			return;
 		}
@@ -184,23 +235,6 @@ function generateID() {
 	const randomNumber = Math.floor(Math.random() * 1000000001);
 	const usid = `${time}_${randomNumber}`;
 	return usid;
-}
-
-function checkActivation() {
-	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-		if (request.contentScriptQuery == "checkActivation") {
-			return request.data.activated;
-		}
-	});
-
-	chrome.runtime.sendMessage({
-		contentScriptQuery: "checkActivation",
-		data: {
-			login: activateFormLogin.value,
-			password: activateFormPassword.value,
-		},
-		url: `${currentIP}checkActivation`,
-	});
 }
 
 function checkUsid(login, usid) {
@@ -244,8 +278,6 @@ function setUsid(login) {
 		},
 		url: `${currentIP}/setusid`,
 	});
-
-	//localStorage.setItem("usid", usid);
 }
 
 function initialization() {

@@ -394,5 +394,33 @@
 			}
 		}
 	}
-	
+
+	.loader {
+		display: none;
+
+		&_loading {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 80px;
+			
+			svg {
+				animation: load;
+				animation-duration: 10s;
+				animation-timing-function: linear;
+				animation-fill-mode: both;
+				animation-iteration-count: infinite;
+			}
+		}
+	}
+
+	@keyframes load {
+		0% {
+			transform: rotate(0deg);
+		}
+		100%{
+			transform: rotate(360deg);
+		}
+		
+	}
 }
