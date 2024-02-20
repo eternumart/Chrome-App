@@ -10,7 +10,7 @@ const loginFormLogin = loginForm.querySelector("#login");
 const loginFormPassword = loginForm.querySelector("#password");
 const loginFormErrors = loginForm.querySelectorAll(".auth__error");
 const loginFormButton = loginForm.querySelector("#login-btn");
-const loginFormActivationError = loginForm.querySelector("#error-activation")
+const loginFormActivationError = loginForm.querySelector("#error-activation");
 
 const activateForm = document.querySelector(".auth__form_first");
 const activateFormLogin = activateForm.querySelector("#login");
@@ -18,7 +18,7 @@ const activateFormPassword = activateForm.querySelector("#password");
 const activateFormKey = activateForm.querySelector("#key");
 const activateFormButton = activateForm.querySelector("#activate-btn");
 const activateFormErrors = activateForm.querySelectorAll(".auth__error");
-const activateFormKeyError = activateForm.querySelector("#error-key")
+const activateFormKeyError = activateForm.querySelector("#error-key");
 
 const loader = document.querySelector(".loader");
 
@@ -39,8 +39,8 @@ const fakeBase = {
 		login: "avd@sste.ru",
 		password: "12345",
 		key: "",
-		usid: ""
-	}
+		usid: "",
+	},
 };
 
 // Конфиг Out & Local
@@ -62,12 +62,12 @@ getCurrentIP();
 checkLogin();
 
 loggedExitButton.addEventListener("click", signOut);
-loginFormButton.addEventListener("click", () => {
-	logIn(loginFormLogin.value, loginFormPassword.value, loginForm);
+loginForm.addEventListener("submit", (evt) => {
+	logIn(loginFormLogin.value, loginFormPassword.value, loginForm, evt);
 });
 
-activateFormButton.addEventListener("click", () => {
-	initActivation(activateFormLogin.value, activateFormPassword.value, activateForm);
+activateForm.addEventListener("submit", (evt) => {
+	initActivation(activateFormLogin.value, activateFormPassword.value, activateForm, evt);
 });
 
 formsTabs.forEach((tab) => {
@@ -82,7 +82,8 @@ function getCurrentIP() {
 	}
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "checkIP") {
-			currentIP = `${request.url}`;
+			currentIP = `http://${request.url}/`;
+			console.log(`Current IP: ${currentIP}`);
 		}
 	});
 
@@ -116,54 +117,44 @@ function changeTab(clickedTab) {
 	});
 }
 
-function initActivation(log, pass, form) {
+function initActivation(log, pass, form, evt) {
+	evt.preventDefault();
+
 	initLoader(form, true);
 
 	const usid = generateID();
 
 	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-		if (request.contentScriptQuery == "checkActivation") {
+		if (request.contentScriptQuery == "activation") {
 			if (request.data.boolean == true) {
 				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
 				checkLogin(log);
 				initLoader(form, false);
 			}
-		}
-
-		if (request.contentScriptQuery == "activation") {
-			if (request.data.boolean == true && request.data.key === "valid") {
-				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
-				checkLogin(log);
-				initLoader(form, false);
-			}
-			if(request.data.key === "in use") {
+			if (request.data.boolean === false) {
 				activateFormKeyError.classList.add("auth__error_visible");
 				initLoader(form, false);
 			}
 		}
-
 	});
 
-	chrome.runtime.sendMessage({
-		contentScriptQuery: "checkActivation",
-		data: {
-			login: log,
-			password: pass,
-		},
-		url: `${currentIP}checkActivation`,
-	});
-
-	if (!currentState) {
-		chrome.runtime.sendMessage({
-			contentScriptQuery: "activation",
-			data: {
-				login: log,
-				password: pass,
-				key: activateFormKey.value,
-				usid: usid,
-			},
-			url: `${currentIP}activation`,
-		});
+	if (log !== "" && pass !== "") {
+		if (!currentState) {
+			chrome.runtime.sendMessage({
+				contentScriptQuery: "activation",
+				data: {
+					login: log,
+					password: pass,
+					key: activateFormKey.value,
+					usid: usid,
+				},
+				url: `${currentIP}activation`,
+			});
+		}
+	} else {
+		activateFormKeyError.classList.add("auth__error_visible");
+		activateFormKeyError.textContent = "Поля не могут быть пустыми";
+		initLoader(form, false);
 	}
 }
 
@@ -177,11 +168,13 @@ function initLoader(form, flag) {
 	}
 }
 
-function logIn(log, pass, form) {
+function logIn(log, pass, form, evt) {
+	evt.preventDefault();
+
 	initLoader(form, true);
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "logIn") {
-			if (request.data.loginIsPossible === true && request.data.activation === "Активация пройдена") {
+			if (request.data.loginIsPossible === true && request.data.activated) {
 				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
 				checkLogin(log);
 				initLoader(form, false);
@@ -192,15 +185,21 @@ function logIn(log, pass, form) {
 			}
 		}
 	});
-
-	chrome.runtime.sendMessage({
-		contentScriptQuery: "logIn",
-		data: {
-			login: log,
-			password: pass,
-		},
-		url: `${currentIP}logIn`,
-	});
+	if (log !== "" && pass !== "") {
+		console.log(`${currentIP}logIn`);
+		chrome.runtime.sendMessage({
+			contentScriptQuery: "logIn",
+			data: {
+				login: log,
+				password: pass,
+			},
+			url: `${currentIP}logIn`,
+		});
+	} else {
+		loginFormActivationError.classList.add("auth__error_visible");
+		loginFormActivationError.textContent = "Поля не могут быть пустыми";
+		initLoader(form, false);
+	}
 }
 
 function changePopupState() {
@@ -214,7 +213,7 @@ function changePopupState() {
 }
 
 function checkLogin(log) {
-	chrome.storage.local.get(["logged"]).then((result) => { 
+	chrome.storage.local.get(["logged"]).then((result) => {
 		if (result.logged !== undefined) {
 			if (log !== undefined && log !== result.logged) {
 				loggedLogin.textContent = log;
@@ -223,9 +222,6 @@ function checkLogin(log) {
 			}
 			changePopupState();
 			initialization();
-
-		} else {
-			return;
 		}
 	});
 }
@@ -293,6 +289,7 @@ function initialization() {
 }
 
 function launchApp() {
+	debugger;
 	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
 
 	// Предотвращение двойного старта
@@ -303,9 +300,7 @@ function launchApp() {
 			if (document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".mji-manager-app") || document.querySelector(".mji-manager-app")) {
 				return;
 			}
-		} catch {
-			return;
-		}
+		} catch {}
 	}
 
 	// Определение наличия iFrame
@@ -476,6 +471,7 @@ function launchApp() {
 			right: 20px;
 			border-radius: 10px;
 			box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+			padding: 0;
 		  }
 		  .app_minimized {
 			top: unset !important;

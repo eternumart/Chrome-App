@@ -17,23 +17,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				});
 			});
 	}
-	if (request.contentScriptQuery == "checkActivation") {
-		fetch(`${request.url}`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json;charset=utf-8",
-			},
-			body: JSON.stringify({ data: request.data }),
-		})
-			.then(checkResponse)
-			.then((res) => {
-				chrome.runtime.sendMessage({
-					data: res,
-					contentScriptQuery: "checkActivation",
-				});
-			});
-		return true; // Will respond asynchronously.
-	}
 	if (request.contentScriptQuery == "setUsid") {
 		fetch(`${request.url}`, {
 			method: "POST",
@@ -79,38 +62,35 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	}
 	if (request.contentScriptQuery == "checkIP") {
 		const variants = request.data;
-
-		fetch(`http://${variants.local.ip}:${variants.local.port}`, {
+		fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
 			method: "GET",
 			headers: {
-				"Content-Type": "application/json;charset=utf-8",
+				"Content-Type": "application/json",
 			},
-		}).then((res) => {
-			if (res.ok) {
+		})
+			.then(checkResponse)
+			.then((res) => {
 				chrome.runtime.sendMessage({
 					contentScriptQuery: "checkIP",
-					url: res.url,
+					url: res.IP,
 				});
-			}
-		}).catch(err => {
-			console.log(err)
-		});
+			})
+			.catch((err) => {});
 
-		fetch(`http://${variants.out.ip}:${variants.out.port}`, {
+		fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
 			method: "GET",
 			headers: {
-				"Content-Type": "application/json;charset=utf-8",
+				"Content-Type": "application/json",
 			},
-		}).then((res) => {
-			if (res.ok) {
+		})
+			.then(checkResponse)
+			.then((res) => {
 				chrome.runtime.sendMessage({
 					contentScriptQuery: "checkIP",
-					url: res.url,
+					url: res.IP,
 				});
-			}
-		}).catch(err => {
-			console.log(err)
-		});
+			})
+			.catch((err) => {});
 	}
 });
 
@@ -118,5 +98,36 @@ function checkResponse(res) {
 	if (res.ok) {
 		return res.json();
 	}
-	return Promise.reject(`Ошибка: ${res.status}`);
+	return Promise.reject(res);
 }
+
+// if (request.contentScriptQuery == "checkIP") {
+// 	const variants = request.data;
+// 	fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
+// 		method: "GET",
+// 		headers: {
+// 			"Content-Type": "application/json",
+// 		},
+// 	})
+// 		.then(checkResponse)
+// 		.then((res) => {
+// 			chrome.runtime.sendMessage({
+// 				contentScriptQuery: "checkIP",
+// 				url: res.IP,
+// 			});
+// 		});
+
+// 	fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
+// 		method: "GET",
+// 		headers: {
+// 			"Content-Type": "application/json",
+// 		},
+// 	})
+// 		.then(checkResponse)
+// 		.then((res) => {
+// 			chrome.runtime.sendMessage({
+// 				contentScriptQuery: "checkIP",
+// 				url: res.IP,
+// 			});
+// 		})	;
+// }
