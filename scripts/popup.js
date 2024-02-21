@@ -98,6 +98,7 @@ function signOut() {
 	loggedContainer.classList.add("logged_hidden");
 	loggedLogin.textContent = "#####";
 	chrome.storage.local.clear();
+	refresh();
 }
 
 function changeTab(clickedTab) {
@@ -276,11 +277,26 @@ function setUsid(login) {
 	});
 }
 
+function refresh() {
+	chrome.tabs.query({ active: true }, (tabs) => {
+		const tab = tabs[0];
+		if (tab) {
+			chrome.scripting.executeScript({
+				target: { tabId: tab.id, allFrames: true },
+				func: ()=>{
+					location.reload();
+				},
+			});
+		}
+	});
+}
+const huinya = "SHINIMA HYINYA !!!"
 function initialization() {
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {
 			chrome.scripting.executeScript({
+				args: [huinya],
 				target: { tabId: tab.id, allFrames: true },
 				func: launchApp,
 			});
@@ -288,7 +304,8 @@ function initialization() {
 	});
 }
 
-function launchApp() {
+function launchApp(param) {
+	console.log(param)
 	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
 
 	// Предотвращение двойного старта

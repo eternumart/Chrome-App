@@ -100,34 +100,3 @@ function checkResponse(res) {
 	}
 	return Promise.reject(res);
 }
-
-// if (request.contentScriptQuery == "checkIP") {
-// 	const variants = request.data;
-// 	fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
-// 		method: "GET",
-// 		headers: {
-// 			"Content-Type": "application/json",
-// 		},
-// 	})
-// 		.then(checkResponse)
-// 		.then((res) => {
-// 			chrome.runtime.sendMessage({
-// 				contentScriptQuery: "checkIP",
-// 				url: res.IP,
-// 			});
-// 		});
-
-// 	fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
-// 		method: "GET",
-// 		headers: {
-// 			"Content-Type": "application/json",
-// 		},
-// 	})
-// 		.then(checkResponse)
-// 		.then((res) => {
-// 			chrome.runtime.sendMessage({
-// 				contentScriptQuery: "checkIP",
-// 				url: res.IP,
-// 			});
-// 		})	;
-// }
