@@ -289,20 +289,12 @@ function initialization() {
 }
 
 function launchApp() {
-	debugger;
 	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
 		setToStorage(false, true, null, null);
-	} else {
-		try {
-			if (document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".mji-manager-app") || document.querySelector(".mji-manager-app")) {
-				return;
-			}
-		} catch {}
 	}
-
 	// Определение наличия iFrame
 	try {
 		iFrame = document.querySelector("#formCanvas");
