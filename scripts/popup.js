@@ -59,7 +59,7 @@ let currentState = false;
 let currentIP = "";
 
 getCurrentIP();
-checkLogin();
+checkLogin(undefined, true, true);
 
 loggedExitButton.addEventListener("click", signOut);
 loginForm.addEventListener("submit", (evt) => {
@@ -129,7 +129,7 @@ function initActivation(log, pass, form, evt) {
 		if (request.contentScriptQuery == "activation") {
 			if (request.data.boolean == true) {
 				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
-				checkLogin(log);
+				checkLogin(log, true, "launched");
 				initLoader(form, false);
 			}
 			if (request.data.boolean === false) {
@@ -176,9 +176,10 @@ function logIn(log, pass, form, evt) {
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "logIn") {
 			if (request.data.loginIsPossible === true && request.data.activated) {
-				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
-				checkLogin(log);
-				initLoader(form, false);
+				chrome.storage.local.set({ logged: `${log}` }).then(() => {
+					checkLogin(log, request.data.loginIsPossible, true);
+					initLoader(form, false);
+				});
 			} else {
 				loginFormActivationError.classList.add("auth__error_visible");
 				loginFormActivationError.textContent = request.data.activation;
@@ -213,16 +214,20 @@ function changePopupState() {
 	}
 }
 
-function checkLogin(log) {
+function checkLogin(log, loginIsPossible, launchStatus) {
+	let currentLogin = "";
 	chrome.storage.local.get(["logged"]).then((result) => {
 		if (result.logged !== undefined) {
 			if (log !== undefined && log !== result.logged) {
 				loggedLogin.textContent = log;
+				currentLogin = log;
 			} else {
 				loggedLogin.textContent = result.logged;
+				currentLogin = result.logged;
 			}
 			changePopupState();
-			initialization();
+			checkLayoutBeforeInit();
+			initialization(currentLogin, loginIsPossible, launchStatus);
 		}
 	});
 }
@@ -277,26 +282,50 @@ function setUsid(login) {
 	});
 }
 
+// Если в storage "status" остался статус init: true - рабочее окно не откроется. Эта функция обнуляет storage "status" до исходного.
+function checkLayoutBeforeInit() {
+	chrome.tabs.query({ active: true }, (tabs) => {
+		const tab = tabs[0];
+		if (tab) {
+			chrome.scripting.executeScript({
+				target: { tabId: tab.id, allFrames: true },
+				func: () => {
+					try {
+						document.querySelector(".mji-manager-app").remove();
+					} catch {}
+					localStorage.setItem("status", JSON.stringify({ layout: false, init: false, authorized: false, uid: null }));
+				},
+			});
+		}
+	});
+}
+
+// При выходе из аккаунта - обнуляется storage "status" до исходного и закрывается рабочее окно если оно было открыто.
 function refresh() {
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {
 			chrome.scripting.executeScript({
 				target: { tabId: tab.id, allFrames: true },
-				func: ()=>{
-					location.reload();
+				func: () => {
+					localStorage.setItem("status", JSON.stringify({ layout: false, init: false, authorized: false, uid: null }));
+					try {
+						document.querySelector(".mji-manager-app").remove();
+					} catch {}
 				},
 			});
 		}
 	});
 }
-const huinya = "SHINIMA HYINYA !!!"
-function initialization() {
+
+// Инициализация запуска рабочего окна
+function initialization(login, loginIsPossible, launchStatus) {
+	console.log(login, loginIsPossible, launchStatus);
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {
 			chrome.scripting.executeScript({
-				args: [huinya],
+				args: [`${login}`, loginIsPossible, launchStatus],
 				target: { tabId: tab.id, allFrames: true },
 				func: launchApp,
 			});
@@ -304,14 +333,23 @@ function initialization() {
 	});
 }
 
-function launchApp(param) {
-	console.log(param)
-	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
-
+function launchApp(login, loginIsPossible, launchStatus) {
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
-		setToStorage(false, true, null, null);
+		setToStorage(false, launchStatus, null, null);
+	} else {
+		const storageData = JSON.parse(localStorage.getItem("status"));
+		if (storageData.init) {
+			return;
+		} else {
+			if (loginIsPossible) {
+				setToStorage(false, launchStatus, null, null);
+			}
+		}
 	}
+
+	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
+
 	// Определение наличия iFrame
 	try {
 		iFrame = document.querySelector("#formCanvas");
@@ -360,6 +398,7 @@ function launchApp(param) {
 	const pasteButton = app.querySelector("#paste");
 	const photoDownload = app.querySelector(".form");
 	const formInput = app.querySelector("#file");
+	const userLogin = app.querySelector(".account-info__login").querySelector("span");
 
 	// Listeners
 	dragIco.addEventListener("mousedown", startDraggingDiv);
@@ -376,6 +415,8 @@ function launchApp(param) {
 			changeTab(tab);
 		});
 	});
+
+	userLogin.textContent = login;
 
 	setInitialDate(inputDate);
 
@@ -435,7 +476,9 @@ function launchApp(param) {
 				</button>
 			</div>
 		</div>
-
+		<div class="account-info">
+    		<p class="account-info__login">Пользователь: <span>sli@sste.ru</span></p>
+    	</div>
 		<div class="tabs">
 			<button class="tabs__button" id="main">Основное</button>
 			<button class="tabs__button" id="photo">Фото</button>
@@ -482,6 +525,18 @@ function launchApp(param) {
 			box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
 			padding: 0;
 		  }
+
+		  .account-info {
+			display: flex;
+			align-items: center;
+			padding: 10px;
+			}
+
+		  .account-info__login {
+			font-size: 16px;
+			font-family: Arial;
+		  }
+
 		  .app_minimized {
 			top: unset !important;
 			bottom: 0 !important;
@@ -873,7 +928,7 @@ function launchApp(param) {
 		minimizeButton.removeEventListener("click", minimizeApp);
 		closeButton.removeEventListener("click", closeApp);
 		dragIco.removeEventListener("mousedown", startDraggingDiv);
-		setToStorage(false, false, null);
+		setToStorage(false, false, null, null);
 		app.remove();
 		htmlHead.querySelector("style").remove();
 	}
