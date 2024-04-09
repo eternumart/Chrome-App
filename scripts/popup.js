@@ -448,7 +448,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 						/>
 					</svg>
 				</div>
-				<h1 class="header__title">МЖИ менеджер v2.0.0</h1>
+				<h1 class="header__title">МЖИ менеджер v2.1.0</h1>
 			</div>
 			<div class="header__drag-button">
 				<svg width="20" height="6" viewBox="0 0 20 6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2961,7 +2961,6 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	}
 
 	function downloadPhotos(evt) {
-		debugger
 		evt.preventDefault();
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
 		if (!buttonError(submitButton, currentPage, "photo", "Загрузить")) {
@@ -3024,7 +3023,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			if (counter >= files.length) {
 				clearInterval(interval);
 				setTimeout(() => {
-					//saveButton.click();
+					saveButton.click();
 					submitButton.value = "Сохранено";
 					submitButton.classList.add("form__button_done");
 					setTimeout(() => {
