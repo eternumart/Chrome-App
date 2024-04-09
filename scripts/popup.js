@@ -397,6 +397,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	const clearDataButton = app.querySelector("#clean");
 	const pasteButton = app.querySelector("#paste");
 	const photoDownload = app.querySelector(".form");
+	const submitButton = photoDownload.querySelector(".form__button");
 	const formInput = app.querySelector("#file");
 	const userLogin = app.querySelector(".account-info__login").querySelector("span");
 
@@ -2960,6 +2961,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	}
 
 	function downloadPhotos(evt) {
+		debugger
 		evt.preventDefault();
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
 		if (!buttonError(submitButton, currentPage, "photo", "Загрузить")) {
@@ -3022,7 +3024,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			if (counter >= files.length) {
 				clearInterval(interval);
 				setTimeout(() => {
-					saveButton.click();
+					//saveButton.click();
 					submitButton.value = "Сохранено";
 					submitButton.classList.add("form__button_done");
 					setTimeout(() => {
