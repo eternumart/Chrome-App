@@ -1,37 +1,361 @@
-document.addEventListener("DOMContentLoaded", initialization);
+const formsTabs = document.querySelectorAll(".tabs__button");
+const formsAll = document.querySelectorAll(".auth__form");
+const authContainer = document.querySelector(".auth");
+const loggedContainer = document.querySelector(".logged");
+const loggedLogin = loggedContainer.querySelector(".logged__login");
+const loggedExitButton = loggedContainer.querySelector(".logged__button");
 
-function initialization(evt) {
+const loginForm = document.querySelector(".auth__form_login");
+const loginFormLogin = loginForm.querySelector("#login");
+const loginFormPassword = loginForm.querySelector("#password");
+const loginFormErrors = loginForm.querySelectorAll(".auth__error");
+const loginFormButton = loginForm.querySelector("#login-btn");
+const loginFormActivationError = loginForm.querySelector("#error-activation");
+
+const activateForm = document.querySelector(".auth__form_first");
+const activateFormLogin = activateForm.querySelector("#login");
+const activateFormPassword = activateForm.querySelector("#password");
+const activateFormKey = activateForm.querySelector("#key");
+const activateFormButton = activateForm.querySelector("#activate-btn");
+const activateFormErrors = activateForm.querySelectorAll(".auth__error");
+const activateFormKeyError = activateForm.querySelector("#error-key");
+
+const loader = document.querySelector(".loader");
+
+const fakeBase = {
+	"sli@sste.ru": {
+		login: "sli@sste.ru",
+		password: "Es12345678",
+		key: "jL0zf-JglWM-iEvWJ-8F1uo",
+		usid: "1703663820788_18283173",
+	},
+	"ada@sste.ru": {
+		login: "ada@sste.ru",
+		password: "12345",
+		key: "jL4zf-JglWM-iEvWJ-9F1u0",
+		usid: "1703663820900_72245271",
+	},
+	"avd@sste.ru": {
+		login: "avd@sste.ru",
+		password: "12345",
+		key: "",
+		usid: "",
+	},
+};
+
+// Конфиг Out & Local
+const server = {
+	local: {
+		ip: "192.168.0.99",
+		port: "3000",
+	},
+	out: {
+		ip: "82.149.216.198",
+		port: "57861",
+	},
+};
+
+let currentState = false;
+let currentIP = "";
+
+getCurrentIP();
+checkLogin(undefined, true, true);
+
+loggedExitButton.addEventListener("click", signOut);
+loginForm.addEventListener("submit", (evt) => {
+	logIn(loginFormLogin.value, loginFormPassword.value, loginForm, evt);
+});
+
+activateForm.addEventListener("submit", (evt) => {
+	initActivation(activateFormLogin.value, activateFormPassword.value, activateForm, evt);
+});
+
+formsTabs.forEach((tab) => {
+	tab.addEventListener("click", () => {
+		changeTab(tab);
+	});
+});
+
+function getCurrentIP() {
+	if (currentIP !== "") {
+		return;
+	}
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		if (request.contentScriptQuery == "checkIP") {
+			currentIP = `http://${request.url}/`;
+			console.log(`Current IP: ${currentIP}`);
+		}
+	});
+
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "checkIP",
+		data: server,
+	});
+}
+
+function signOut() {
+	authContainer.classList.remove("auth_hidden");
+	loggedContainer.classList.add("logged_hidden");
+	loggedLogin.textContent = "#####";
+	chrome.storage.local.clear();
+	refresh();
+}
+
+function changeTab(clickedTab) {
+	formsTabs.forEach((tab) => {
+		if (tab === clickedTab) {
+			tab.classList.add("tabs__button_active");
+		} else {
+			tab.classList.remove("tabs__button_active");
+		}
+	});
+	formsAll.forEach((form) => {
+		if (clickedTab.id === form.id) {
+			form.classList.add("auth__form_active");
+		} else {
+			form.classList.remove("auth__form_active");
+		}
+	});
+}
+
+function initActivation(log, pass, form, evt) {
 	evt.preventDefault();
 
+	initLoader(form, true);
+
+	const usid = generateID();
+
+	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+		if (request.contentScriptQuery == "activation") {
+			if (request.data.boolean == true) {
+				chrome.storage.local.set({ logged: `${log}` }).then(() => {});
+				checkLogin(log, true, "launched");
+				initLoader(form, false);
+			}
+			if (request.data.boolean === false) {
+				activateFormKeyError.classList.add("auth__error_visible");
+				initLoader(form, false);
+			}
+		}
+	});
+
+	if (log !== "" && pass !== "") {
+		if (!currentState) {
+			chrome.runtime.sendMessage({
+				contentScriptQuery: "activation",
+				data: {
+					login: log,
+					password: pass,
+					key: activateFormKey.value,
+					usid: usid,
+				},
+				url: `${currentIP}activation`,
+			});
+		}
+	} else {
+		activateFormKeyError.classList.add("auth__error_visible");
+		activateFormKeyError.textContent = "Поля не могут быть пустыми";
+		initLoader(form, false);
+	}
+}
+
+function initLoader(form, flag) {
+	if (flag) {
+		loader.classList.add("loader_loading");
+		form.classList.remove("auth__form_active");
+	} else {
+		loader.classList.remove("loader_loading");
+		form.classList.add("auth__form_active");
+	}
+}
+
+function logIn(log, pass, form, evt) {
+	evt.preventDefault();
+
+	initLoader(form, true);
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		if (request.contentScriptQuery == "logIn") {
+			if (request.data.loginIsPossible === true && request.data.activated) {
+				chrome.storage.local.set({ logged: `${log}` }).then(() => {
+					checkLogin(log, request.data.loginIsPossible, true);
+					initLoader(form, false);
+				});
+			} else {
+				loginFormActivationError.classList.add("auth__error_visible");
+				loginFormActivationError.textContent = request.data.activation;
+				initLoader(form, false);
+			}
+		}
+	});
+	if (log !== "" && pass !== "") {
+		console.log(`${currentIP}logIn`);
+		chrome.runtime.sendMessage({
+			contentScriptQuery: "logIn",
+			data: {
+				login: log,
+				password: pass,
+			},
+			url: `${currentIP}logIn`,
+		});
+	} else {
+		loginFormActivationError.classList.add("auth__error_visible");
+		loginFormActivationError.textContent = "Поля не могут быть пустыми";
+		initLoader(form, false);
+	}
+}
+
+function changePopupState() {
+	if (!currentState) {
+		authContainer.classList.toggle("auth_hidden");
+		loggedContainer.classList.toggle("logged_hidden");
+		currentState = true;
+	} else {
+		return;
+	}
+}
+
+function checkLogin(log, loginIsPossible, launchStatus) {
+	let currentLogin = "";
+	chrome.storage.local.get(["logged"]).then((result) => {
+		if (result.logged !== undefined) {
+			if (log !== undefined && log !== result.logged) {
+				loggedLogin.textContent = log;
+				currentLogin = log;
+			} else {
+				loggedLogin.textContent = result.logged;
+				currentLogin = result.logged;
+			}
+			changePopupState();
+			checkLayoutBeforeInit();
+			initialization(currentLogin, loginIsPossible, launchStatus);
+		}
+	});
+}
+
+function generateID() {
+	const time = Date.now();
+	const randomNumber = Math.floor(Math.random() * 1000000001);
+	const usid = `${time}_${randomNumber}`;
+	return usid;
+}
+
+function checkUsid(login, usid) {
+	let usidInBase;
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		usidInBase = request.usid;
+
+		if (usidInBase) {
+			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {});
+		}
+	});
+
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "checkUsid",
+		data: {
+			login: login,
+			usid: usid,
+		},
+		url: `${currentIP}/checkusid`,
+	});
+
+	chrome.storage.local.get(["usid"]).then((result) => {});
+}
+
+function setUsid(login) {
+	const usid = generateID();
+	let usidInBase;
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		usidInBase = request.usid;
+
+		if (usidInBase) {
+			chrome.storage.local.set({ usid: `${usidInBase}` }).then(() => {});
+		}
+	});
+
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "setUsid",
+		data: {
+			login: login,
+			usid: usid,
+		},
+		url: `${currentIP}/setusid`,
+	});
+}
+
+// Если в storage "status" остался статус init: true - рабочее окно не откроется. Эта функция обнуляет storage "status" до исходного.
+function checkLayoutBeforeInit() {
 	chrome.tabs.query({ active: true }, (tabs) => {
 		const tab = tabs[0];
 		if (tab) {
 			chrome.scripting.executeScript({
 				target: { tabId: tab.id, allFrames: true },
-				func: app,
+				func: () => {
+					try {
+						document.querySelector(".mji-manager-app").remove();
+					} catch {}
+					localStorage.setItem("status", JSON.stringify({ layout: false, init: false, authorized: false, uid: null }));
+				},
 			});
 		}
 	});
 }
 
-function app() {
-	let html, wholeAddress, isIFrame, iFrame, currentPage, form;
+// При выходе из аккаунта - обнуляется storage "status" до исходного и закрывается рабочее окно если оно было открыто.
+function refresh() {
+	chrome.tabs.query({ active: true }, (tabs) => {
+		const tab = tabs[0];
+		if (tab) {
+			chrome.scripting.executeScript({
+				target: { tabId: tab.id, allFrames: true },
+				func: () => {
+					localStorage.setItem("status", JSON.stringify({ layout: false, init: false, authorized: false, uid: null }));
+					try {
+						document.querySelector(".mji-manager-app").remove();
+					} catch {}
+				},
+			});
+		}
+	});
+}
 
+// Инициализация запуска рабочего окна
+function initialization(login, loginIsPossible, launchStatus) {
+	console.log(login, loginIsPossible, launchStatus);
+	chrome.tabs.query({ active: true }, (tabs) => {
+		const tab = tabs[0];
+		if (tab) {
+			chrome.scripting.executeScript({
+				args: [`${login}`, loginIsPossible, launchStatus],
+				target: { tabId: tab.id, allFrames: true },
+				func: launchApp,
+			});
+		}
+	});
+}
+
+function launchApp(login, loginIsPossible, launchStatus) {
 	// Предотвращение двойного старта
-	if (!localStorage.getItem("appStarted")) {
-		localStorage.setItem("appStarted", true);
+	if (!localStorage.getItem("status")) {
+		setToStorage(false, launchStatus, null, null);
 	} else {
-		try{
-			if(document.querySelector("#formCanvas").contentWindow.document.querySelector("html").querySelector(".app") || document.querySelector(".app")){
-				return;
+		const storageData = JSON.parse(localStorage.getItem("status"));
+		if (storageData.init) {
+			return;
+		} else {
+			if (loginIsPossible) {
+				setToStorage(false, launchStatus, null, null);
 			}
-		} catch {}
+		}
 	}
+
+	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
 
 	// Определение наличия iFrame
 	try {
 		iFrame = document.querySelector("#formCanvas");
-		isIFrame = true;
+		if (iFrame) {
+			isIFrame = true;
+		}
 	} catch {
 		isIFrame = false;
 	}
@@ -51,7 +375,55 @@ function app() {
 	// Встраивание приложения в страницу
 	const htmlHead = html.querySelector("head");
 	const htmlBody = html.querySelector("body");
-	const popupLayout = `<div class="app">
+
+	// Определение страницы встраивания
+	if (htmlBody.querySelector("#formData107")) {
+		form = htmlBody.querySelector("#formData107");
+		currentPage = "photo";
+		createPopup(currentPage);
+	} else {
+		form = htmlBody.querySelector("#formData181");
+		currentPage = "main";
+		createPopup(currentPage);
+	}
+	setToStorage(true, true, null, null);
+
+	const dragIco = app.querySelector(".header__drag-button");
+	const inputDate = app.querySelector("#date");
+	const cleanButton = app.querySelector("#cleanButton");
+	const minimizeButton = app.querySelector("#minimizeButton");
+	const closeButton = app.querySelector("#closeButton");
+	const copyButton = app.querySelector("#copy");
+	const clearDataButton = app.querySelector("#clean");
+	const pasteButton = app.querySelector("#paste");
+	const photoDownload = app.querySelector(".form");
+	const submitButton = photoDownload.querySelector(".form__button");
+	const formInput = app.querySelector("#file");
+	const userLogin = app.querySelector(".account-info__login").querySelector("span");
+
+	// Listeners
+	dragIco.addEventListener("mousedown", startDraggingDiv);
+	dragIco.addEventListener("dragstart", removeDefaultDrag);
+	cleanButton.addEventListener("click", clearCache);
+	minimizeButton.addEventListener("click", minimizeApp);
+	closeButton.addEventListener("click", closeApp);
+	clearDataButton.addEventListener("click", clearData);
+	copyButton.addEventListener("click", saveData);
+	pasteButton.addEventListener("click", loadData);
+	photoDownload.addEventListener("submit", downloadPhotos);
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			changeTab(tab);
+		});
+	});
+
+	userLogin.textContent = login;
+
+	setInitialDate(inputDate);
+
+	// Функционал приложения
+	function createPopup(currentPage) {
+		const popupLayout = `<div class="mji-manager-app">
 		<div class="header">
 			<div class="header__title-wrapper">
 				<div class="header__logo">
@@ -76,7 +448,7 @@ function app() {
 						/>
 					</svg>
 				</div>
-				<h1 class="header__title">МЖИ менеджер v1.5.0</h1>
+				<h1 class="header__title">МЖИ менеджер v2.1.0</h1>
 			</div>
 			<div class="header__drag-button">
 				<svg width="20" height="6" viewBox="0 0 20 6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -105,7 +477,9 @@ function app() {
 				</button>
 			</div>
 		</div>
-
+		<div class="account-info">
+    		<p class="account-info__login">Пользователь: <span>sli@sste.ru</span></p>
+    	</div>
 		<div class="tabs">
 			<button class="tabs__button" id="main">Основное</button>
 			<button class="tabs__button" id="photo">Фото</button>
@@ -133,14 +507,14 @@ function app() {
 			</div>
 		</div>
 		</div>`;
-	const stylesLayout = `<style>
-		* {
+		const stylesLayout = `<style>
+		.mji-manager-app * {
 			padding: 0;
 			margin: 0;
 			box-sizing: border-box;
 		  }
 		  
-		  .app {
+		  .mji-manager-app {
 			font-family: Inter;
 			z-index: 999;
 			background: #fff;
@@ -150,11 +524,24 @@ function app() {
 			right: 20px;
 			border-radius: 10px;
 			box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+			padding: 0;
 		  }
+
+		  .account-info {
+			display: flex;
+			align-items: center;
+			padding: 10px;
+			}
+
+		  .account-info__login {
+			font-size: 16px;
+			font-family: Arial;
+		  }
+
 		  .app_minimized {
 			top: unset !important;
-    		bottom: 0 !important;
-    		left: unset !important;
+			bottom: 0 !important;
+			left: unset !important;
 			max-height: 48px;
 			width: auto;
 		  }
@@ -164,6 +551,21 @@ function app() {
 		  }
 		  .app_minimized #minimizeButton {
 			transform: rotate(180deg);
+		  }
+		  .app_not-auth {
+			width: 330px;
+		  }
+		  .app_not-auth #cleanButton {
+			display: none;
+		  }
+		  .app_not-auth .tabs {
+			display: none !important;
+		  }
+		  .app_not-auth .main {
+			display: none !important;
+		  }
+		  .app_not-auth .auth {
+			display: block !important;
 		  }
 		  
 		  .header {
@@ -188,7 +590,6 @@ function app() {
 		  
 		  .header__title {
 			color: #1a1a18;
-			
 			font-size: 20px;
 			font-style: normal;
 			font-weight: 400;
@@ -198,7 +599,7 @@ function app() {
 		  .header__drag-button {
 			position: absolute;
 			top: 2px;
-			left: calc(50% - (20px / 2));
+			left: calc(50% - 10px);
 			height: 6px;
 			display: flex;
 			align-items: center;
@@ -222,37 +623,97 @@ function app() {
 			cursor: pointer;
 			align-items: flex-end;
 		  }
+		  
 		  .header__button:hover {
 			opacity: 0.7;
 			transition: opacity 0.3s;
 		  }
-
-		  	.app_minimized .header {
-				gap: 20px;
-			}
-
-			.animation {
-				animation: colorChange;
-				animation-duration: 1s;
-				animation-timing-function: ease-in-out;
-				animation-fill-mode: both;
-				animation-direction: normal;
-				animation-iteration-count: 1;
-			
-			}
-			
-			@keyframes colorChange {
-				0% {
-					fill: #787878;
-				}
-				50% {
-					fill: #008000;
-				}
-				100% {
-					fill: #787878;
-				}
-			}
 		  
+		  .auth {
+			padding: 20px 10px;
+			display: none;
+		  }
+		  .auth__form {
+			display: flex;
+			width: 100%;
+			justify-content: center;
+			flex-direction: column;
+			gap: 10px;
+		  }
+		  .auth__input-wrapper {
+			display: flex;
+			align-items: center;
+			position: relative;
+		  }
+		  .auth__input {
+			width: 100%;
+			padding: 10px;
+			border: 1px solid #1f5473;
+			color: #1a1a18;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			height: 34px;
+			outline: none;
+		  }
+		  .auth__error {
+			color: #9f0000;
+			font-size: 14px;
+			position: absolute;
+			right: 10px;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s;
+		  }
+		  .auth__error_visible {
+			opacity: 1;
+			transition: opacity 0.3s;
+		  }
+		  .auth__button {
+			background: #1f5473;
+			border: none;
+			outline: none;
+			padding: 10px 30px;
+			text-align: center;
+			color: #fff;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			height: 34px;
+			cursor: pointer;
+			transition: opacity 0.3s;
+		  }
+		  .auth__button:hover {
+			opacity: 0.7;
+			transition: opacity 0.3s;
+		  }
+		  
+		  .app_minimized .header {
+			gap: 20px;
+		  }
+		  
+		  .animation {
+			animation: colorChange;
+			animation-duration: 1s;
+			animation-timing-function: ease-in-out;
+			animation-fill-mode: both;
+			animation-direction: normal;
+			animation-iteration-count: 1;
+		  }
+		  
+		  @keyframes colorChange {
+			0% {
+			  fill: #787878;
+			}
+			50% {
+			  fill: #008000;
+			}
+			100% {
+			  fill: #787878;
+			}
+		  }
 		  .tabs {
 			display: flex;
 			width: 100%;
@@ -270,7 +731,6 @@ function app() {
 			padding: 8px;
 			color: #1a1a18;
 			text-align: center;
-			
 			font-size: 14px;
 			font-style: normal;
 			font-weight: 400;
@@ -290,9 +750,11 @@ function app() {
 		  .main {
 			padding: 0 10px 20px 10px;
 		  }
+		  
 		  .content_deactive {
 			display: none !important;
-		  }		  
+		  }
+		  
 		  .content#main {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
@@ -311,137 +773,140 @@ function app() {
 			padding: 10px 0;
 			transition: opacity 0.3s;
 		  }
+		  
 		  .main__button:hover {
-			  transition: opacity 0.3s;
-			  opacity: 0.7;
-			  cursor: pointer;
+			transition: opacity 0.3s;
+			opacity: 0.7;
+			cursor: pointer;
 		  }
+		  
 		  .main__button_done {
 			color: #00931a !important;
 		  }
+		  
 		  .main__button_error {
 			color: #9f0000 !important;
 		  }
+		  
 		  .form__field {
-			  display: flex;
-			  flex-direction: column;
-			  gap: 10px;
-			  width: 100%;
-			  margin-bottom: 20px;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			width: 100%;
+			margin-bottom: 20px;
 		  }
 		  
 		  .form__label {
-			  color: #1A1A18;
-		  font-size: 12px;
-		  font-style: normal;
-		  font-weight: 400;
-		  line-height: 100%;
+			color: #1a1a18;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
 		  }
 		  
 		  .form__input[type=file]::file-selector-button {
-			  	width: 190px;
-			  	border: none;
-			  	background: #1F5473;
-			  	padding: 10px 30px;
-		  		margin-right: 10px;
-			  	color: #fff;
-			  cursor: pointer;
-			  transition: opacity 0.3s;
-			  font-size: 14px;
-			  font-style: normal;
-			  font-weight: 400;
-			  line-height: 100%;
-			}
-			.form__input[type=file]::file-selector-button:hover {
-			  transition: opacity 0.3s;
-			  opacity: 0.7;
-			}
-			.form__input[type=date] {
-			  width: 190px;
-			  border: 1px solid #1F5473;
-			  padding: 11px 10px;
-			  color: #1A1A18;
-		  font-size: 12px;
-		  font-style: normal;
-		  font-weight: 400;
-		  line-height: 100%;
-		  outline: none;
-			}
+			width: 190px;
+			border: none;
+			background: #1f5473;
+			padding: 10px 30px;
+			margin-right: 10px;
+			color: #fff;
+			cursor: pointer;
+			transition: opacity 0.3s;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+		  }
 		  
-			.form__button {
-			  width: 190px;
-			  outline: none;
-			  border: none;
-			  background: #1F5473;
-			  color: #FFF;
-			  transition: 0.3s;
-		  		font-size: 14px;
-		  		font-style: normal;
-		  		font-weight: 400;
-		  		line-height: 100%;
-		  		cursor: pointer;
-		  		padding: 10px 30px;
-			}
+		  .form__input[type=file]::file-selector-button:hover {
+			transition: opacity 0.3s;
+			opacity: 0.7;
+		  }
 		  
-			.form__button:hover {
-			  transition: 0.3s;
-			  opacity: 0.7;
-			}
-			.form__button_done {
-				background: #00931a !important;
-			}
+		  .form__input[type=date] {
+			width: 190px;
+			border: 1px solid #1f5473;
+			padding: 11px 10px;
+			color: #1a1a18;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			outline: none;
+		  }
+		  
+		  .form__button {
+			width: 190px;
+			outline: none;
+			border: none;
+			background: #1f5473;
+			color: #fff;
+			transition: 0.3s;
+			font-size: 14px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 100%;
+			cursor: pointer;
+			padding: 10px 30px;
+		  }
+		  
+		  .form__button:hover {
+			transition: 0.3s;
+			opacity: 0.7;
+		  }
+		  
+		  .form__button_done {
+			background: #00931a !important;
+		  }
 	  	</style>`;
 
-	// Определение страницы встраивания
-	if (htmlBody.querySelector("#formData107")) {
-		form = htmlBody.querySelector("#formData107");
-		currentPage = "photo";
-	} else {
-		form = htmlBody.querySelector("#formData181");
-		currentPage = "main";
+		htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
+		htmlBody.insertAdjacentHTML("afterBegin", popupLayout);
+
+		app = htmlBody.querySelector(".mji-manager-app");
+		tabs = app.querySelectorAll(".tabs__button");
+		tabsContent = app.querySelectorAll(".content");
+
+		// Установка табов и контента под текущую страницу
+		currentPage === "main" ? tabs[0].classList.add("tabs__button_active") : tabs[1].classList.add("tabs__button_active");
+		currentPage === "main" ? tabsContent[1].classList.add("content_deactive") : tabsContent[0].classList.add("content_deactive");
 	}
 
-	htmlHead.insertAdjacentHTML("beforeEnd", stylesLayout);
-	htmlBody.insertAdjacentHTML("afterBegin", popupLayout);
+	function setToStorage(layout, init, authorized, uid) {
+		let status;
+		if (localStorage.getItem("status")) {
+			status = JSON.parse(localStorage.getItem("status"));
+			if (layout !== null) {
+				status.layout = layout;
+			}
+			if (init !== null) {
+				status.init = init;
+			}
+			if (authorized !== null) {
+				status.authorized = authorized;
+			}
+			if (uid !== null) {
+				status.uid = uid;
+			}
+		} else {
+			status = {};
+			if (layout !== null) {
+				status.layout = layout;
+			}
+			if (init !== null) {
+				status.init = init;
+			}
+			if (authorized !== null) {
+				status.authorized = authorized;
+			}
+			if (uid !== null) {
+				status.uid = uid;
+			}
+		}
+		localStorage.setItem("status", JSON.stringify(status));
+	}
 
-	const app = htmlBody.querySelector(".app");
-	const dragIco = app.querySelector(".header__drag-button");
-	const tabs = app.querySelectorAll(".tabs__button");
-	const tabsContent = app.querySelectorAll(".content");
-	const inputDate = app.querySelector("#date");
-	const cleanButton = app.querySelector("#cleanButton");
-	const minimizeButton = app.querySelector("#minimizeButton");
-	const closeButton = app.querySelector("#closeButton");
-	const copyButton = app.querySelector("#copy");
-	const clearDataButton = app.querySelector("#clean");
-	const pasteButton = app.querySelector("#paste");
-	const photoDownload = app.querySelector(".form");
-	const formInput = app.querySelector("#file");
-	const submitButton = app.querySelector(".form__button");
-
-	// Listeners
-	dragIco.addEventListener("mousedown", startDraggingDiv);
-	dragIco.addEventListener("dragstart", removeDefaultDrag);
-	cleanButton.addEventListener("click", clearCache);
-	minimizeButton.addEventListener("click", minimizeApp);
-	closeButton.addEventListener("click", closeApp);
-	clearDataButton.addEventListener("click", clearData);
-	copyButton.addEventListener("click", saveData);
-	pasteButton.addEventListener("click", loadData);
-	photoDownload.addEventListener("submit", downloadPhotos);
-	tabs.forEach((tab) => {
-		tab.addEventListener("click", () => {
-			changeTab(tab);
-		});
-	});
-
-	// Установка табов и контента под текущую страницу
-	currentPage === "main" ? tabs[0].classList.add("tabs__button_active") : tabs[1].classList.add("tabs__button_active");
-	currentPage === "main" ? tabsContent[1].classList.add("content_deactive") : tabsContent[0].classList.add("content_deactive");
-
-	setInitialDate(inputDate);
-
-	// Функционал приложения
 	function clearCache() {
 		cleanButton.firstElementChild.firstElementChild.classList.add("animation");
 		localStorage.removeItem("MJIDATA");
@@ -464,8 +929,9 @@ function app() {
 		minimizeButton.removeEventListener("click", minimizeApp);
 		closeButton.removeEventListener("click", closeApp);
 		dragIco.removeEventListener("mousedown", startDraggingDiv);
-		localStorage.removeItem("appStarted");
+		setToStorage(false, false, null, null);
 		app.remove();
+		htmlHead.querySelector("style").remove();
 	}
 
 	function setInitialDate(tag) {
@@ -503,7 +969,6 @@ function app() {
 	function startDraggingDiv(event) {
 		dragIco.style.cursor = "grabbing";
 		let shiftX = event.clientX - app.getBoundingClientRect().left;
-		let shiftY = event.clientY - app.getBoundingClientRect().top;
 
 		html.addEventListener("mousemove", onMouseMove);
 		html.addEventListener("mouseup", () => {
@@ -528,17 +993,26 @@ function app() {
 		return false;
 	}
 
+	function buttonError(button, currentPage, needPage, stdValue) {
+		if (currentPage !== needPage) {
+			button.classList.add("main__button_error");
+			button.textContent = "Ошибка!";
+			setTimeout(() => {
+				button.classList.remove("main__button_error");
+				button.textContent = stdValue;
+			}, 1500);
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 	function saveData() {
 		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
-		if (currentPage !== "main") {
-			copyButton.classList.add("main__button_error");
-			copyButton.textContent = "Ошибка!";
-			setTimeout(() => {
-				copyButton.classList.remove("main__button_error");
-				copyButton.textContent = "Копирование отчета";
-			}, 1500);
+		if (!buttonError(copyButton, currentPage, "main", "Копирование отчета")) {
 			return;
 		}
+
 		const area = wholeAddress.split(",")[0];
 		const district = wholeAddress.split(",")[1];
 		const address = htmlBody.querySelector("#comboboxTextcomp_12339").value;
@@ -1779,15 +2253,10 @@ function app() {
 
 	function loadData() {
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
-		if (currentPage !== "main") {
-			pasteButton.classList.add("main__button_error");
-			pasteButton.textContent = "Ошибка!";
-			setTimeout(() => {
-				pasteButton.classList.remove("main__button_error");
-				pasteButton.textContent = "Вставка отчета";
-			}, 1500);
+		if (!buttonError(pasteButton, currentPage, "main", "Вставка отчета")) {
 			return;
 		}
+
 		// Если никаких данных в localStorage нет - выходим из функции
 		if (localStorage.getItem("MJIDATA") === null) {
 			pasteButton.classList.add("main__button_error");
@@ -2147,15 +2616,10 @@ function app() {
 
 	function clearData() {
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
-		if (currentPage !== "main") {
-			clearDataButton.classList.add("main__button_error");
-			clearDataButton.textContent = "Ошибка!";
-			setTimeout(() => {
-				clearDataButton.classList.remove("main__button_error");
-				clearDataButton.textContent = "Очистка отчета";
-			}, 1500);
+		if (!buttonError(clearDataButton, currentPage, "main", "Очистка отчета")) {
 			return;
 		}
+
 		const repairProjectsTable = form.querySelector("#group_22130");
 		const repairProjectsTableRows = repairProjectsTable.querySelectorAll("tr");
 		const conclusionsPrevSurvey = form.querySelector("#gridSql_22131").querySelector(".data");
@@ -2499,15 +2963,10 @@ function app() {
 	function downloadPhotos(evt) {
 		evt.preventDefault();
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
-		if (currentPage === "main") {
-			submitButton.classList.add("form__button_error");
-			submitButton.value = "Ошибка!";
-			setTimeout(() => {
-				submitButton.classList.remove("form__button_error");
-				submitButton.value = "Загрузить";
-			}, 1500);
+		if (!buttonError(submitButton, currentPage, "photo", "Загрузить")) {
 			return;
 		}
+
 		const files = formInput.files;
 		let counter = 0;
 		if (files.length < 1) {

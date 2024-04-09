@@ -1,21 +1,25 @@
 {
 	"name": "МЖИ менеджер",
 	"description": "Ускорение работы с отчетами МЖИ",
-	"version": "1.5.0",
+	"version": "2.1.0",
 	"manifest_version": 3,
 	"icons": {
 		"16": "icons/ico16.png",
 		"512": "icons/ico512.png"
 	},
 	"action": {
-		"default_popup": "popup.html"
+		"default_popup": "mji-app.html"
 	},
-	"permissions": ["scripting", "activeTab", "storage"],
-	"background": {},
+	"permissions": ["scripting", "activeTab", "storage", "webRequest", "debugger"],
+	"host_permissions": ["http://*/*", "https://*/*"],
+	"background": {
+		"service_worker": "./scripts/background.js",
+		"type": "module"
+	},
 	"content_scripts": [
 		{
-			"matches": ["http://185.173.2.132:7777/*"],
-			"css": ["popup.css"]
+			"matches": ["http://*/*", "https://*/*"],
+			"css": ["./styles/popup.css"]
 		}
 	]
 }
