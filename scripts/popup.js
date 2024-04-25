@@ -22,28 +22,7 @@ const activateFormKeyError = activateForm.querySelector("#error-key");
 
 const loader = document.querySelector(".loader");
 
-const fakeBase = {
-	"sli@sste.ru": {
-		login: "sli@sste.ru",
-		password: "Es12345678",
-		key: "jL0zf-JglWM-iEvWJ-8F1uo",
-		usid: "1703663820788_18283173",
-	},
-	"ada@sste.ru": {
-		login: "ada@sste.ru",
-		password: "12345",
-		key: "jL4zf-JglWM-iEvWJ-9F1u0",
-		usid: "1703663820900_72245271",
-	},
-	"avd@sste.ru": {
-		login: "avd@sste.ru",
-		password: "12345",
-		key: "",
-		usid: "",
-	},
-};
-
-// Конфиг Out & Local
+// Конфиг Out & Local // Временно. Далее в планах применение только с VPN. Уберем getCurrentIP
 const server = {
 	local: {
 		ip: "192.168.0.99",
@@ -350,7 +329,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 	let html, wholeAddress, isIFrame, iFrame, form, currentPage, app, tabs, tabsContent;
 
-	// Определение наличия iFrame
+	// Определение наличия iFrame на странице встраивания
 	try {
 		iFrame = document.querySelector("#formCanvas");
 		if (iFrame) {
@@ -372,11 +351,11 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		} catch {}
 	}
 
-	// Встраивание приложения в страницу
+	// Определение тегов head и body в документе
 	const htmlHead = html.querySelector("head");
 	const htmlBody = html.querySelector("body");
 
-	// Определение страницы встраивания
+	// Определение страницы встраивания с фото или с отчетом
 	if (htmlBody.querySelector("#formData107")) {
 		form = htmlBody.querySelector("#formData107");
 		currentPage = "photo";
@@ -401,7 +380,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	const formInput = app.querySelector("#file");
 	const userLogin = app.querySelector(".account-info__login").querySelector("span");
 
-	// Listeners
+	// Обработчики действий пользователя
 	dragIco.addEventListener("mousedown", startDraggingDiv);
 	dragIco.addEventListener("dragstart", removeDefaultDrag);
 	cleanButton.addEventListener("click", clearCache);
@@ -421,7 +400,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 	setInitialDate(inputDate);
 
-	// Функционал приложения
+	// Встраивание верстки приложения в страницу
 	function createPopup(currentPage) {
 		const popupLayout = `<div class="mji-manager-app">
 		<div class="header">
@@ -873,6 +852,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		currentPage === "main" ? tabsContent[1].classList.add("content_deactive") : tabsContent[0].classList.add("content_deactive");
 	}
 
+	// Статус инициализации запуска в страницу
 	function setToStorage(layout, init, authorized, uid) {
 		let status;
 		if (localStorage.getItem("status")) {
@@ -907,6 +887,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		localStorage.setItem("status", JSON.stringify(status));
 	}
 
+	// Очистка памяти LocalStorage от сохраненных копий отчетов
 	function clearCache() {
 		cleanButton.firstElementChild.firstElementChild.classList.add("animation");
 		localStorage.removeItem("MJIDATA");
@@ -916,6 +897,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}, 1100);
 	}
 
+	// Минимизация приложения в нижний край экрана
 	function minimizeApp() {
 		app.style.transition = "0.5s";
 		app.classList.toggle("app_minimized");
@@ -924,6 +906,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}, 500);
 	}
 
+	// Закрытие приложения
 	function closeApp() {
 		cleanButton.removeEventListener("click", clearCache);
 		minimizeButton.removeEventListener("click", minimizeApp);
@@ -934,6 +917,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		htmlHead.querySelector("style").remove();
 	}
 
+	// Установка текущей даты
 	function setInitialDate(tag) {
 		const date = new Date();
 		let day = date.getDate();
@@ -949,6 +933,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		tag.value = `${year}-${month}-${day}`;
 	}
 
+	// Смена вкладки в приложении
 	function changeTab(clickedTab) {
 		tabs.forEach((tab) => {
 			if (tab === clickedTab) {
@@ -966,6 +951,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		});
 	}
 
+	// Управление перетаскиванием рабочего окна по странице с помощью мыши
 	function startDraggingDiv(event) {
 		dragIco.style.cursor = "grabbing";
 		let shiftX = event.clientX - app.getBoundingClientRect().left;
@@ -988,11 +974,11 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 		moveAt(event.screenX, event.screenY);
 	}
-
 	function removeDefaultDrag() {
 		return false;
 	}
 
+	// Отображение ошибки при неправильном действии
 	function buttonError(button, currentPage, needPage, stdValue) {
 		if (currentPage !== needPage) {
 			button.classList.add("main__button_error");
@@ -1007,6 +993,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}
 	}
 
+	// Сохранение копии отчета в LocalStorage
 	function saveData() {
 		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
 		if (!buttonError(copyButton, currentPage, "main", "Копирование отчета")) {
@@ -2251,6 +2238,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}, 1500);
 	}
 
+	// Подгрузка копии отчета из LocalStorage на страницу
 	function loadData() {
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
 		if (!buttonError(pasteButton, currentPage, "main", "Вставка отчета")) {
@@ -2614,6 +2602,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}, 1500);
 	}
 
+	// Очистка полей отчета на странице
 	function clearData() {
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
 		if (!buttonError(clearDataButton, currentPage, "main", "Очистка отчета")) {
@@ -2960,6 +2949,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}, 1500);
 	}
 
+	// Автоматическая загрузка фотографий на страницу
 	function downloadPhotos(evt) {
 		evt.preventDefault();
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
