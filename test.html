@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+	</head>
+	<body style="height: 98vh; background: lightgray">
+		<style>
+			.fakeSelect {
+				margin: 0;
+				background: #fff;
+				border-radius: 10px;
+				box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+				padding: 20px 10px;
+				list-style: none;
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+				position: absolute;
+				width: 200%;
+			}
+
+			.fakeSelect__item {
+				outline: none;
+				border: none;
+				transition: 0.3s;
+				cursor: pointer;
+				width: fit-content;
+				color: #1a1a18;
+				font-size: 12px;
+				font-style: normal;
+				font-weight: 400;
+				line-height: 100%;
+				font-family: Inter;
+			}
+
+			.fakeSelect__item:hover {
+				color: #1f5473;
+				transition: 0.3s;
+			}
+
+			.fakeSelect__selector {
+				position: absolute;
+				top: 3px;
+				right: 3px;
+				width: 15px;
+				height: 15px;
+				border-radius: 20px;
+				background: #1f5473;
+				cursor: pointer;
+				transition: 0.3s;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.fakeSelect__selector:hover {
+				background: #fff;
+				transition: 0.3s;
+			}
+
+			.fakeSelect__selector:hover svg path {
+				fill: #1f5473;
+				transition: 0.3s;
+			}
+		</style>
+		<div class="fakeSelect__selector">
+			<svg width="7" height="6" viewBox="0 0 7 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<g clip-path="url(#clip0_100_4)">
+					<path d="M3.5 6L0.0358987 -6.52533e-07L6.9641 -4.68497e-08L3.5 6Z" fill="white" />
+				</g>
+				<defs>
+					<clipPath id="clip0_100_4">
+						<rect width="7" height="6" fill="white" />
+					</clipPath>
+				</defs>
+			</svg>
+		</div>
+		<ul class="fakeSelect">
+			<li class="fakeSelect__item">Ослабление крепления отдельных листов к обрешетке.</li>
+			<li class="fakeSelect__item">Неплотности, деформации фальцев.</li>
+			<li class="fakeSelect__item">Повреждение цинкового покрытия.</li>
+			<li class="fakeSelect__item">Пробоины стальных листов.</li>
+			<li class="fakeSelect__item">Поверхностная коррозия листов.</li>
+			<li class="fakeSelect__item">Выборочный ремонт.</li>
+			<li class="fakeSelect__item">Просветы при осмотре со стороны чердака.</li>
+		</ul>
+	</body>
+</html>

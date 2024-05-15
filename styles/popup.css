@@ -369,4 +369,13 @@
   100% {
     transform: rotate(360deg);
   }
-}/*# sourceMappingURL=popup.css.map */
+}
+
+.fakeSelect__selector:hover {
+  background: #fff;
+  transition: 0.3s;
+}
+.fakeSelect__selector:hover svg path {
+  background: #1f5473;
+  transition: 0.3s;
+}

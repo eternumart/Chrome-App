@@ -427,3 +427,15 @@
 		}
 	}
 }
+
+.fakeSelect__selector:hover {
+	background: #fff;
+	transition: 0.3s;
+
+	svg {
+		path {
+			background: #1f5473;
+			transition: 0.3s;
+		}
+	}
+}
