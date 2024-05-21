@@ -19,8 +19,7 @@
 	"content_scripts": [
 		{
 			"matches": ["http://*/*", "https://*/*"],
-			"css": ["./styles/popup.css"],
-			"js": ["./scripts/appLayout.js"]
+			"css": ["./styles/popup.css"]
 		}
 	]
 }
