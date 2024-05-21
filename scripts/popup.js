@@ -315,6 +315,10 @@ function initialization(login, loginIsPossible, launchStatus) {
 function launchApp(login, loginIsPossible, launchStatus) {
 	// Хранилище всех переменных приложения
 	const appVariables = {};
+	const resultsDefectsInputs = {
+		empty: true,
+		inputs: [],
+	};
 	// Верстка внутреннего попапа со стилями и верстка выпадающих окон
 	const popupLayout = `<div class="mji-manager-app">
 	<div class="header">
@@ -383,6 +387,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			<button class="main__button" id="copy">Копирование отчета</button>
 			<button class="main__button" id="clean">Очистка отчета</button>
 			<button class="main__button" id="paste">Вставка отчета</button>
+			<button class="main__button" id="fakeSelects">Всплывающие поля</button>
 		</div>
 		<div class="content" id="photo">
 			<form class="form" action="submit">
@@ -760,12 +765,54 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		border-radius: 10px;
 		box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
 		padding: 20px 10px;
+		position: absolute;
+		width: 500px;
+    	z-index: 100;
+    	opacity: 0;
+    	visibility: hidden;
+    	pointer-events: none;
+		transition: 0.4s;
+	}
+
+	.fakeSelect-wrapper {
+		position: relative;
+	}
+
+	.fakeSelect_opened {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transition: 0.4s;
+	}
+
+	.fakeSelect__list {
 		list-style: none;
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
+		padding: 0 0 0 15px;
+		margin: 0;
+	}
+
+	.fakeSelect__close-selector {
 		position: absolute;
-		width: 200%;
+		top: -17px;
+		left: -6px;
+		width: 15px;
+		height: 15px;
+		border-radius: 20px;
+		background: #1f5473;
+		cursor: pointer;
+		transition: 0.3s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transfor: rotate(180deg)
+	}
+
+	.fakeSelect__close-selector:hover {
+		background: #fff;
+		transition: 0.3s;
 	}
 
 	.fakeSelect__item {
@@ -800,6 +847,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		z-index: 50;
 	}
 
 	.fakeSelect__selector:hover {
@@ -813,28 +861,31 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	}
 	</style>`;
 
-	const fakeSelectButton = `<div class="fakeSelect__selector">
-<svg width="7" height="6" viewBox="0 0 7 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-	<g clip-path="url(#clip0_100_4)">
-		<path d="M3.5 6L0.0358987 -6.52533e-07L6.9641 -4.68497e-08L3.5 6Z" fill="white" />
-	</g>
-	<defs>
-		<clipPath id="clip0_100_4">
-			<rect width="7" height="6" fill="white" />
-		</clipPath>
-	</defs>
-</svg>
-	</div>`;
-
-	const fakeSelectList = `<ul class="fakeSelect">
-<li class="fakeSelect__item">#####</li>
-<li class="fakeSelect__item">#####</li>
-<li class="fakeSelect__item">#####</li>
-<li class="fakeSelect__item">#####</li>
-<li class="fakeSelect__item">#####</li>
-<li class="fakeSelect__item">#####</li>
-<li class="fakeSelect__item">#####</li>
-	</ul>`;
+	const fakeSelectList = `<div class="fakeSelect">
+	<div class="fakeSelect-wrapper">
+		<div class="fakeSelect__close-selector">
+			<svg width="7" height="6" viewBox="0 0 7 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<g clip-path="url(#clip0_100_4)">
+					<path d="M3.5 6L0.0358987 -6.52533e-07L6.9641 -4.68497e-08L3.5 6Z" fill="white" />
+				</g>
+				<defs>
+					<clipPath id="clip0_100_4">
+						<rect width="7" height="6" fill="white" />
+					</clipPath>
+				</defs>
+			</svg>
+		</div>
+		<ul class="fakeSelect__list">
+			<li class="fakeSelect__item">Ослабление крепления отдельных листов к обрешетке.</li>
+			<li class="fakeSelect__item">Неплотности, деформации фальцев.</li>
+			<li class="fakeSelect__item">Повреждение цинкового покрытия.</li>
+			<li class="fakeSelect__item">Пробоины стальных листов.</li>
+			<li class="fakeSelect__item">Поверхностная коррозия листов.</li>
+			<li class="fakeSelect__item">Выборочный ремонт.</li>
+			<li class="fakeSelect__item">Просветы при осмотре со стороны чердака.</li>
+		</ul>
+	</div>
+</div>`;
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
@@ -898,6 +949,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	appVariables.copyButton = appVariables.app.querySelector("#copy");
 	appVariables.clearDataButton = appVariables.app.querySelector("#clean");
 	appVariables.pasteButton = appVariables.app.querySelector("#paste");
+	appVariables.fakeSelectsButton = appVariables.app.querySelector("#fakeSelects");
 	appVariables.photoDownload = appVariables.app.querySelector(".form");
 	appVariables.submitButton = appVariables.photoDownload.querySelector(".form__button");
 	appVariables.formInput = appVariables.app.querySelector("#file");
@@ -913,6 +965,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	appVariables.copyButton.addEventListener("click", saveData);
 	appVariables.pasteButton.addEventListener("click", loadData);
 	appVariables.photoDownload.addEventListener("submit", downloadPhotos);
+	appVariables.fakeSelectsButton.addEventListener("click", createFakeSelects);
 	appVariables.tabs.forEach((tab) => {
 		tab.addEventListener("click", () => {
 			changeTab(tab);
@@ -934,6 +987,10 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		// Установка табов и контента под текущую страницу
 		currentPage === "main" ? appVariables.tabs[0].classList.add("tabs__button_active") : appVariables.tabs[1].classList.add("tabs__button_active");
 		currentPage === "main" ? appVariables.tabsContent[1].classList.add("content_deactive") : appVariables.tabsContent[0].classList.add("content_deactive");
+
+		appVariables.html.addEventListener("keyup", (evt) => {
+			minimizeAppByEscape(evt);
+		});
 	}
 
 	// Статус инициализации запуска в страницу
@@ -990,6 +1047,13 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}, 500);
 	}
 
+	function minimizeAppByEscape(evt) {
+		console.log(evt);
+		if (evt.key === "Escape") {
+			minimizeApp();
+		}
+	}
+
 	// Закрытие приложения
 	function closeApp() {
 		appVariables.cleanButton.removeEventListener("click", clearCache);
@@ -999,6 +1063,12 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		setToStorage(false, false, null, null);
 		appVariables.app.remove();
 		appVariables.htmlHead.querySelector("style").remove();
+		appVariables.htmlBody.querySelectorAll(".fakeSelect").forEach((select) => {
+			select.remove();
+		});
+		appVariables.htmlBody.querySelectorAll(".fakeSelect__selector").forEach((selector) => {
+			selector.remove();
+		});
 	}
 
 	// Установка текущей даты
@@ -1038,7 +1108,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	// Управление перетаскиванием рабочего окна по странице с помощью мыши
 	function startDraggingDiv(event) {
 		appVariables.dragIco.style.cursor = "grabbing";
-		let shiftX = event.clientX - app.getBoundingClientRect().left;
+		let shiftX = event.clientX - appVariables.app.getBoundingClientRect().left;
 
 		appVariables.html.addEventListener("mousemove", onMouseMove);
 		appVariables.html.addEventListener("mouseup", () => {
@@ -1048,7 +1118,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		});
 
 		function moveAt(screenX, screenY) {
-			appVariables.app.style.left = screenX - shiftX + "px";
+			appVariables.app.style.left = screenX - 255 + "px";
 			appVariables.app.style.top = screenY - 142 + "px";
 		}
 
@@ -1205,55 +1275,55 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		appVariables.recomend = new Object();
 		// Крыша
 		appVariables.recomend.krisha = new Object();
-		for (let i = 1; i < appVariables.resultsRoofRows.length; i++) {
-			switch (appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent) {
+		for (let i = 1; i < appVariables.roofRows.length; i++) {
+			switch (appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent) {
 				case "Кровля":
 					appVariables.recomend.krisha.krovla = new Object();
-					appVariables.recomend.krisha.krovla.name = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.krisha.krovla.recomend = appVariables.resultsRoofRows[i].querySelector("#comp_12484");
-					appVariables.recomend.krisha.krovla.trebObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12485");
-					appVariables.recomend.krisha.krovla.vypolnenGod = appVariables.resultsRoofRows[i].querySelector("#comp_12486");
-					appVariables.recomend.krisha.krovla.factObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12487");
+					appVariables.recomend.krisha.krovla.name = appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent;
+					appVariables.recomend.krisha.krovla.recomend = appVariables.roofRows[i].querySelector("#comp_12484");
+					appVariables.recomend.krisha.krovla.trebObjom = appVariables.roofRows[i].querySelector("#comp_12485");
+					appVariables.recomend.krisha.krovla.vypolnenGod = appVariables.roofRows[i].querySelector("#comp_12486");
+					appVariables.recomend.krisha.krovla.factObjom = appVariables.roofRows[i].querySelector("#comp_12487");
 					break;
 				case "Свесы":
 					appVariables.recomend.krisha.svesy = new Object();
-					appVariables.recomend.krisha.svesy.name = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.krisha.svesy.recomend = appVariables.resultsRoofRows[i].querySelector("#comp_12484");
-					appVariables.recomend.krisha.svesy.trebObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12485");
-					appVariables.recomend.krisha.svesy.vypolnenGod = appVariables.resultsRoofRows[i].querySelector("#comp_12486");
-					appVariables.recomend.krisha.svesy.factObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12487");
+					appVariables.recomend.krisha.svesy.name = appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent;
+					appVariables.recomend.krisha.svesy.recomend = appVariables.roofRows[i].querySelector("#comp_12484");
+					appVariables.recomend.krisha.svesy.trebObjom = appVariables.roofRows[i].querySelector("#comp_12485");
+					appVariables.recomend.krisha.svesy.vypolnenGod = appVariables.roofRows[i].querySelector("#comp_12486");
+					appVariables.recomend.krisha.svesy.factObjom = appVariables.roofRows[i].querySelector("#comp_12487");
 					break;
 				case "Стропильная система":
 					appVariables.recomend.krisha.stropilnayaSistema = new Object();
-					appVariables.recomend.krisha.stropilnayaSistema.name = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.krisha.stropilnayaSistema.recomend = appVariables.resultsRoofRows[i].querySelector("#comp_12484");
-					appVariables.recomend.krisha.stropilnayaSistema.trebObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12485");
-					appVariables.recomend.krisha.stropilnayaSistema.vypolnenGod = appVariables.resultsRoofRows[i].querySelector("#comp_12486");
-					appVariables.recomend.krisha.stropilnayaSistema.factObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12487");
+					appVariables.recomend.krisha.stropilnayaSistema.name = appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent;
+					appVariables.recomend.krisha.stropilnayaSistema.recomend = appVariables.roofRows[i].querySelector("#comp_12484");
+					appVariables.recomend.krisha.stropilnayaSistema.trebObjom = appVariables.roofRows[i].querySelector("#comp_12485");
+					appVariables.recomend.krisha.stropilnayaSistema.vypolnenGod = appVariables.roofRows[i].querySelector("#comp_12486");
+					appVariables.recomend.krisha.stropilnayaSistema.factObjom = appVariables.roofRows[i].querySelector("#comp_12487");
 					break;
 				case "Чердак":
 					appVariables.recomend.krisha.cherdak = new Object();
-					appVariables.recomend.krisha.cherdak.name = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.krisha.cherdak.recomend = appVariables.resultsRoofRows[i].querySelector("#comp_12484");
-					appVariables.recomend.krisha.cherdak.trebObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12485");
-					appVariables.recomend.krisha.cherdak.vypolnenGod = appVariables.resultsRoofRows[i].querySelector("#comp_12486");
-					appVariables.recomend.krisha.cherdak.factObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12487");
+					appVariables.recomend.krisha.cherdak.name = appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent;
+					appVariables.recomend.krisha.cherdak.recomend = appVariables.roofRows[i].querySelector("#comp_12484");
+					appVariables.recomend.krisha.cherdak.trebObjom = appVariables.roofRows[i].querySelector("#comp_12485");
+					appVariables.recomend.krisha.cherdak.vypolnenGod = appVariables.roofRows[i].querySelector("#comp_12486");
+					appVariables.recomend.krisha.cherdak.factObjom = appVariables.roofRows[i].querySelector("#comp_12487");
 					break;
 				case "Покрытие ж/б":
 					appVariables.recomend.krisha.pokritieJB = new Object();
-					appVariables.recomend.krisha.pokritieJB.name = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.krisha.pokritieJB.recomend = appVariables.resultsRoofRows[i].querySelector("#comp_12484");
-					appVariables.recomend.krisha.pokritieJB.trebObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12485");
-					appVariables.recomend.krisha.pokritieJB.vypolnenGod = appVariables.resultsRoofRows[i].querySelector("#comp_12486");
-					appVariables.recomend.krisha.pokritieJB.factObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12487");
+					appVariables.recomend.krisha.pokritieJB.name = appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent;
+					appVariables.recomend.krisha.pokritieJB.recomend = appVariables.roofRows[i].querySelector("#comp_12484");
+					appVariables.recomend.krisha.pokritieJB.trebObjom = appVariables.roofRows[i].querySelector("#comp_12485");
+					appVariables.recomend.krisha.pokritieJB.vypolnenGod = appVariables.roofRows[i].querySelector("#comp_12486");
+					appVariables.recomend.krisha.pokritieJB.factObjom = appVariables.roofRows[i].querySelector("#comp_12487");
 					break;
 				case "Все элементы":
 					appVariables.recomend.krisha.vseElementy = new Object();
-					appVariables.recomend.krisha.vseElementy.name = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.krisha.vseElementy.recomend = appVariables.resultsRoofRows[i].querySelector("#comp_12484");
-					appVariables.recomend.krisha.vseElementy.trebObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12485");
-					appVariables.recomend.krisha.vseElementy.vypolnenGod = appVariables.resultsRoofRows[i].querySelector("#comp_12486");
-					appVariables.recomend.krisha.vseElementy.factObjom = appVariables.resultsRoofRows[i].querySelector("#comp_12487");
+					appVariables.recomend.krisha.vseElementy.name = appVariables.roofRows[i].querySelector("#lookupTextcomp_12483").textContent;
+					appVariables.recomend.krisha.vseElementy.recomend = appVariables.roofRows[i].querySelector("#comp_12484");
+					appVariables.recomend.krisha.vseElementy.trebObjom = appVariables.roofRows[i].querySelector("#comp_12485");
+					appVariables.recomend.krisha.vseElementy.vypolnenGod = appVariables.roofRows[i].querySelector("#comp_12486");
+					appVariables.recomend.krisha.vseElementy.factObjom = appVariables.roofRows[i].querySelector("#comp_12487");
 					break;
 			}
 		}
@@ -1279,51 +1349,55 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		appVariables.recomend.fasad.vypolnenGod = appVariables.recomendationsDone.querySelector("#comp_12496");
 		appVariables.recomend.fasad.factObjom = appVariables.recomendationsDone.querySelector("#comp_12364");
 
+		// Балконы
 		appVariables.recomend.balkony = new Object();
-		for (let i = 1; i < appVariables.resultsBalconyRows[i].length; i++) {
-			switch (appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent) {
+		appVariables.recomend.balkony.balkony = new Object();
+		appVariables.recomend.balkony.lodjii = new Object();
+		appVariables.recomend.balkony.kozirki = new Object();
+		appVariables.recomend.balkony.erkery = new Object();
+		appVariables.recomend.balkony.vseElementy = new Object();
+
+		for (let i = 1; i < appVariables.balconyRows.length; i++) {
+			switch (appVariables.balconyRows[i].querySelector("#lookupTextcomp_12498").textContent) {
 				case "Балконы":
-					appVariables.recomend.balkony.balkony = new Object();
-					appVariables.recomend.balkony.balkony.name = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.balkony.balkony.recomend = appVariables.resultsBalconyRows[i].querySelector("#comp_12484");
-					appVariables.recomend.balkony.balkony.trebObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12485");
-					appVariables.recomend.balkony.balkony.vypolnenGod = appVariables.resultsBalconyRows[i].querySelector("#comp_12486");
-					appVariables.recomend.balkony.balkony.factObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12487");
+					appVariables.recomend.balkony.balkony.name = appVariables.balconyRows[i].querySelector("#lookupTextcomp_12498").textContent;
+					appVariables.recomend.balkony.balkony.recomend = appVariables.balconyRows[i].querySelector("#comp_12499");
+					appVariables.recomend.balkony.balkony.trebObjom = appVariables.balconyRows[i].querySelector("#comp_12500");
+					appVariables.recomend.balkony.balkony.vypolnenGod = appVariables.balconyRows[i].querySelector("#comp_12501");
+					appVariables.recomend.balkony.balkony.factObjom = appVariables.balconyRows[i].querySelector("#comp_12502");
 					break;
 				case "Лоджии":
-					appVariables.recomend.balkony.lodjii = new Object();
-					appVariables.recomend.balkony.lodjii.name = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.balkony.lodjii.recomend = appVariables.resultsBalconyRows[i].querySelector("#comp_12484");
-					appVariables.recomend.balkony.lodjii.trebObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12485");
-					appVariables.recomend.balkony.lodjii.vypolnenGod = appVariables.resultsBalconyRows[i].querySelector("#comp_12486");
-					appVariables.recomend.balkony.lodjii.factObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12487");
+					appVariables.recomend.balkony.lodjii.name = appVariables.balconyRows[i].querySelector("#lookupTextcomp_12498").textContent;
+					appVariables.recomend.balkony.lodjii.recomend = appVariables.balconyRows[i].querySelector("#comp_12499");
+					appVariables.recomend.balkony.lodjii.trebObjom = appVariables.balconyRows[i].querySelector("#comp_12500");
+					appVariables.recomend.balkony.lodjii.vypolnenGod = appVariables.balconyRows[i].querySelector("#comp_12501");
+					appVariables.recomend.balkony.lodjii.factObjom = appVariables.balconyRows[i].querySelector("#comp_12502");
 					break;
 				case "Козырьки":
-					appVariables.recomend.balkony.kozirki = new Object();
-					appVariables.recomend.balkony.kozirkiname = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.balkony.kozirki.recomend = appVariables.resultsBalconyRows[i].querySelector("#comp_12484");
-					appVariables.recomend.balkony.kozirki.trebObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12485");
-					appVariables.recomend.balkony.kozirki.vypolnenGod = appVariables.resultsBalconyRows[i].querySelector("#comp_12486");
-					appVariables.recomend.balkony.kozirki.factObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12487");
+					appVariables.recomend.balkony.kozirki.name = appVariables.balconyRows[i].querySelector("#lookupTextcomp_12498").textContent;
+					appVariables.recomend.balkony.kozirki.recomend = appVariables.balconyRows[i].querySelector("#comp_12499");
+					appVariables.recomend.balkony.kozirki.trebObjom = appVariables.balconyRows[i].querySelector("#comp_12500");
+					appVariables.recomend.balkony.kozirki.vypolnenGod = appVariables.balconyRows[i].querySelector("#comp_12501");
+					appVariables.recomend.balkony.kozirki.factObjom = appVariables.balconyRows[i].querySelector("#comp_12502");
 					break;
 				case "Эркеры":
-					appVariables.recomend.balkony.erkery = new Object();
-					appVariables.recomend.balkony.erkery.name = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.balkony.erkery.recomend = appVariables.resultsBalconyRows[i].querySelector("#comp_12484");
-					appVariables.recomend.balkony.erkery.trebObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12485");
-					appVariables.recomend.balkony.erkery.vypolnenGod = appVariables.resultsBalconyRows[i].querySelector("#comp_12486");
-					appVariables.recomend.balkony.erkery.factObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12487");
+					appVariables.recomend.balkony.erkery.name = appVariables.balconyRows[i].querySelector("#lookupTextcomp_12498").textContent;
+					appVariables.recomend.balkony.erkery.recomend = appVariables.balconyRows[i].querySelector("#comp_12499");
+					appVariables.recomend.balkony.erkery.trebObjom = appVariables.balconyRows[i].querySelector("#comp_12500");
+					appVariables.recomend.balkony.erkery.vypolnenGod = appVariables.balconyRows[i].querySelector("#comp_12501");
+					appVariables.recomend.balkony.erkery.factObjom = appVariables.balconyRows[i].querySelector("#comp_12502");
 					break;
 				case "Все элементы":
-					appVariables.recomend.balkony.vseElementy = new Object();
-					appVariables.recomend.balkony.vseElementy.name = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12483").textContent;
-					appVariables.recomend.balkony.vseElementy.recomend = appVariables.resultsBalconyRows[i].querySelector("#comp_12484");
-					appVariables.recomend.balkony.vseElementy.trebObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12485");
-					appVariables.recomend.balkony.vseElementy.vypolnenGod = appVariables.resultsBalconyRows[i].querySelector("#comp_12486");
-					appVariables.recomend.balkony.vseElementy.factObjom = appVariables.resultsBalconyRows[i].querySelector("#comp_12487");
+					appVariables.recomend.balkony.vseElementy.name = appVariables.balconyRows[i].querySelector("#lookupTextcomp_12498").textContent;
+					appVariables.recomend.balkony.vseElementy.recomend = appVariables.balconyRows[i].querySelector("#comp_12499");
+					appVariables.recomend.balkony.vseElementy.trebObjom = appVariables.balconyRows[i].querySelector("#comp_12500");
+					appVariables.recomend.balkony.vseElementy.vypolnenGod = appVariables.balconyRows[i].querySelector("#comp_12501");
+					appVariables.recomend.balkony.vseElementy.factObjom = appVariables.balconyRows[i].querySelector("#comp_12502");
 					break;
 			}
 		}
+		appVariables.recomend.balkony.balkony.osteklenie = appVariables.recomendationsDone.querySelector("#lookupTextcomp_12604");
+		appVariables.recomend.balkony.lodjii.osteklenie = appVariables.recomendationsDone.querySelector("#lookupTextcomp_12603");
 
 		// Стены
 		appVariables.recomend.steny = new Object();
@@ -1363,71 +1437,71 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 		// Места общего пользования
 		appVariables.recomend.mop = new Object();
-		for (let i = 1; i < appVariables.resultsMopRows.length; i++) {
-			switch (appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent) {
+		for (let i = 1; i < appVariables.mopRows.length; i++) {
+			switch (appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent) {
 				case "Вестибюли":
 					appVariables.recomend.mop.vestibuli = new Object();
-					appVariables.recomend.mop.vestibuli.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.vestibuli.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.vestibuli.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.vestibuli.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.vestibuli.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.vestibuli.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.vestibuli.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.vestibuli.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.vestibuli.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.vestibuli.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Крыльца":
 					appVariables.recomend.mop.krilca = new Object();
-					appVariables.recomend.mop.krilca.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.krilca.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.krilca.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.krilca.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.krilca.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.krilca.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.krilca.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.krilca.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.krilca.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.krilca.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Пандусы наружные":
 					appVariables.recomend.mop.pandusyNaruzh = new Object();
-					appVariables.recomend.mop.pandusyNaruzh.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.pandusyNaruzh.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.pandusyNaruzh.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.pandusyNaruzh.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.pandusyNaruzh.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.pandusyNaruzh.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.pandusyNaruzh.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.pandusyNaruzh.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.pandusyNaruzh.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.pandusyNaruzh.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Пандусы внутриподъездные":
 					appVariables.recomend.mop.pandusyVnutr = new Object();
-					appVariables.recomend.mop.pandusyVnutr.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.pandusyVnutr.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.pandusyVnutr.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.pandusyVnutr.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.pandusyVnutr.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.pandusyVnutr.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.pandusyVnutr.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.pandusyVnutr.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.pandusyVnutr.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.pandusyVnutr.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Сходы/съезды":
 					appVariables.recomend.mop.shodySiezdy = new Object();
-					appVariables.recomend.mop.shodySiezdy.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.shodySiezdy.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.shodySiezdy.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.shodySiezdy.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.shodySiezdy.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.shodySiezdy.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.shodySiezdy.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.shodySiezdy.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.shodySiezdy.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.shodySiezdy.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Окна, двери":
 					appVariables.recomend.mop.oknaDveri = new Object();
-					appVariables.recomend.mop.oknaDveri.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.oknaDveri.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.oknaDveri.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.oknaDveri.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.oknaDveri.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.oknaDveri.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.oknaDveri.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.oknaDveri.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.oknaDveri.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.oknaDveri.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Внутренняя отделка помещений":
 					appVariables.recomend.mop.vnOtdelkaPomesh = new Object();
-					appVariables.recomend.mop.vnOtdelkaPomesh.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.vnOtdelkaPomesh.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.vnOtdelkaPomesh.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.vnOtdelkaPomesh.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.vnOtdelkaPomesh.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.vnOtdelkaPomesh.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.vnOtdelkaPomesh.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.vnOtdelkaPomesh.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.vnOtdelkaPomesh.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.vnOtdelkaPomesh.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 				case "Все элементы":
 					appVariables.recomend.mop.vseElementy = new Object();
-					appVariables.recomend.mop.vseElementy.name = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12520").textContent;
-					appVariables.recomend.mop.vseElementy.recomend = appVariables.resultsMopRows[i].querySelector("#comp_12521");
-					appVariables.recomend.mop.vseElementy.trebObjom = appVariables.resultsMopRows[i].querySelector("#comp_12522");
-					appVariables.recomend.mop.vseElementy.vypolnenGod = appVariables.resultsMopRows[i].querySelector("#comp_12523");
-					appVariables.recomend.mop.vseElementy.factObjom = appVariables.resultsMopRows[i].querySelector("#comp_12524");
+					appVariables.recomend.mop.vseElementy.name = appVariables.mopRows[i].querySelector("#lookupTextcomp_12520").textContent;
+					appVariables.recomend.mop.vseElementy.recomend = appVariables.mopRows[i].querySelector("#comp_12521");
+					appVariables.recomend.mop.vseElementy.trebObjom = appVariables.mopRows[i].querySelector("#comp_12522");
+					appVariables.recomend.mop.vseElementy.vypolnenGod = appVariables.mopRows[i].querySelector("#comp_12523");
+					appVariables.recomend.mop.vseElementy.factObjom = appVariables.mopRows[i].querySelector("#comp_12524");
 					break;
 			}
 		}
@@ -1448,141 +1522,141 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 		// Система отопления
 		appVariables.recomend.sistemaOtoplenia = new Object();
-		for (let i = 1; i < appVariables.resultsHeatSystemRows.length; i++) {
-			switch (appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent) {
+		for (let i = 1; i < appVariables.heatSystemRows.length; i++) {
+			switch (appVariables.heatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent) {
 				case "Тех.подполье/тех.этаж":
 					appVariables.recomend.sistemaOtoplenia.tehPodpolie = new Object();
-					appVariables.recomend.sistemaOtoplenia.tehPodpolie.name = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
-					appVariables.recomend.sistemaOtoplenia.tehPodpolie.recomend = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12536");
-					appVariables.recomend.sistemaOtoplenia.tehPodpolie.trebObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12537");
-					appVariables.recomend.sistemaOtoplenia.tehPodpolie.vypolnenGod = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12538");
-					appVariables.recomend.sistemaOtoplenia.tehPodpolie.factObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12539");
+					appVariables.recomend.sistemaOtoplenia.tehPodpolie.name = appVariables.heatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
+					appVariables.recomend.sistemaOtoplenia.tehPodpolie.recomend = appVariables.heatSystemRows[i].querySelector("#comp_12536");
+					appVariables.recomend.sistemaOtoplenia.tehPodpolie.trebObjom = appVariables.heatSystemRows[i].querySelector("#comp_12537");
+					appVariables.recomend.sistemaOtoplenia.tehPodpolie.vypolnenGod = appVariables.heatSystemRows[i].querySelector("#comp_12538");
+					appVariables.recomend.sistemaOtoplenia.tehPodpolie.factObjom = appVariables.heatSystemRows[i].querySelector("#comp_12539");
 					break;
 				case "Транзит питающий":
 					appVariables.recomend.sistemaOtoplenia.tranzitPitaush = new Object();
-					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.name = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
-					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.recomend = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12536");
-					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.trebObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12537");
-					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.vypolnenGod = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12538");
-					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.factObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12539");
+					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.name = appVariables.heatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
+					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.recomend = appVariables.heatSystemRows[i].querySelector("#comp_12536");
+					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.trebObjom = appVariables.heatSystemRows[i].querySelector("#comp_12537");
+					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.vypolnenGod = appVariables.heatSystemRows[i].querySelector("#comp_12538");
+					appVariables.recomend.sistemaOtoplenia.tranzitPitaush.factObjom = appVariables.heatSystemRows[i].querySelector("#comp_12539");
 					break;
 				case "Чердак":
 					appVariables.recomend.sistemaOtoplenia.cherdak = new Object();
-					appVariables.recomend.sistemaOtoplenia.cherdak.name = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
-					appVariables.recomend.sistemaOtoplenia.cherdak.recomend = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12536");
-					appVariables.recomend.sistemaOtoplenia.cherdak.trebObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12537");
-					appVariables.recomend.sistemaOtoplenia.cherdak.vypolnenGod = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12538");
-					appVariables.recomend.sistemaOtoplenia.cherdak.factObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12539");
+					appVariables.recomend.sistemaOtoplenia.cherdak.name = appVariables.heatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
+					appVariables.recomend.sistemaOtoplenia.cherdak.recomend = appVariables.heatSystemRows[i].querySelector("#comp_12536");
+					appVariables.recomend.sistemaOtoplenia.cherdak.trebObjom = appVariables.heatSystemRows[i].querySelector("#comp_12537");
+					appVariables.recomend.sistemaOtoplenia.cherdak.vypolnenGod = appVariables.heatSystemRows[i].querySelector("#comp_12538");
+					appVariables.recomend.sistemaOtoplenia.cherdak.factObjom = appVariables.heatSystemRows[i].querySelector("#comp_12539");
 					break;
 				case "Этажи":
 					appVariables.recomend.sistemaOtoplenia.etaji = new Object();
-					appVariables.recomend.sistemaOtoplenia.etaji.name = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
-					appVariables.recomend.sistemaOtoplenia.etaji.recomend = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12536");
-					appVariables.recomend.sistemaOtoplenia.etaji.trebObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12537");
-					appVariables.recomend.sistemaOtoplenia.etaji.vypolnenGod = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12538");
-					appVariables.recomend.sistemaOtoplenia.etaji.factObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12539");
+					appVariables.recomend.sistemaOtoplenia.etaji.name = appVariables.heatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
+					appVariables.recomend.sistemaOtoplenia.etaji.recomend = appVariables.heatSystemRows[i].querySelector("#comp_12536");
+					appVariables.recomend.sistemaOtoplenia.etaji.trebObjom = appVariables.heatSystemRows[i].querySelector("#comp_12537");
+					appVariables.recomend.sistemaOtoplenia.etaji.vypolnenGod = appVariables.heatSystemRows[i].querySelector("#comp_12538");
+					appVariables.recomend.sistemaOtoplenia.etaji.factObjom = appVariables.heatSystemRows[i].querySelector("#comp_12539");
 					break;
 				case "Вся система":
 					appVariables.recomend.sistemaOtoplenia.vsaSistema = new Object();
-					appVariables.recomend.sistemaOtoplenia.vsaSistema.name = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
-					appVariables.recomend.sistemaOtoplenia.vsaSistema.recomend = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12536");
-					appVariables.recomend.sistemaOtoplenia.vsaSistema.trebObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12537");
-					appVariables.recomend.sistemaOtoplenia.vsaSistema.vypolnenGod = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12538");
-					appVariables.recomend.sistemaOtoplenia.vsaSistema.factObjom = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12539");
+					appVariables.recomend.sistemaOtoplenia.vsaSistema.name = appVariables.heatSystemRows[i].querySelector("#lookupTextcomp_12535").textContent;
+					appVariables.recomend.sistemaOtoplenia.vsaSistema.recomend = appVariables.heatSystemRows[i].querySelector("#comp_12536");
+					appVariables.recomend.sistemaOtoplenia.vsaSistema.trebObjom = appVariables.heatSystemRows[i].querySelector("#comp_12537");
+					appVariables.recomend.sistemaOtoplenia.vsaSistema.vypolnenGod = appVariables.heatSystemRows[i].querySelector("#comp_12538");
+					appVariables.recomend.sistemaOtoplenia.vsaSistema.factObjom = appVariables.heatSystemRows[i].querySelector("#comp_12539");
 					break;
 			}
 		}
 
 		// ГВС
 		appVariables.recomend.gvs = new Object();
-		for (let i = 1; i < appVariables.resultsGvsRows.length; i++) {
-			switch (appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12540").textContent) {
+		for (let i = 1; i < appVariables.gvsRows.length; i++) {
+			switch (appVariables.gvsRows[i].querySelector("#lookupTextcomp_12540").textContent) {
 				case "Тех.подполье/тех.этаж":
 					appVariables.recomend.gvs.tehPodpolie = new Object();
-					appVariables.recomend.gvs.tehPodpolie.name = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
-					appVariables.recomend.gvs.tehPodpolie.recomend = appVariables.resultsGvsRows[i].querySelector("#comp_12541");
-					appVariables.recomend.gvs.tehPodpolie.trebObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12542");
-					appVariables.recomend.gvs.tehPodpolie.vypolnenGod = appVariables.resultsGvsRows[i].querySelector("#comp_12543");
-					appVariables.recomend.gvs.tehPodpolie.factObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12544");
+					appVariables.recomend.gvs.tehPodpolie.name = appVariables.gvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
+					appVariables.recomend.gvs.tehPodpolie.recomend = appVariables.gvsRows[i].querySelector("#comp_12541");
+					appVariables.recomend.gvs.tehPodpolie.trebObjom = appVariables.gvsRows[i].querySelector("#comp_12542");
+					appVariables.recomend.gvs.tehPodpolie.vypolnenGod = appVariables.gvsRows[i].querySelector("#comp_12543");
+					appVariables.recomend.gvs.tehPodpolie.factObjom = appVariables.gvsRows[i].querySelector("#comp_12544");
 					break;
 				case "Транзит питающий":
 					appVariables.recomend.gvs.tranzitPitaush = new Object();
-					appVariables.recomend.gvs.tranzitPitaush.name = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
-					appVariables.recomend.gvs.tranzitPitaush.recomend = appVariables.resultsGvsRows[i].querySelector("#comp_12541");
-					appVariables.recomend.gvs.tranzitPitaush.trebObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12542");
-					appVariables.recomend.gvs.tranzitPitaush.vypolnenGod = appVariables.resultsGvsRows[i].querySelector("#comp_12543");
-					appVariables.recomend.gvs.tranzitPitaush.factObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12544");
+					appVariables.recomend.gvs.tranzitPitaush.name = appVariables.gvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
+					appVariables.recomend.gvs.tranzitPitaush.recomend = appVariables.gvsRows[i].querySelector("#comp_12541");
+					appVariables.recomend.gvs.tranzitPitaush.trebObjom = appVariables.gvsRows[i].querySelector("#comp_12542");
+					appVariables.recomend.gvs.tranzitPitaush.vypolnenGod = appVariables.gvsRows[i].querySelector("#comp_12543");
+					appVariables.recomend.gvs.tranzitPitaush.factObjom = appVariables.gvsRows[i].querySelector("#comp_12544");
 					break;
 				case "Чердак":
 					appVariables.recomend.gvs.cherdak = new Object();
-					appVariables.recomend.gvs.cherdak.name = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
-					appVariables.recomend.gvs.cherdak.recomend = appVariables.resultsGvsRows[i].querySelector("#comp_12541");
-					appVariables.recomend.gvs.cherdak.trebObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12542");
-					appVariables.recomend.gvs.cherdak.vypolnenGod = appVariables.resultsGvsRows[i].querySelector("#comp_12543");
-					appVariables.recomend.gvs.cherdak.factObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12544");
+					appVariables.recomend.gvs.cherdak.name = appVariables.gvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
+					appVariables.recomend.gvs.cherdak.recomend = appVariables.gvsRows[i].querySelector("#comp_12541");
+					appVariables.recomend.gvs.cherdak.trebObjom = appVariables.gvsRows[i].querySelector("#comp_12542");
+					appVariables.recomend.gvs.cherdak.vypolnenGod = appVariables.gvsRows[i].querySelector("#comp_12543");
+					appVariables.recomend.gvs.cherdak.factObjom = appVariables.gvsRows[i].querySelector("#comp_12544");
 					break;
 				case "Этажи":
 					appVariables.recomend.gvs.etaji = new Object();
-					appVariables.recomend.gvs.etaji.name = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
-					appVariables.recomend.gvs.etaji.recomend = appVariables.resultsGvsRows[i].querySelector("#comp_12541");
-					appVariables.recomend.gvs.etaji.trebObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12542");
-					appVariables.recomend.gvs.etaji.vypolnenGod = appVariables.resultsGvsRows[i].querySelector("#comp_12543");
-					appVariables.recomend.gvs.etaji.factObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12544");
+					appVariables.recomend.gvs.etaji.name = appVariables.gvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
+					appVariables.recomend.gvs.etaji.recomend = appVariables.gvsRows[i].querySelector("#comp_12541");
+					appVariables.recomend.gvs.etaji.trebObjom = appVariables.gvsRows[i].querySelector("#comp_12542");
+					appVariables.recomend.gvs.etaji.vypolnenGod = appVariables.gvsRows[i].querySelector("#comp_12543");
+					appVariables.recomend.gvs.etaji.factObjom = appVariables.gvsRows[i].querySelector("#comp_12544");
 					break;
 				case "Вся система":
 					appVariables.recomend.gvs.vsaSistema = new Object();
-					appVariables.recomend.gvs.vsaSistema.name = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
-					appVariables.recomend.gvs.vsaSistema.recomend = appVariables.resultsGvsRows[i].querySelector("#comp_12541");
-					appVariables.recomend.gvs.vsaSistema.trebObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12542");
-					appVariables.recomend.gvs.vsaSistema.vypolnenGod = appVariables.resultsGvsRows[i].querySelector("#comp_12543");
-					appVariables.recomend.gvs.vsaSistema.factObjom = appVariables.resultsGvsRows[i].querySelector("#comp_12544");
+					appVariables.recomend.gvs.vsaSistema.name = appVariables.gvsRows[i].querySelector("#lookupTextcomp_12540").textContent;
+					appVariables.recomend.gvs.vsaSistema.recomend = appVariables.gvsRows[i].querySelector("#comp_12541");
+					appVariables.recomend.gvs.vsaSistema.trebObjom = appVariables.gvsRows[i].querySelector("#comp_12542");
+					appVariables.recomend.gvs.vsaSistema.vypolnenGod = appVariables.gvsRows[i].querySelector("#comp_12543");
+					appVariables.recomend.gvs.vsaSistema.factObjom = appVariables.gvsRows[i].querySelector("#comp_12544");
 					break;
 			}
 		}
 
 		// ХВС
 		appVariables.recomend.hvs = new Object();
-		for (let i = 1; i < appVariables.resultsHvsRows.length; i++) {
+		for (let i = 1; i < appVariables.hvsRows.length; i++) {
 			switch (appVariables.hvsRows[i].querySelector("#lookupTextcomp_12545").textContent) {
 				case "Тех.подполье/тех.этаж":
 					appVariables.recomend.hvs.tehPodpolie = new Object();
-					appVariables.recomend.hvs.tehPodpolie.name = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
-					appVariables.recomend.hvs.tehPodpolie.recomend = appVariables.resultsHvsRows[i].querySelector("#comp_12546");
-					appVariables.recomend.hvs.tehPodpolie.trebObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12547");
-					appVariables.recomend.hvs.tehPodpolie.vypolnenGod = appVariables.resultsHvsRows[i].querySelector("#comp_12548");
-					appVariables.recomend.hvs.tehPodpolie.factObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12549");
+					appVariables.recomend.hvs.tehPodpolie.name = appVariables.hvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
+					appVariables.recomend.hvs.tehPodpolie.recomend = appVariables.hvsRows[i].querySelector("#comp_12546");
+					appVariables.recomend.hvs.tehPodpolie.trebObjom = appVariables.hvsRows[i].querySelector("#comp_12547");
+					appVariables.recomend.hvs.tehPodpolie.vypolnenGod = appVariables.hvsRows[i].querySelector("#comp_12548");
+					appVariables.recomend.hvs.tehPodpolie.factObjom = appVariables.hvsRows[i].querySelector("#comp_12549");
 					break;
 				case "Транзит питающий":
 					appVariables.recomend.hvs.tranzitPitaush = new Object();
-					appVariables.recomend.hvs.tranzitPitaush.name = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
-					appVariables.recomend.hvs.tranzitPitaush.recomend = appVariables.resultsHvsRows[i].querySelector("#comp_12546");
-					appVariables.recomend.hvs.tranzitPitaush.trebObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12547");
-					appVariables.recomend.hvs.tranzitPitaush.vypolnenGod = appVariables.resultsHvsRows[i].querySelector("#comp_12548");
-					appVariables.recomend.hvs.tranzitPitaush.factObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12549");
+					appVariables.recomend.hvs.tranzitPitaush.name = appVariables.hvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
+					appVariables.recomend.hvs.tranzitPitaush.recomend = appVariables.hvsRows[i].querySelector("#comp_12546");
+					appVariables.recomend.hvs.tranzitPitaush.trebObjom = appVariables.hvsRows[i].querySelector("#comp_12547");
+					appVariables.recomend.hvs.tranzitPitaush.vypolnenGod = appVariables.hvsRows[i].querySelector("#comp_12548");
+					appVariables.recomend.hvs.tranzitPitaush.factObjom = appVariables.hvsRows[i].querySelector("#comp_12549");
 					break;
 				case "Этажи":
 					appVariables.recomend.hvs.etaji = new Object();
-					appVariables.recomend.hvs.etaji.name = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
-					appVariables.recomend.hvs.etaji.recomend = appVariables.resultsHvsRows[i].querySelector("#comp_12546");
-					appVariables.recomend.hvs.etaji.trebObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12547");
-					appVariables.recomend.hvs.etaji.vypolnenGod = appVariables.resultsHvsRows[i].querySelector("#comp_12548");
-					appVariables.recomend.hvs.etaji.factObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12549");
+					appVariables.recomend.hvs.etaji.name = appVariables.hvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
+					appVariables.recomend.hvs.etaji.recomend = appVariables.hvsRows[i].querySelector("#comp_12546");
+					appVariables.recomend.hvs.etaji.trebObjom = appVariables.hvsRows[i].querySelector("#comp_12547");
+					appVariables.recomend.hvs.etaji.vypolnenGod = appVariables.hvsRows[i].querySelector("#comp_12548");
+					appVariables.recomend.hvs.etaji.factObjom = appVariables.hvsRows[i].querySelector("#comp_12549");
 					break;
 				case "Внутренний пожарный водопровод":
 					appVariables.recomend.hvs.vnPojarTrubopr = new Object();
-					appVariables.recomend.hvs.vnPojarTrubopr.name = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
-					appVariables.recomend.hvs.vnPojarTrubopr.recomend = appVariables.resultsHvsRows[i].querySelector("#comp_12546");
-					appVariables.recomend.hvs.vnPojarTrubopr.trebObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12547");
-					appVariables.recomend.hvs.vnPojarTrubopr.vypolnenGod = appVariables.resultsHvsRows[i].querySelector("#comp_12548");
-					appVariables.recomend.hvs.vnPojarTrubopr.factObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12549");
+					appVariables.recomend.hvs.vnPojarTrubopr.name = appVariables.hvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
+					appVariables.recomend.hvs.vnPojarTrubopr.recomend = appVariables.hvsRows[i].querySelector("#comp_12546");
+					appVariables.recomend.hvs.vnPojarTrubopr.trebObjom = appVariables.hvsRows[i].querySelector("#comp_12547");
+					appVariables.recomend.hvs.vnPojarTrubopr.vypolnenGod = appVariables.hvsRows[i].querySelector("#comp_12548");
+					appVariables.recomend.hvs.vnPojarTrubopr.factObjom = appVariables.hvsRows[i].querySelector("#comp_12549");
 					break;
 				case "Вся система":
 					appVariables.recomend.hvs.vsaSistema = new Object();
-					appVariables.recomend.hvs.vsaSistema.name = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
-					appVariables.recomend.hvs.vsaSistema.recomend = appVariables.resultsHvsRows[i].querySelector("#comp_12546");
-					appVariables.recomend.hvs.vsaSistema.trebObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12547");
-					appVariables.recomend.hvs.vsaSistema.vypolnenGod = appVariables.resultsHvsRows[i].querySelector("#comp_12548");
-					appVariables.recomend.hvs.vsaSistema.factObjom = appVariables.resultsHvsRows[i].querySelector("#comp_12549");
+					appVariables.recomend.hvs.vsaSistema.name = appVariables.hvsRows[i].querySelector("#lookupTextcomp_12545").textContent;
+					appVariables.recomend.hvs.vsaSistema.recomend = appVariables.hvsRows[i].querySelector("#comp_12546");
+					appVariables.recomend.hvs.vsaSistema.trebObjom = appVariables.hvsRows[i].querySelector("#comp_12547");
+					appVariables.recomend.hvs.vsaSistema.vypolnenGod = appVariables.hvsRows[i].querySelector("#comp_12548");
+					appVariables.recomend.hvs.vsaSistema.factObjom = appVariables.hvsRows[i].querySelector("#comp_12549");
 					break;
 			}
 		}
@@ -1747,7 +1821,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.krovlyaPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.krovlyaProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
 					appVariables.krovlyaOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12645");
-					appVariables.krovlyaOcenka.classList.add("click");
+
 					break;
 				case "Свесы":
 					appVariables.svesyName = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent;
@@ -1755,7 +1829,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.svesyPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.svesyProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
 					appVariables.svesyOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12645");
-					appVariables.svesyOcenka.classList.add("click");
+
 					break;
 				case "Стропильная система":
 					appVariables.stropilnayaSistemaName = "Стропильная система";
@@ -1763,7 +1837,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.stropilnayaSistemaPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.stropilnayaSistemaProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
 					appVariables.stropilnayaSistemaOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12645");
-					appVariables.stropilnayaSistemaOcenka.classList.add("click");
+
 					break;
 				case "Чердак":
 					appVariables.cherdakName = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent;
@@ -1771,7 +1845,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.cherdakPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.cherdakProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
 					appVariables.cherdakOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12645");
-					appVariables.cherdakOcenka.classList.add("click");
+
 					break;
 				case "Покрытие ж/б":
 					appVariables.pokritieJBName = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent;
@@ -1779,7 +1853,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.pokritieJBPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.pokritieJBProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
 					appVariables.pokritieJBOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12645");
-					appVariables.pokritieJBOcenka.classList.add("click");
+
 					break;
 				case "Все элементы":
 					appVariables.vsyaKrishaName = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent;
@@ -1787,13 +1861,13 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.vsyaKrishaPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.vsyaKrishaProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
 					appVariables.vsyaKrishaOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12645");
-					appVariables.vsyaKrishaOcenka.classList.add("click");
+
 					break;
 			}
 		}
-		appVariables.resultsRoofConstruction = appVariables.results.querySelector("#lookupTextcomp_12453");
-		appVariables.resultsRoofMaterial = appVariables.results.querySelector("#lookupTextcomp_12454");
-		appVariables.resultsRoofSquare = appVariables.results.querySelector("#comp_12455");
+		appVariables.roofConstruction = appVariables.results.querySelector("#lookupTextcomp_12453");
+		appVariables.roofMaterial = appVariables.results.querySelector("#lookupTextcomp_12454");
+		appVariables.roofSquare = appVariables.results.querySelector("#comp_12455");
 
 		// Водоотвод
 		appVariables.vodootvodDefecty = appVariables.results.querySelector("#comp_12647");
@@ -1832,7 +1906,8 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.balkonyDefecty = appVariables.resultsBalconyRows[i].querySelector("#comp_12736");
 					appVariables.balkonyPercent = appVariables.resultsBalconyRows[i].querySelector("#comp_12738");
 					appVariables.balkonyProshlOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12737");
-					appVariables.balkonyOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12739");
+					appVariables.balkonyOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12739");
+
 					break;
 				case "Лоджии":
 					appVariables.lodjiiName = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent;
@@ -1840,6 +1915,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.lodjiiPercent = appVariables.resultsBalconyRows[i].querySelector("#comp_12738");
 					appVariables.lodjiiProshlOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12737");
 					appVariables.lodjiiOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12739");
+
 					break;
 				case "Козырьки":
 					appVariables.kozirkiName = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent;
@@ -1847,6 +1923,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.kozirkiPercent = appVariables.resultsBalconyRows[i].querySelector("#comp_12738");
 					appVariables.kozirkiProshlOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12737");
 					appVariables.kozirkiOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12739");
+
 					break;
 				case "Эркеры":
 					appVariables.erkeryName = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent;
@@ -1854,6 +1931,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.erkeryPercent = appVariables.resultsBalconyRows[i].querySelector("#comp_12738");
 					appVariables.erkeryProshlOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12737");
 					appVariables.erkeryOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12739");
+
 					break;
 				case "Все элементы":
 					appVariables.vseBalkonyName = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12735").textContent;
@@ -1861,6 +1939,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.vseBalkonyPercent = appVariables.resultsBalconyRows[i].querySelector("#comp_12738");
 					appVariables.vseBalkonyProshlOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12737");
 					appVariables.vseBalkonyOcenka = appVariables.resultsBalconyRows[i].querySelector("#lookupTextcomp_12739");
+
 					break;
 			}
 		}
@@ -1925,6 +2004,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopVestibuliPercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopVestibuliProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopVestibuliOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Крыльца":
 					appVariables.mopKrilcaName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1932,6 +2012,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopKrilcaPercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopKrilcaProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopKrilcaOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Пандусы наружные":
 					appVariables.mopPandusyNaruzhnieName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1939,6 +2020,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopPandusyNaruzhniePercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopPandusyNaruzhnieProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopPandusyNaruzhnieOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Пандусы внутри-подъездные":
 					appVariables.mopPandusyVnutrennieName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1946,6 +2028,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopPandusyVnutrenniePercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopPandusyVnutrennieProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopPandusyVnutrennieOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Сходы/съезды":
 					appVariables.mopShodySiezdyName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1953,6 +2036,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopShodySiezdyPercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopShodySiezdyProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopShodySiezdyOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Окна, двери":
 					appVariables.mopOknaDveriName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1960,6 +2044,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopOknaDveriPercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopOknaDveriProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopOknaDveriOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Внутренняя отделка помещений":
 					appVariables.mopVnOtdelkaPomeshName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1967,6 +2052,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopVnOtdelkaPomeshPercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopVnOtdelkaPomeshProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopVnOtdelkaPomeshOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 				case "Все элементы":
 					appVariables.mopVseElementyName = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12751").textContent;
@@ -1974,6 +2060,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.mopVseElementyPercent = appVariables.resultsMopRows[i].querySelector("#comp_12754");
 					appVariables.mopVseElementyProshlOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12753");
 					appVariables.mopVseElementyOcenka = appVariables.resultsMopRows[i].querySelector("#lookupTextcomp_12755");
+
 					break;
 			}
 		}
@@ -2008,6 +2095,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.otopleniyeTehPodpoliePercent = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12768");
 					appVariables.otopleniyeTehPodpolieProshlOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12767");
 					appVariables.otopleniyeTehPodpolieOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12769");
+
 					break;
 				case "Транзит питающий":
 					appVariables.otopleniyeTranzitPitaushName = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent;
@@ -2015,6 +2103,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.otopleniyeTranzitPitaushPercent = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12768");
 					appVariables.otopleniyeTranzitPitaushProshlOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12767");
 					appVariables.otopleniyeTranzitPitaushOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12769");
+
 					break;
 				case "Чердак":
 					appVariables.otopleniyeCherdakName = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent;
@@ -2022,6 +2111,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.otopleniyeCherdakPercent = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12768");
 					appVariables.otopleniyeCherdakProshlOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12767");
 					appVariables.otopleniyeCherdakOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12769");
+
 					break;
 				case "Этажи":
 					appVariables.otopleniyeEtajiName = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent;
@@ -2029,6 +2119,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.otopleniyeEtajiPercent = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12768");
 					appVariables.otopleniyeEtajiProshlOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12767");
 					appVariables.otopleniyeEtajiOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12769");
+
 					break;
 				case "Вся система":
 					appVariables.vseOtopleniyeName = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12765").textContent;
@@ -2036,6 +2127,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.vseOtopleniyePercent = appVariables.resultsHeatSystemRows[i].querySelector("#comp_12768");
 					appVariables.vseOtopleniyeProshlOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12767");
 					appVariables.vseOtopleniyeOcenka = appVariables.resultsHeatSystemRows[i].querySelector("#lookupTextcomp_12769");
+
 					break;
 			}
 		}
@@ -2062,6 +2154,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.gvsTehPodpoliePercent = appVariables.resultsGvsRows[i].querySelector("#comp_12773");
 					appVariables.gvsTehPodpolieProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12772");
 					appVariables.gvsTehPodpolieOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12675");
+
 					break;
 				case "Транзит питающий":
 					appVariables.gvsTranzitPitaushName = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent;
@@ -2069,6 +2162,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.gvsTranzitPitaushPercent = appVariables.resultsGvsRows[i].querySelector("#comp_12773");
 					appVariables.gvsTranzitPitaushProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12772");
 					appVariables.gvsTranzitPitaushOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12675");
+
 					break;
 				case "Чердак":
 					appVariables.gvsCherdakName = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent;
@@ -2076,6 +2170,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.gvsCherdakPercent = appVariables.resultsGvsRows[i].querySelector("#comp_12773");
 					appVariables.gvsCherdakProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12772");
 					appVariables.gvsCherdakOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12675");
+
 					break;
 				case "Этажи":
 					appVariables.gvsEtajiName = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent;
@@ -2083,6 +2178,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.gvsEtajiPercent = appVariables.resultsGvsRows[i].querySelector("#comp_12773");
 					appVariables.gvsEtajiProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12772");
 					appVariables.gvsEtajiOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12675");
+
 					break;
 				case "Вся система":
 					appVariables.vseGvsName = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12770").textContent;
@@ -2090,6 +2186,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.vseGvsPercent = appVariables.resultsGvsRows[i].querySelector("#comp_12773");
 					appVariables.vseGvsProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12772");
 					appVariables.vseGvsOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12675");
+
 					break;
 			}
 		}
@@ -2109,36 +2206,41 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.hvsTehPodpolieName = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent;
 					appVariables.hvsTehPodpolieDefecty = appVariables.resultsHvsRows[i].querySelector("#comp_12775");
 					appVariables.hvsTehPodpoliePercent = appVariables.resultsHvsRows[i].querySelector("#comp_12777");
-					appVariables.hvsTehPodpolieProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12776");
+					appVariables.hvsTehPodpolieProshlOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12776");
 					appVariables.hvsTehPodpolieOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12778");
+
 					break;
 				case "Транзит питающий":
 					appVariables.hvsTranzitPitaushName = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent;
 					appVariables.hvsTranzitPitaushDefecty = appVariables.resultsHvsRows[i].querySelector("#comp_12775");
 					appVariables.hvsTranzitPitaushPercent = appVariables.resultsHvsRows[i].querySelector("#comp_12777");
-					appVariables.hvsTranzitPitaushProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12776");
+					appVariables.hvsTranzitPitaushProshlOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12776");
 					appVariables.hvsTranzitPitaushOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12778");
+
 					break;
 				case "Этажи":
 					appVariables.hvsEtajiName = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent;
 					appVariables.hvsEtajiDefecty = appVariables.resultsHvsRows[i].querySelector("#comp_12775");
 					appVariables.hvsEtajiPercent = appVariables.resultsHvsRows[i].querySelector("#comp_12777");
-					appVariables.hvsEtajiProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12776");
+					appVariables.hvsEtajiProshlOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12776");
 					appVariables.hvsEtajiOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12778");
+
 					break;
 				case "Внутренний пожарный водопровод":
 					appVariables.hvsVnPozharProvodName = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent;
 					appVariables.hvsVnPozharProvodDefecty = appVariables.resultsHvsRows[i].querySelector("#comp_12775");
 					appVariables.hvsVnPozharProvodPercent = appVariables.resultsHvsRows[i].querySelector("#comp_12777");
-					appVariables.hvsVnPozharProvodProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12776");
+					appVariables.hvsVnPozharProvodProshlOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12776");
 					appVariables.hvsVnPozharProvodOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12778");
+
 					break;
 				case "Вся система":
 					appVariables.vseHvsName = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12774").textContent;
 					appVariables.vseHvsDefecty = appVariables.resultsHvsRows[i].querySelector("#comp_12775");
 					appVariables.vseHvsPercent = appVariables.resultsHvsRows[i].querySelector("#comp_12777");
-					appVariables.vseHvsProshlOcenka = appVariables.resultsGvsRows[i].querySelector("#lookupTextcomp_12776");
+					appVariables.vseHvsProshlOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12776");
 					appVariables.vseHvsOcenka = appVariables.resultsHvsRows[i].querySelector("#lookupTextcomp_12778");
+
 					break;
 			}
 		}
@@ -2159,6 +2261,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.kanalizaciaTehPodpoliePercent = appVariables.resultsSewerRows[i].querySelector("#comp_12782");
 					appVariables.kanalizaciaTehPodpolieProshlOcenka = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12781");
 					appVariables.kanalizaciaTehPodpolieOcenka = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12783");
+
 					break;
 				case "Этажи":
 					appVariables.kanalizaciaEtajiName = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent;
@@ -2166,6 +2269,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.kanalizaciaEtajiPercent = appVariables.resultsSewerRows[i].querySelector("#comp_12782");
 					appVariables.kanalizaciaEtajiProshlOcenka = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12781");
 					appVariables.kanalizaciaEtajiOcenka = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12783");
+
 					break;
 				case "Вся система":
 					appVariables.vseKanalizaciaName = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12779").textContent;
@@ -2173,6 +2277,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					appVariables.vseKanalizaciaPercent = appVariables.resultsSewerRows[i].querySelector("#comp_12782");
 					appVariables.vseKanalizaciaProshlOcenka = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12781");
 					appVariables.vseKanalizaciaOcenka = appVariables.resultsSewerRows[i].querySelector("#lookupTextcomp_12783");
+
 					break;
 			}
 		}
@@ -2343,6 +2448,72 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			appVariables[i]["licaOt"] = appVariables.signatoriesRows[i].querySelector("#comp_12340");
 			appVariables[i]["LicaDoljnost"] = appVariables.signatoriesRows[i].querySelector("#comp_12341");
 			appVariables[i]["licaFio"] = appVariables.signatoriesRows[i].querySelector("#comp_12342");
+		}
+
+		if (resultsDefectsInputs.empty) {
+			resultsDefectsInputs.inputs.push(appVariables.krovlyaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.svesyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.stropilnayaSistemaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.cherdakDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.pokritieJBDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vsyaKrishaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vodootvodDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.majpanelnyeStykiDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.fasadDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.balkonyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.lodjiiDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.krovlyaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.erkeryDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vseBalkonyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.stenyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.podvalDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.techPodpolieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.techEtajDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.garageDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopVestibuliDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopKrilcaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopPandusyNaruzhnieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopPandusyVnutrennieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopShodySiezdyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopOknaDveriDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopVnOtdelkaPomeshDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.mopVseElementyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.lestnicyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.perekrityaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.otopleniyeTehPodpolieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.otopleniyeTranzitPitaushDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.otopleniyeCherdakDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.otopleniyeEtajiDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vseOtopleniyeDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.gvsTehPodpolieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.gvsTranzitPitaushDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.gvsCherdakDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.gvsEtajiDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vseGvsDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.hvsTehPodpolieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.hvsTranzitPitaushDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.hvsEtajiDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.hvsVnPozharProvodDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vseHvsDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.kanalizaciaTehPodpolieDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.kanalizaciaEtajiDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vseKanalizaciaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.musoroprovodyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.odsDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.ventilaciaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.musoroChistSistemaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.ozdsDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.gazohodyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.liftyDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.podyomnikDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.autoSpuskLiftDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.systemEsDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.vkvDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.avrDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.ppaiduDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.pozharOpoveshenDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.sistemaGsDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.sistemaVideonabDefecty);
 		}
 	}
 
@@ -2740,7 +2911,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					"Факт. объем, %": appVariables.recomend.lifty.factObjom.value,
 				},
 				"Подъёмное устройство для маломобильной группы населения": {
-					Рекомендации: appVariables.recomend.podyomnikrecomend.value,
+					Рекомендации: appVariables.recomend.podyomnik.recomend.value,
 					"Треб. объем, %": appVariables.recomend.podyomnik.trebObjom.value,
 					"Выполнен, год": appVariables.recomend.podyomnik.vypolnenGod.value,
 					"Факт. объем, %": appVariables.recomend.podyomnik.factObjom.value,
@@ -2809,9 +2980,9 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			},
 			"Результаты выборочного обследования": {
 				Крыша: {
-					"Конструкция крыши": appVariables.resultsRoofConstruction.value,
-					"Материал кровли": appVariables.resultsRoofMaterial.value,
-					"Площадь кровли, м²": appVariables.resultsRoofSquare.value,
+					"Конструкция крыши": appVariables.roofConstruction.value,
+					"Материал кровли": appVariables.roofMaterial.value,
+					"Площадь кровли, м²": appVariables.roofSquare.value,
 					Кровля: {
 						"Выявленные дефекты": appVariables.krovlyaDefecty.value,
 						"Оценка пред.": appVariables.krovlyaProshlOcenka.textContent,
@@ -3296,7 +3467,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					"№ и дата последнего обслед.": appVariables.ppaiduPosledObsled.value,
 					"Специализированная организация": appVariables.ppaiduOrganizacia.value,
 					"Оценка пред.": appVariables.ppaiduProshlOcenka.textContent,
-					Оценка: results.appVariables.ppaiduOcenka.value,
+					Оценка: appVariables.ppaiduOcenka.value,
 				},
 				"Система оповещения о пожаре": {
 					Наличие: appVariables.pozharOpoveshenNalichie.value,
@@ -3373,7 +3544,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 		// Для выводов по результатам пред. обследования
 		for (let key in appVariables.vivodyPoRezultatam) {
-			data["Выводы по результатам предыдущего обследования"][i] = new Object();
+			data["Выводы по результатам предыдущего обследования"][key] = new Object();
 
 			data["Выводы по результатам предыдущего обследования"][key]["id"] = appVariables["vivodyPoRezultatam"][key]["id"].textContent;
 			data["Выводы по результатам предыдущего обследования"][key]["Дата"] = appVariables["vivodyPoRezultatam"][key]["data"].textContent;
@@ -3384,52 +3555,59 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		// РЕКОМЕНДАЦИИ ПО КАП РЕМОНТУ
 		// Крыша
 		for (let key in appVariables.recomend.krisha) {
-			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.krisha[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Крыша"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 		// Балконы
 		for (let key in appVariables.recomend.balkony) {
-			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.balkony[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Балконы"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 		// Места общего пользования
 		for (let key in appVariables.recomend.mop) {
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.mop[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 		// Системы отопления
 		for (let key in appVariables.recomend.sistemaOtoplenia) {
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Места общего пользования"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.sistemaOtoplenia[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["Система отопления"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Система отопления"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Система отопления"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Система отопления"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 		// ГВС
 		for (let key in appVariables.recomend.gvs) {
-			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.gvs[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["ГВС"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 		// ХВС
 		for (let key in appVariables.recomend.hvs) {
-			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.hvs[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["ХВС"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 		// Канализация
 		for (let key in appVariables.recomend.kanalizacia) {
-			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][key.name]["Рекомендации"] = key.recomend.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][key.name]["Треб. объем, %"] = key.trebObjom.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][key.name]["Выполнен, год"] = key.vypolnenGod.value;
-			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][key.name]["Факт. объем, %"] = key.factObjom.value;
+			const neededObj = appVariables.recomend.kanalizacia[key];
+			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Рекомендации"] = neededObj.recomend.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Треб. объем, %"] = neededObj.trebObjom.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
+			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 
 		localStorage.setItem("MJIDATA", JSON.stringify(data));
@@ -3469,362 +3647,362 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		// Кровля
 		appVariables.krovlyaDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Выявленные дефекты"];
 		appVariables.krovlyaPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["% деф. части"];
-		clickGenerator(appVariables.krovlyaOcenka, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Оценка"]);
 
 		// Свесы
 		appVariables.svesyDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.svesyName]["Выявленные дефекты"];
 		appVariables.svesyPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.svesyName]["% деф. части"];
-		clickGenerator(appVariables.svesyOcenka, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.svesyName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.svesyName]["Оценка"]);
 
 		// Стропильная система
 		appVariables.stropilnayaSistemaDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.stropilnayaSistemaName]["Выявленные дефекты"];
 		appVariables.stropilnayaSistemaPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.stropilnayaSistemaName]["% деф. части"];
-		clickGenerator(appVariables.stropilnayaSistemaOcenka, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.stropilnayaSistemaName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.stropilnayaSistemaName]["Оценка"]);
 
 		// Чердак
 		appVariables.cherdakDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.cherdakName]["Выявленные дефекты"];
 		appVariables.cherdakPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.cherdakName]["% деф. части"];
-		clickGenerator(appVariables.cherdakOcenka, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.cherdakName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.cherdakName]["Оценка"]);
 
 		// Покрытие ж/б
 		appVariables.pokritieJBDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.pokritieJBName]["Выявленные дефекты"];
 		appVariables.pokritieJBPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.pokritieJBName]["% деф. части"];
-		clickGenerator(appVariables.pokritieJBOcenka, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.pokritieJBName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.pokritieJBName]["Оценка"]);
 
 		// Все элементы
 		appVariables.vsyaKrishaDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.vsyaKrishaName]["Выявленные дефекты"];
 		appVariables.vsyaKrishaPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.vsyaKrishaName]["% деф. части"];
-		clickGenerator(appVariables.vsyaKrishaOcenka, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.vsyaKrishaName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.vsyaKrishaName]["Оценка"]);
 
 		// Водоотвод
 		appVariables.vodootvodDefecty.value = loadData["Результаты выборочного обследования"]["Водоотвод"]["Выявленные дефекты"];
 		appVariables.vodootvodPercent.value = loadData["Результаты выборочного обследования"]["Водоотвод"]["% деф. части"];
-		clickGenerator(appVariables.vodootvodOcenka, "#lookupTextcomp_12650", loadData["Результаты выборочного обследования"]["Водоотвод"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12650", loadData["Результаты выборочного обследования"]["Водоотвод"]["Оценка"]);
 
 		// Межпанельные стыки
 		appVariables.majpanelnyeStykiDefecty.querySelector("#comp_12652").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Выявленные дефекты"];
 		appVariables.majpanelnyeStykiPercent.querySelector("#comp_12654").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["% деф. части"];
-		clickGenerator(appVariables.majpanelnyeStykiOcenka, "#lookupTextcomp_12655", loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12655", loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Оценка"]);
 
 		// Фасад
 		appVariables.fasadDefecty.value = loadData["Результаты выборочного обследования"]["Фасад"]["Выявленные дефекты"];
 		appVariables.fasadPercent.value = loadData["Результаты выборочного обследования"]["Фасад"]["% деф. части"];
-		clickGenerator(appVariables.fasadOcenka, "#lookupTextcomp_12660", loadData["Результаты выборочного обследования"]["Фасад"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12660", loadData["Результаты выборочного обследования"]["Фасад"]["Оценка"]);
 
 		// Балконы
 		// Балконы
 		appVariables.balkonyDefecty.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.balkonyName]["Выявленные дефекты"];
 		appVariables.balkonyPercent.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.balkonyName]["% деф. части"];
-		clickGenerator(appVariables.balkonyOcenka, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.balkonyName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.balkonyName]["Оценка"]);
 
 		// Лоджии
 		appVariables.lodjiiDefecty.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.lodjiiName]["Выявленные дефекты"];
 		appVariables.lodjiiPercent.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.lodjiiName]["% деф. части"];
-		clickGenerator(appVariables.lodjiiOcenka, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.lodjiiName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.lodjiiName]["Оценка"]);
 
 		// Козырьки
 		appVariables.kozirkiDefecty.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.kozirkiName]["Выявленные дефекты"];
 		appVariables.kozirkiPercent.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.kozirkiName]["% деф. части"];
-		clickGenerator(appVariables.kozirkiOcenka, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.kozirkiName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.kozirkiName]["Оценка"]);
 
 		// Эркеры
 		appVariables.erkeryDefecty.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.erkeryName]["Выявленные дефекты"];
 		appVariables.erkeryPercent.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.erkeryName]["% деф. части"];
-		clickGenerator(appVariables.erkeryOcenka, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.erkeryName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.erkeryName]["Оценка"]);
 
 		// Все элементы
 		appVariables.vseBalkonyDefecty.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.vseBalkonyName]["Выявленные дефекты"];
 		appVariables.vseBalkonyPercent.value = loadData["Результаты выборочного обследования"]["Балконы"][appVariables.vseBalkonyName]["% деф. части"];
-		clickGenerator(appVariables.vseBalkonyOcenka, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.vseBalkonyName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", loadData["Результаты выборочного обследования"]["Балконы"][appVariables.vseBalkonyName]["Оценка"]);
 
 		// Стены
 		appVariables.stenyDefecty.value = loadData["Результаты выборочного обследования"]["Стены"]["Выявленные дефекты"];
 		appVariables.stenyPercent.value = loadData["Результаты выборочного обследования"]["Стены"]["% деф. части"];
-		clickGenerator(appVariables.stenyOcenka, "#lookupTextcomp_12672", loadData["Результаты выборочного обследования"]["Стены"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12672", loadData["Результаты выборочного обследования"]["Стены"]["Оценка"]);
 
 		// Подвал
 		appVariables.podvalDefecty.value = loadData["Результаты выборочного обследования"]["Подвал"]["Выявленные дефекты"];
 		appVariables.podvalPercent.value = loadData["Результаты выборочного обследования"]["Подвал"]["% деф. части"];
-		clickGenerator(appVariables.podvalOcenka, "#lookupTextcomp_12631", loadData["Результаты выборочного обследования"]["Подвал"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12631", loadData["Результаты выборочного обследования"]["Подвал"]["Оценка"]);
 
 		// Тех.подполье
 		appVariables.techPodpolieDefecty.value = loadData["Результаты выборочного обследования"]["Тех.подполье"]["Выявленные дефекты"];
 		appVariables.techPodpoliePercent.value = loadData["Результаты выборочного обследования"]["Тех.подполье"]["% деф. части"];
-		clickGenerator(appVariables.techPodpolieOcenka, "#lookupTextcomp_12636", loadData["Результаты выборочного обследования"]["Тех.подполье"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12636", loadData["Результаты выборочного обследования"]["Тех.подполье"]["Оценка"]);
 
 		// Тех.этаж
 		appVariables.techEtajDefecty.value = loadData["Результаты выборочного обследования"]["Тех.этаж"]["Выявленные дефекты"];
 		appVariables.techEtajPercent.value = loadData["Результаты выборочного обследования"]["Тех.этаж"]["% деф. части"];
-		clickGenerator(appVariables.techEtajOcenka, "#lookupTextcomp_12673", loadData["Результаты выборочного обследования"]["Тех.этаж"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12673", loadData["Результаты выборочного обследования"]["Тех.этаж"]["Оценка"]);
 
 		// Гараж стоянка (подземный)
 		appVariables.garageDefecty.value = loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["Выявленные дефекты"];
 		appVariables.garagePercent.value = loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["% деф. части"];
-		clickGenerator(appVariables.garageOcenka, "#lookupTextcomp_12750", loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12750", loadData["Результаты выборочного обследования"]["Гараж стоянка (подземный)"]["Оценка"]);
 
 		// Места общего пользования
 		// Вестибюли
 		appVariables.mopVestibuliDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Выявленные дефекты"];
 		appVariables.mopVestibuliPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["% деф. части"];
-		clickGenerator(appVariables.mopVestibuliOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Оценка"]);
 
 		// Крыльца
 		appVariables.mopKrilcaDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Выявленные дефекты"];
 		appVariables.mopKrilcaPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["% деф. части"];
-		clickGenerator(appVariables.mopKrilcaOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Оценка"]);
 
 		// Пандусы наружные
 		appVariables.mopPandusyNaruzhnieDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["Выявленные дефекты"];
 		aappVariables.mopPandusyNaruzhniePercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["% деф. части"];
-		clickGenerator(appVariables.mopPandusyNaruzhnieOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["Оценка"]);
 
 		// Пандусы внутри-подъездные
 		appVariables.mopPandusyVnutrennieDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyVnutrennieName]["Выявленные дефекты"];
 		appVariables.mopPandusyVnutrenniePercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyVnutrennieName]["% деф. части"];
-		clickGenerator(appVariables.mopPandusyVnutrennieOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyVnutrennieName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyVnutrennieName]["Оценка"]);
 
 		// Сходы/съезды
 		appVariables.mopShodySiezdyDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopShodySiezdyName]["Выявленные дефекты"];
 		appVariables.mopShodySiezdyPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopShodySiezdyName]["% деф. части"];
-		clickGenerator(appVariables.mopShodySiezdyOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopShodySiezdyName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopShodySiezdyName]["Оценка"]);
 
 		// Окна, двери
 		appVariables.mopOknaDveriDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopOknaDveriName]["Выявленные дефекты"];
 		appVariables.mopOknaDveriPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopOknaDveriName]["% деф. части"];
-		clickGenerator(appVariables.mopOknaDveriOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopOknaDveriName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopOknaDveriName]["Оценка"]);
 
 		// Внутренняя отделка помещений
 		appVariables.mopVnOtdelkaPomeshDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVnOtdelkaPomeshName]["Выявленные дефекты"];
 		appVariables.mopVnOtdelkaPomeshPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVnOtdelkaPomeshName]["% деф. части"];
-		clickGenerator(appVariables.mopVnOtdelkaPomeshOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVnOtdelkaPomeshName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVnOtdelkaPomeshName]["Оценка"]);
 
 		// Все элементы
 		appVariables.mopVseElementyDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVseElementyName]["Выявленные дефекты"];
 		appVariables.mopVseElementyPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVseElementyName]["% деф. части"];
-		clickGenerator(appVariables.mopVseElementyOcenka, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVseElementyName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVseElementyName]["Оценка"]);
 
 		// Лестницы
 		appVariables.lestnicyDefecty.value = loadData["Результаты выборочного обследования"]["Лестницы"]["Выявленные дефекты"];
 		appVariables.lestnicyPercent.value = loadData["Результаты выборочного обследования"]["Лестницы"]["% деф. части"];
-		clickGenerator(appVariables.lestnicyOcenka, "#lookupTextcomp_12674", loadData["Результаты выборочного обследования"]["Лестницы"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12674", loadData["Результаты выборочного обследования"]["Лестницы"]["Оценка"]);
 
 		// Перекрытия
 		appVariables.perekrityaDefecty.value = loadData["Результаты выборочного обследования"]["Перекрытия"]["Выявленные дефекты"];
 		appVariables.perekrityaPercent.value = loadData["Результаты выборочного обследования"]["Перекрытия"]["% деф. части"];
-		clickGenerator(appVariables.lestnicyOcenka, "#lookupTextcomp_12764", loadData["Результаты выборочного обследования"]["Перекрытия"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12764", loadData["Результаты выборочного обследования"]["Перекрытия"]["Оценка"]);
 
 		// Система отопления
 		// Тех.подполье/тех.этаж
 		appVariables.otopleniyeTehPodpolieDefecty.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTehPodpolieName]["Выявленные дефекты"];
 		appVariables.otopleniyeTehPodpoliePercent.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTehPodpolieName]["% деф. части"];
-		clickGenerator(appVariables.otopleniyeTehPodpolieOcenka, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTehPodpolieName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTehPodpolieName]["Оценка"]);
 
 		// Транзит питающий
 		appVariables.otopleniyeTranzitPitaushDefecty.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTranzitPitaushName]["Выявленные дефекты"];
 		appVariables.otopleniyeTranzitPitaushPercent.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTranzitPitaushName]["% деф. части"];
-		clickGenerator(appVariables.otopleniyeTranzitPitaushOcenka, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTranzitPitaushName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeTranzitPitaushName]["Оценка"]);
 
 		// Чердак
 		appVariables.otopleniyeCherdakDefecty.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeCherdakName]["Выявленные дефекты"];
 		appVariables.otopleniyeCherdakPercent.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeCherdakName]["% деф. части"];
-		clickGenerator(appVariables.otopleniyeCherdakOcenka, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeCherdakName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeCherdakName]["Оценка"]);
 
 		// Этажи
 		appVariables.otopleniyeEtajiDefecty.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeEtajiName]["Выявленные дефекты"];
 		appVariables.otopleniyeEtajiPercent.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeEtajiName]["% деф. части"];
-		clickGenerator(appVariables.otopleniyeEtajiOcenka, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeEtajiName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.otopleniyeEtajiName]["Оценка"]);
 
 		// Вся система
 		appVariables.vseOtopleniyeDefecty.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.vseOtopleniyeName]["Выявленные дефекты"];
 		appVariables.vseOtopleniyePercent.value = loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.vseOtopleniyeName]["% деф. части"];
-		clickGenerator(appVariables.vseOtopleniyeOcenka, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.vseOtopleniyeName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", loadData["Результаты выборочного обследования"]["Система отопления"][appVariables.vseOtopleniyeName]["Оценка"]);
 
 		// ГВС
 		// Тех.подполье/тех.этаж
 		appVariables.gvsTehPodpolieDefecty.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTehPodpolieName]["Выявленные дефекты"];
 		appVariables.gvsTehPodpoliePercent.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTehPodpolieName]["% деф. части"];
-		clickGenerator(appVariables.gvsTehPodpolieOcenka, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTehPodpolieName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTehPodpolieName]["Оценка"]);
 
 		// Транзит питающий
 		appVariables.gvsTranzitPitaushDefecty.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTranzitPitaushName]["Выявленные дефекты"];
 		appVariables.gvsTranzitPitaushPercent.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTranzitPitaushName]["% деф. части"];
-		clickGenerator(appVariables.gvsTranzitPitaushOcenka, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTranzitPitaushName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsTranzitPitaushName]["Оценка"]);
 
 		// Чердак
 		appVariables.gvsCherdakDefecty.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsCherdakName]["Выявленные дефекты"];
 		appVariables.gvsCherdakPercent.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsCherdakName]["% деф. части"];
-		clickGenerator(appVariables.gvsCherdakOcenka, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsCherdakName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsCherdakName]["Оценка"]);
 
 		// Этажи
 		appVariables.gvsEtajiDefecty.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsEtajiName]["Выявленные дефекты"];
 		appVariables.gvsEtajiPercent.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsEtajiName]["% деф. части"];
-		clickGenerator(appVariables.gvsEtajiOcenka, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsEtajiName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.gvsEtajiName]["Оценка"]);
 
 		// Вся система
 		appVariables.vseGvsDefecty.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.vseGvsName]["Выявленные дефекты"];
 		appVariables.vseGvsPercent.value = loadData["Результаты выборочного обследования"]["ГВС"][appVariables.vseGvsName]["% деф. части"];
-		clickGenerator(appVariables.vseGvsOcenka, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.vseGvsName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", loadData["Результаты выборочного обследования"]["ГВС"][appVariables.vseGvsName]["Оценка"]);
 
 		// ХВС
 		// Тех.подполье/тех.этаж
 		appVariables.hvsTehPodpolieDefecty.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTehPodpolieName]["Выявленные дефекты"];
 		appVariables.hvsTehPodpoliePercent.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTehPodpolieName]["% деф. части"];
-		clickGenerator(appVariables.hvsTehPodpolieOcenka, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTehPodpolieName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTehPodpolieName]["Оценка"]);
 
 		// Транзит питающий
 		appVariables.hvsTranzitPitaushDefecty.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTranzitPitaushName]["Выявленные дефекты"];
 		appVariables.hvsTranzitPitaushPercent.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTranzitPitaushName]["% деф. части"];
-		clickGenerator(appVariables.hvsTranzitPitaushOcenka, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTranzitPitaushName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsTranzitPitaushName]["Оценка"]);
 
 		// Этажи
 		appVariables.hvsEtajiDefecty.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsEtajiName]["Выявленные дефекты"];
 		appVariables.hvsEtajiPercent.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsEtajiName]["% деф. части"];
-		clickGenerator(appVariables.hvsEtajiOcenka, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsEtajiName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsEtajiName]["Оценка"]);
 
 		// Внутренний пожарный водопровод
 		appVariables.hvsVnPozharProvodDefecty.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsVnPozharProvodName]["Выявленные дефекты"];
 		appVariables.hvsVnPozharProvodPercent.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsVnPozharProvodName]["% деф. части"];
-		clickGenerator(appVariables.hvsVnPozharProvodOcenka, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsVnPozharProvodName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.hvsVnPozharProvodName]["Оценка"]);
 
 		// Вся система
 		appVariables.vseHvsDefecty.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.vseHvsName]["Выявленные дефекты"];
 		appVariables.vseHvsPercent.value = loadData["Результаты выборочного обследования"]["ХВС"][appVariables.vseHvsName]["% деф. части"];
-		clickGenerator(appVariables.vseHvsOcenka, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.vseHvsName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", loadData["Результаты выборочного обследования"]["ХВС"][appVariables.vseHvsName]["Оценка"]);
 
 		// Канализация
 		// Тех.подполье/тех.этаж
 		appVariables.kanalizaciaTehPodpolieDefecty.value = loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaTehPodpolieName]["Выявленные дефекты"];
 		appVariables.kanalizaciaTehPodpoliePercent.value = loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaTehPodpolieName]["% деф. части"];
-		clickGenerator(appVariables.kanalizaciaTehPodpolieOcenka, "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaTehPodpolieName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaTehPodpolieName]["Оценка"]);
 
 		// Этажи
 		appVariables.kanalizaciaEtajiDefecty.value = loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaEtajiName]["Выявленные дефекты"];
 		appVariables.kanalizaciaEtajiPercent.value = loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaEtajiName]["% деф. части"];
-		clickGenerator(appVariables.kanalizaciaEtajiOcenka, "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaEtajiName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][appVariables.kanalizaciaEtajiName]["Оценка"]);
 
 		// Вся система
 		appVariables.vseKanalizaciaDefecty.value = loadData["Результаты выборочного обследования"]["Канализация"][appVariables.vseKanalizaciaName]["Выявленные дефекты"];
 		appVariables.vseKanalizaciaPercent.value = loadData["Результаты выборочного обследования"]["Канализация"][appVariables.vseKanalizaciaName]["% деф. части"];
-		clickGenerator(appVariables.vseKanalizaciaOcenka, "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][appVariables.vseKanalizaciaName]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12783", loadData["Результаты выборочного обследования"]["Канализация"][appVariables.vseKanalizaciaName]["Оценка"]);
 
 		// Мусоропроводы
 		appVariables.musoroprovodyDefecty.value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Выявленные дефекты"];
 		appVariables.musoroprovodyPercent.value = loadData["Результаты выборочного обследования"]["Мусоропроводы"]["% деф. части"];
-		clickGenerator(appVariables.musoroprovodyOcenka, "#lookupTextcomp_12788", loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12788", loadData["Результаты выборочного обследования"]["Мусоропроводы"]["Оценка"]);
 
 		// Связь с ОДС
-		clickGenerator(appVariables.odsSostoyanie, "#lookupTextcomp_12607", loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12607", loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Состояние"]);
 		appVariables.odsDefecty.value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Выявленные дефекты"];
 		appVariables.odsPosledneeObsled.value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["№ и дата последнего обслед."];
 		appVariables.odsOrganizacia.value = loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Специализированная организация"];
-		clickGenerator(appVariables.odsOcenka, "#lookupTextcomp_12793", loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12793", loadData["Результаты выборочного обследования"]["Связь с ОДС"]["Оценка"]);
 
 		// Вентиляция
-		clickGenerator(appVariables.ventilaciaSostoyanie, "#lookupTextcomp_12608", loadData["Результаты выборочного обследования"]["Вентиляция"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12608", loadData["Результаты выборочного обследования"]["Вентиляция"]["Состояние"]);
 		appVariables.ventilaciaDefecty.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Выявленные дефекты"];
 		appVariables.ventilaciaPosledneeObsled.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["№ и дата последнего обслед."];
 		appVariables.odsOrganizacia.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Специализированная организация"];
-		clickGenerator(appVariables.odsOcenka, "#lookupTextcomp_12798", loadData["Результаты выборочного обследования"]["Вентиляция"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12798", loadData["Результаты выборочного обследования"]["Вентиляция"]["Оценка"]);
 
 		// Система промывки и прочистки стволов мусоропроводов
-		clickGenerator(appVariables.musoroChistSistemaSostoyanie, "#lookupTextcomp_126090", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_126090", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Состояние"]);
 		appVariables.musoroChistSistemaDefecty.value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Выявленные дефекты"];
 		appVariables.musoroChistSistemaPosledObsled.value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["№ и дата последнего обслед."];
 		appVariables.musoroChistSistemaOrganizacia.value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Специализированная организация"];
-		clickGenerator(appVariables.musoroChistSistemaOcenka, "#lookupTextcomp_12803", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12803", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Оценка"]);
 
 		// ОЗДС (охранно-защитная дератизационная система)
-		clickGenerator(appVariables.ozdsSostoyanie, "#lookupTextcomp_12610", loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12610", loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Состояние"]);
 		appVariables.ozdsDefecty.value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Выявленные дефекты"];
 		appVariables.ozdsPosledObsled.value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["№ и дата последнего обслед."];
 		appVariables.ozdsOrganizacia.value = loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Специализированная организация"];
-		clickGenerator(appVariables.ozdsOcenka, "#lookupTextcomp_12680", loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12680", loadData["Результаты выборочного обследования"]["ОЗДС (охранно-защитная дератизационная система)"]["Оценка"]);
 
 		// Газоходы
-		clickGenerator(appVariables.gazohodySostoyanie, "#lookupTextcomp_12612", loadData["Результаты выборочного обследования"]["Газоходы"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12612", loadData["Результаты выборочного обследования"]["Газоходы"]["Состояние"]);
 		appVariables.gazohodyDefecty.value = loadData["Результаты выборочного обследования"]["Газоходы"]["Выявленные дефекты"];
 		appVariables.gazohodyPosledObsled.value = loadData["Результаты выборочного обследования"]["Газоходы"]["№ и дата последнего обслед."];
 		appVariables.gazohodyOrganizacia.value = loadData["Результаты выборочного обследования"]["Газоходы"]["Специализированная организация"];
-		clickGenerator(appVariables.gazohodyOcenka, "#ookupTextcomp_12690", loadData["Результаты выборочного обследования"]["Газоходы"]["Оценка"]);
+		clickGenerator(appVariables.results, "#ookupTextcomp_12690", loadData["Результаты выборочного обследования"]["Газоходы"]["Оценка"]);
 
 		// Лифты
-		clickGenerator(appVariables.gazohodySostoyanie, "#lookupTextcomp_12613", loadData["Результаты выборочного обследования"]["Лифты"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12613", loadData["Результаты выборочного обследования"]["Лифты"]["Состояние"]);
 		appVariables.liftyDefecty.value = loadData["Результаты выборочного обследования"]["Лифты"]["Выявленные дефекты"];
 		appVariables.liftyPosledObsled.value = loadData["Результаты выборочного обследования"]["Лифты"]["№ и дата последнего обслед."];
 		appVariables.liftyOrganizacia.value = loadData["Результаты выборочного обследования"]["Лифты"]["Специализированная организация"];
-		clickGenerator(appVariables.gazohodyOcenka, "#lookupTextcomp_12695", loadData["Результаты выборочного обследования"]["Лифты"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12695", loadData["Результаты выборочного обследования"]["Лифты"]["Оценка"]);
 
 		// Подъёмное устройство для маломобильной группы населения
-		clickGenerator(appVariables.podyomnikSostoyanie, "#lookupTextcomp_12614", loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12614", loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Состояние"]);
 		appVariables.podyomnikDefecty.value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Выявленные дефекты"];
 		appVariables.podyomnikPosledObsled.value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["№ и дата последнего обслед."];
 		appVariables.podyomnikOrganizacia.value = loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Специализированная организация"];
-		clickGenerator(appVariables.podyomnikOcenka, "#lookupTextcomp_12700", loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12700", loadData["Результаты выборочного обследования"]["Подъёмное устройство для маломобильной группы населения"]["Оценка"]);
 
 		// Устройство для автоматического опускания лифта
-		clickGenerator(appVariables.autoSpuskLiftSostoyanie, "#lookupTextcomp_12615", loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12615", loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Состояние"]);
 		appVariables.autoSpuskLiftDefecty.value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Выявленные дефекты"];
 		appVariables.autoSpuskLiftPosledObsled.value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["№ и дата последнего обслед."];
 		appVariables.autoSpuskLiftOrganizacia.value = loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Специализированная организация"];
-		clickGenerator(appVariables.autoSpuskLiftOcenka, "#lookupTextcomp_12705", loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12705", loadData["Результаты выборочного обследования"]["Устройство для автоматического опускания лифта"]["Оценка"]);
 
 		// Система ЭС
 		clickGenerator(appVariables.results, "#lookupTextcomp_12616", loadData["Результаты выборочного обследования"]["Система ЭС"]["Состояние"]);
 		appVariables.systemEsDefecty.value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Выявленные дефекты"];
 		appVariables.systemEsPosledObsled.value = loadData["Результаты выборочного обследования"]["Система ЭС"]["№ и дата последнего обслед."];
 		appVariables.systemEsOrganizacia.value = loadData["Результаты выборочного обследования"]["Система ЭС"]["Специализированная организация"];
-		clickGenerator(appVariables.systemEsOcenka, "#lookupTextcomp_12710", loadData["Результаты выборочного обследования"]["Система ЭС"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12710", loadData["Результаты выборочного обследования"]["Система ЭС"]["Оценка"]);
 
 		// ВКВ (второй кабельный ввод)
-		clickGenerator(appVariables.vkvNalichie, "#lookupTextcomp_12398", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Наличие"]);
-		clickGenerator(appVariables.vkvSostoyanie, "#lookupTextcomp_12622", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12398", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Наличие"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12622", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Состояние"]);
 		appVariables.vkvDefecty.value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Выявленные дефекты"];
 		appVariables.vkvPosledObsled.value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["№ и дата последнего обслед."];
 		appVariables.vkvOrganizacia.value = loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Специализированная организация"];
-		clickGenerator(appVariables.vkvOcenka, "#lookupTextcomp_12715", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12715", loadData["Результаты выборочного обследования"]["ВКВ (второй кабельный ввод)"]["Оценка"]);
 
 		// АВР (автоматическое включение резервного питания)
-		clickGenerator(appVariables.avrNalichie, "#lookupTextcomp_12399", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Наличие"]);
-		clickGenerator(appVariables.avrSostoyanie, "#lookupTextcomp_12617", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12399", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Наличие"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12617", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Состояние"]);
 		appVariables.avrDefecty.value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Выявленные дефекты"];
 		appVariables.avrPosledObsled.value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["№ и дата последнего обслед."];
 		appVariables.avrOrganizacia.value = loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Специализированная организация"];
-		clickGenerator(appVariables.avrOcenka, "#lookupTextcomp_12720", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12720", loadData["Результаты выборочного обследования"]["АВР (автоматическое включение резервного питания)"]["Оценка"]);
 
 		// ППАиДУ
-		clickGenerator(appVariables.ppaiduType, "#lookupTextcomp_12400", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Тип"]);
-		clickGenerator(appVariables.ppaiduSostoyanie, "#lookupTextcomp_12618", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12400", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Тип"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12618", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Состояние"]);
 		appVariables.ppaiduDefecty.value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["Выявленные дефекты"];
 		appVariables.ppaiduPosledObsled.value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["№ и дата последнего обслед."];
 		appVariables.ppaiduOrganizacia.value = loadData["Результаты выборочного обследования"]["ППАиДУ"]["Специализированная организация"];
-		clickGenerator(appVariables.ppaiduOcenka, "#lookupTextcomp_12725", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12725", loadData["Результаты выборочного обследования"]["ППАиДУ"]["Оценка"]);
 
 		// Система оповещения о пожаре
-		clickGenerator(appVariables.pozharOpoveshenNalichie, "#lookupTextcomp_12401", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Наличие"]);
-		clickGenerator(appVariables.pozharOpoveshenSostoyanie, "#lookupTextcomp_12619", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12401", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Наличие"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12619", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Состояние"]);
 		appVariables.pozharOpoveshenDefecty.value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Выявленные дефекты"];
 		appVariables.pozharOpoveshenPosledObsled.value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["№ и дата последнего обслед."];
 		appVariables.pozharOpoveshenOrganizacia.value = loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Специализированная организация"];
-		clickGenerator(appVariables.pozharOpoveshenOcenka, "#lookupTextcomp_12730", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12730", loadData["Результаты выборочного обследования"]["Система оповещения о пожаре"]["Оценка"]);
 
 		// Система ГС
-		clickGenerator(appVariables.sistemaGsVvody, "#lookupTextcomp_12402", loadData["Результаты выборочного обследования"]["Система ГС"]["Вводы"]);
-		clickGenerator(appVariables.sistemaGsSostoyanie, "#lookupTextcomp_12620", loadData["Результаты выборочного обследования"]["Система ГС"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12402", loadData["Результаты выборочного обследования"]["Система ГС"]["Вводы"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12620", loadData["Результаты выборочного обследования"]["Система ГС"]["Состояние"]);
 		appVariables.sistemaGsDefecty.value = loadData["Результаты выборочного обследования"]["Система ГС"]["Выявленные дефекты"];
 		appVariables.sistemaGsPosledObsled.value = loadData["Результаты выборочного обследования"]["Система ГС"]["№ и дата последнего обслед."];
 		appVariables.sistemaGsOrganizacia.value = loadData["Результаты выборочного обследования"]["Система ГС"]["Специализированная организация"];
-		clickGenerator(appVariables.sistemaGsOcenka, "#lookupTextcomp_12740", loadData["Результаты выборочного обследования"]["Система ГС"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12740", loadData["Результаты выборочного обследования"]["Система ГС"]["Оценка"]);
 
 		// Система видеонаблюдения
-		clickGenerator(appVariables.sistemaVideonabMesto, "#lookupTextcomp_12349", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Место"]);
-		clickGenerator(appVariables.sistemaVideonabSostoyanie, "#lookupTextcomp_12621", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12349", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Место"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12621", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Состояние"]);
 		appVariables.sistemaVideonabDefecty.value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Выявленные дефекты"];
 		appVariables.sistemaVideonabPosledObsled.value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["№ и дата последнего обслед."];
 		appVariables.sistemaVideonabOrganizacia.value = loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Специализированная организация"];
-		clickGenerator(appVariables.sistemaVideonabOcenka, "#lookupTextcomp_12745", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12745", loadData["Результаты выборочного обследования"]["Система видеонаблюдения"]["Оценка"]);
 
 		appVariables.dopolnitDannye.value = loadData["Результаты выборочного обследования"]["Дополнительные данные"];
-		clickGenerator(appVariables.recomendatciiPoUtepleniuSten, "#lookupTextcomp_12350", loadData["Результаты выборочного обследования"]["Рекомендации по утеплению стен"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12350", loadData["Результаты выборочного обследования"]["Рекомендации по утеплению стен"]);
 		appVariables.recomendatciiPoDopRabotam.value = loadData["Выводы по результатам обследования"]["РЕКОМЕНДАЦИИ по ремонтно-восстановительным работам"];
 
 		// Подписывающие лица
@@ -3855,18 +4033,368 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		if (!buttonError(appVariables.clearDataButton, appVariables.currentPage, "main", "Очистка отчета")) {
 			return;
 		}
+		// РЕЗУЛЬТАТЫ ВЫБОРОЧНОГО ОБСЛЕДОВАНИЯ
+		// Крыша
+		// Кровля
+		appVariables.krovlyaDefecty.value = "";
+		appVariables.krovlyaPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", "-");
 
-		for (let key in appVariables) {
-			if (typeof key === Object) {
-				continue;
-			}
+		// Свесы
+		appVariables.svesyDefecty.value = "";
+		appVariables.svesyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", "-");
 
-			if (appVariables[key].classList.contains("click")) {
-				clickGenerator(appVariables.results, appVariables[key].id, "-");
-			} else {
-				appVariables[key].value = "";
-			}
-		}
+		// Стропильная система
+		appVariables.stropilnayaSistemaDefecty.value = "";
+		appVariables.stropilnayaSistemaPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", "-");
+
+		// Чердак
+		appVariables.cherdakDefecty.value = "";
+		appVariables.cherdakPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", "-");
+
+		// Покрытие ж/б
+		appVariables.pokritieJBDefecty.value = "";
+		appVariables.pokritieJBPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", "-");
+
+		// Все элементы
+		appVariables.vsyaKrishaDefecty.value = "";
+		appVariables.vsyaKrishaPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12645", "-");
+
+		// Водоотвод
+		appVariables.vodootvodDefecty.value = "";
+		appVariables.vodootvodPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12650", "-");
+
+		// Межпанельные стыки
+		appVariables.majpanelnyeStykiDefecty.querySelector("#comp_12652").value = "";
+		appVariables.majpanelnyeStykiPercent.querySelector("#comp_12654").value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12655", "-");
+
+		// Фасад
+		appVariables.fasadDefecty.value = "";
+		appVariables.fasadPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12660", "-");
+
+		// Балконы
+		// Балконы
+		appVariables.balkonyDefecty.value = "";
+		appVariables.balkonyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", "-");
+
+		// Лоджии
+		appVariables.lodjiiDefecty.value = "";
+		appVariables.lodjiiPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", "-");
+
+		// Козырьки
+		appVariables.kozirkiDefecty.value = "";
+		appVariables.kozirkiPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", "-");
+
+		// Эркеры
+		appVariables.erkeryDefecty.value = "";
+		appVariables.erkeryPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", "-");
+
+		// Все элементы
+		appVariables.vseBalkonyDefecty.value = "";
+		appVariables.vseBalkonyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12739", "-");
+
+		// Стены
+		appVariables.stenyDefecty.value = "";
+		appVariables.stenyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12672", "-");
+
+		// Подвал
+		appVariables.podvalDefecty.value = "";
+		appVariables.podvalPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12631", "-");
+
+		// Тех.подполье
+		appVariables.techPodpolieDefecty.value = "";
+		appVariables.techPodpoliePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12636", "-");
+
+		// Тех.этаж
+		appVariables.techEtajDefecty.value = "";
+		appVariables.techEtajPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12673", "-");
+
+		// Гараж стоянка (подземный)
+		appVariables.garageDefecty.value = "";
+		appVariables.garagePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12750", "-");
+
+		// Места общего пользования
+		// Вестибюли
+		appVariables.mopVestibuliDefecty.value = "";
+		appVariables.mopVestibuliPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Крыльца
+		appVariables.mopKrilcaDefecty.value = "";
+		appVariables.mopKrilcaPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Пандусы наружные
+		appVariables.mopPandusyNaruzhnieDefecty.value = "";
+		aappVariables.mopPandusyNaruzhniePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Пандусы внутри-подъездные
+		appVariables.mopPandusyVnutrennieDefecty.value = "";
+		appVariables.mopPandusyVnutrenniePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Сходы/съезды
+		appVariables.mopShodySiezdyDefecty.value = "";
+		appVariables.mopShodySiezdyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Окна, двери
+		appVariables.mopOknaDveriDefecty.value = "";
+		appVariables.mopOknaDveriPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Внутренняя отделка помещений
+		appVariables.mopVnOtdelkaPomeshDefecty.value = "";
+		appVariables.mopVnOtdelkaPomeshPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Все элементы
+		appVariables.mopVseElementyDefecty.value = "";
+		appVariables.mopVseElementyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
+
+		// Лестницы
+		appVariables.lestnicyDefecty.value = "";
+		appVariables.lestnicyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12674", "-");
+
+		// Перекрытия
+		appVariables.perekrityaDefecty.value = "";
+		appVariables.perekrityaPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12764", "-");
+
+		// Система отопления
+		// Тех.подполье/тех.этаж
+		appVariables.otopleniyeTehPodpolieDefecty.value = "";
+		appVariables.otopleniyeTehPodpoliePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", "-");
+
+		// Транзит питающий
+		appVariables.otopleniyeTranzitPitaushDefecty.value = "";
+		appVariables.otopleniyeTranzitPitaushPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", "-");
+
+		// Чердак
+		appVariables.otopleniyeCherdakDefecty.value = "";
+		appVariables.otopleniyeCherdakPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", "-");
+
+		// Этажи
+		appVariables.otopleniyeEtajiDefecty.value = "";
+		appVariables.otopleniyeEtajiPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", "-");
+
+		// Вся система
+		appVariables.vseOtopleniyeDefecty.value = "";
+		appVariables.vseOtopleniyePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12769", "-");
+
+		// ГВС
+		// Тех.подполье/тех.этаж
+		appVariables.gvsTehPodpolieDefecty.value = "";
+		appVariables.gvsTehPodpoliePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", "-");
+
+		// Транзит питающий
+		appVariables.gvsTranzitPitaushDefecty.value = "";
+		appVariables.gvsTranzitPitaushPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", "-");
+
+		// Чердак
+		appVariables.gvsCherdakDefecty.value = "";
+		appVariables.gvsCherdakPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", "-");
+
+		// Этажи
+		appVariables.gvsEtajiDefecty.value = "";
+		appVariables.gvsEtajiPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", "-");
+
+		// Вся система
+		appVariables.vseGvsDefecty.value = "";
+		appVariables.vseGvsPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12675", "-");
+
+		// ХВС
+		// Тех.подполье/тех.этаж
+		appVariables.hvsTehPodpolieDefecty.value = "";
+		appVariables.hvsTehPodpoliePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", "-");
+
+		// Транзит питающий
+		appVariables.hvsTranzitPitaushDefecty.value = "";
+		appVariables.hvsTranzitPitaushPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", "-");
+
+		// Этажи
+		appVariables.hvsEtajiDefecty.value = "";
+		appVariables.hvsEtajiPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", "-");
+
+		// Внутренний пожарный водопровод
+		appVariables.hvsVnPozharProvodDefecty.value = "";
+		appVariables.hvsVnPozharProvodPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", "-");
+
+		// Вся система
+		appVariables.vseHvsDefecty.value = "";
+		appVariables.vseHvsPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12778", "-");
+
+		// Канализация
+		// Тех.подполье/тех.этаж
+		appVariables.kanalizaciaTehPodpolieDefecty.value = "";
+		appVariables.kanalizaciaTehPodpoliePercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12783", "-");
+
+		// Этажи
+		appVariables.kanalizaciaEtajiDefecty.value = "";
+		appVariables.kanalizaciaEtajiPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12783", "-");
+
+		// Вся система
+		appVariables.vseKanalizaciaDefecty.value = "";
+		appVariables.vseKanalizaciaPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12783", "-");
+
+		// Мусоропроводы
+		appVariables.musoroprovodyDefecty.value = "";
+		appVariables.musoroprovodyPercent.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12788", "-");
+
+		// Связь с ОДС
+		clickGenerator(appVariables.results, "#lookupTextcomp_12607", "-");
+		appVariables.odsDefecty.value = "";
+		appVariables.odsPosledneeObsled.value = "";
+		appVariables.odsOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12793", "-");
+
+		// Вентиляция
+		clickGenerator(appVariables.results, "#lookupTextcomp_12608", "-");
+		appVariables.ventilaciaDefecty.value = "";
+		appVariables.ventilaciaPosledneeObsled.value = "";
+		appVariables.odsOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12798", "-");
+
+		// Система промывки и прочистки стволов мусоропроводов
+		clickGenerator(appVariables.results, "#lookupTextcomp_126090", "-");
+		appVariables.musoroChistSistemaDefecty.value = "";
+		appVariables.musoroChistSistemaPosledObsled.value = "";
+		appVariables.musoroChistSistemaOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12803", "-");
+
+		// ОЗДС (охранно-защитная дератизационная система)
+		clickGenerator(appVariables.results, "#lookupTextcomp_12610", "-");
+		appVariables.ozdsDefecty.value = "";
+		appVariables.ozdsPosledObsled.value = "";
+		appVariables.ozdsOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12680", "-");
+
+		// Газоходы
+		clickGenerator(appVariables.results, "#lookupTextcomp_12612", "-");
+		appVariables.gazohodyDefecty.value = "";
+		appVariables.gazohodyPosledObsled.value = "";
+		appVariables.gazohodyOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#ookupTextcomp_12690", "-");
+
+		// Лифты
+		clickGenerator(appVariables.results, "#lookupTextcomp_12613", "-");
+		appVariables.liftyDefecty.value = "";
+		appVariables.liftyPosledObsled.value = "";
+		appVariables.liftyOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12695", "-");
+
+		// Подъёмное устройство для маломобильной группы населения
+		clickGenerator(appVariables.results, "#lookupTextcomp_12614", "-");
+		appVariables.podyomnikDefecty.value = "";
+		appVariables.podyomnikPosledObsled.value = "";
+		appVariables.podyomnikOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12700", "-");
+
+		// Устройство для автоматического опускания лифта
+		clickGenerator(appVariables.results, "#lookupTextcomp_12615", "-");
+		appVariables.autoSpuskLiftDefecty.value = "";
+		appVariables.autoSpuskLiftPosledObsled.value = "";
+		appVariables.autoSpuskLiftOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12705", "-");
+
+		// Система ЭС
+		clickGenerator(appVariables.results, "#lookupTextcomp_12616", "-");
+		appVariables.systemEsDefecty.value = "";
+		appVariables.systemEsPosledObsled.value = "";
+		appVariables.systemEsOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12710", "-");
+
+		// ВКВ (второй кабельный ввод)
+		clickGenerator(appVariables.results, "#lookupTextcomp_12398", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12622", "-");
+		appVariables.vkvDefecty.value = "";
+		appVariables.vkvPosledObsled.value = "";
+		appVariables.vkvOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12715", "-");
+
+		// АВР (автоматическое включение резервного питания)
+		clickGenerator(appVariables.results, "#lookupTextcomp_12399", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12617", "-");
+		appVariables.avrDefecty.value = "";
+		appVariables.avrPosledObsled.value = "";
+		appVariables.avrOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12720", "-");
+
+		// ППАиДУ
+		clickGenerator(appVariables.results, "#lookupTextcomp_12400", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12618", "-");
+		appVariables.ppaiduDefecty.value = "";
+		appVariables.ppaiduPosledObsled.value = "";
+		appVariables.ppaiduOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12725", "-");
+
+		// Система оповещения о пожаре
+		clickGenerator(appVariables.results, "#lookupTextcomp_12401", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12619", "-");
+		appVariables.pozharOpoveshenDefecty.value = "";
+		appVariables.pozharOpoveshenPosledObsled.value = "";
+		appVariables.pozharOpoveshenOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12730", "-");
+
+		// Система ГС
+		clickGenerator(appVariables.results, "#lookupTextcomp_12402", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12620", "-");
+		appVariables.sistemaGsDefecty.value = "";
+		appVariables.sistemaGsPosledObsled.value = "";
+		appVariables.sistemaGsOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12740", "-");
+
+		// Система видеонаблюдения
+		clickGenerator(appVariables.results, "#lookupTextcomp_12349", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12621", "-");
+		appVariables.sistemaVideonabDefecty.value = "";
+		appVariables.sistemaVideonabPosledObsled.value = "";
+		appVariables.sistemaVideonabOrganizacia.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12745", "-");
+
+		appVariables.dopolnitDannye.value = "";
+		clickGenerator(appVariables.results, "#lookupTextcomp_12350", "-");
+		appVariables.recomendatciiPoDopRabotam.value = "";
 
 		// Подписывающие лица
 		for (let i = 1; i < appVariables.signatoriesRows.length; i++) {
@@ -3878,28 +4406,11 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			appVariables.licaFio[i].value = "";
 		}
 
-		function clickGenerator(parent, id, value) {
-			try {
-				const element = parent.querySelector(id);
-				const dataElement = element.parentElement.nextElementSibling;
-				const listItems = dataElement.querySelectorAll("li");
-
-				listItems.forEach((item) => {
-					const a = item.querySelector("a");
-					if (a.textContent === value) {
-						a.click();
-					}
-				});
-			} catch {
-				return;
-			}
-		}
-
-		appVariables.clearDataButton.textContent = "Очищено";
-		appVariables.clearDataButton.classList.add("main__button_done");
+		appVariables.cleanButton.textContent = "Очищено";
+		appVariables.cleanButton.classList.add("main__button_done");
 		setTimeout(() => {
-			appVariables.clearDataButton.textContent = "Очистка отчета";
-			appVariables.clearDataButton.classList.remove("main__button_done");
+			appVariables.cleanButton.textContent = "Очистка отчета";
+			appVariables.cleanButton.classList.remove("main__button_done");
 		}, 1500);
 	}
 
@@ -3984,7 +4495,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			const element = parent.querySelector(id);
 			const dataElement = element.parentElement.nextElementSibling;
 			const listItems = dataElement.querySelectorAll("li");
-
+			element.classList.add("click");
 			listItems.forEach((item) => {
 				const a = item.querySelector("a");
 				if (a.textContent === value) {
@@ -3998,5 +4509,47 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	}
 
 	// Добавляет на странице отчета во все поля раскрывающийся список с параметрами для выбора
-	function createFakeSelects() {}
+	function createFakeSelects() {
+		if (!buttonError(appVariables.copyButton, appVariables.currentPage, "main", "Всплывающие поля")) {
+			return;
+		}
+
+		// Поиск полей отчета
+		searchAllInputs();
+
+		resultsDefectsInputs.inputs.forEach((input) => {
+			const container = input.parentElement;
+			const containerName = container.previousElementSibling.querySelector("span").textContent;
+			if (!container.querySelector(".fakeSelect")) {
+				container.style.position = "relative";
+				container.insertAdjacentHTML("afterBegin", fakeSelectList);
+
+				const currentSelect = container.querySelector(".fakeSelect");
+				input.addEventListener("click", () => {
+					openCloseFakeSelect(currentSelect);
+				});
+			}
+		});
+
+		appVariables.fakeSelectsButton.textContent = "Создано!";
+		appVariables.fakeSelectsButton.classList.add("main__button_done");
+		setTimeout(() => {
+			appVariables.fakeSelectsButton.textContent = "Всплывающие поля";
+			appVariables.fakeSelectsButton.classList.remove("main__button_done");
+		}, 1500);
+	}
+
+	function openCloseFakeSelect(selectList) {
+		if (!selectList.classList.contains("fakeSelect_opened")) {
+			if (appVariables.htmlBody.querySelector(".fakeSelect_opened")) {
+				appVariables.htmlBody.querySelector(".fakeSelect_opened").classList.remove("fakeSelect_opened");
+			}
+			selectList.classList.add("fakeSelect_opened");
+			selectList.querySelector(".fakeSelect__close-selector").addEventListener("click", () => {
+				openCloseFakeSelect(selectList);
+			});
+		} else {
+			selectList.classList.remove("fakeSelect_opened");
+		}
+	}
 }
