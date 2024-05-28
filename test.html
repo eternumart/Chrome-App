@@ -13,12 +13,60 @@
 				border-radius: 10px;
 				box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
 				padding: 20px 10px;
+				position: absolute;
+				width: 500px;
+				z-index: 100;
+				opacity: 0;
+				visibility: hidden;
+				pointer-events: none;
+				transition: 0.4s;
+			}
+
+			.fakeSelect-wrapper {
+				position: relative;
+			}
+
+			.fakeSelect_opened {
+				opacity: 1;
+				visibility: visible;
+				pointer-events: auto;
+				transition: 0.4s;
+			}
+
+			.fakeSelect__list {
 				list-style: none;
 				display: flex;
 				flex-direction: column;
 				gap: 5px;
+				padding: 0;
+				margin: 0;
+			}
+
+			.fakeSelect__close-selector {
 				position: absolute;
-				width: 200%;
+				top: -17px;
+				left: -6px;
+				width: 15px;
+				height: 15px;
+				border-radius: 20px;
+				background: #1f5473;
+				cursor: pointer;
+				transition: 0.3s;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transfor: rotate(180deg);
+			}
+
+			.fakeSelect__close-selector:hover {
+				background: #000;
+				transition: 0.3s;
+			}
+
+			.fakeSelect__item-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 6px;
 			}
 
 			.fakeSelect__item {
@@ -53,6 +101,7 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				z-index: 50;
 			}
 
 			.fakeSelect__selector:hover {
@@ -77,7 +126,7 @@
 				</defs>
 			</svg>
 		</div>
-		<div class="fakeSelect">
+		<div class="fakeSelect fakeSelect_opened">
 			<div class="fakeSelect-wrapper">
 				<div class="fakeSelect__close-selector">
 					<svg width="7" height="6" viewBox="0 0 7 6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,20 +135,41 @@
 						</g>
 						<defs>
 							<clipPath id="clip0_100_4">
-								<rect width="7" height="6" fill="white" />
+								<rect width="10" height="10" fill="white" />
 							</clipPath>
 						</defs>
 					</svg>
 				</div>
-				<ul class="fakeSelect__list">
-					<li class="fakeSelect__item">Ослабление крепления отдельных листов к обрешетке.</li>
-					<li class="fakeSelect__item">Неплотности, деформации фальцев.</li>
-					<li class="fakeSelect__item">Повреждение цинкового покрытия.</li>
-					<li class="fakeSelect__item">Пробоины стальных листов.</li>
-					<li class="fakeSelect__item">Поверхностная коррозия листов.</li>
-					<li class="fakeSelect__item">Выборочный ремонт.</li>
-					<li class="fakeSelect__item">Просветы при осмотре со стороны чердака.</li>
-				</ul>
+				<div class="fakeSelect__list">
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-1" />
+						<label for="fakselect-item-1">Ослабление крепления отдельных листов к обрешетке.</label>
+					</div>
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-2" />
+						<label for="fakselect-item-2">Неплотности, деформации фальцев.</label>
+					</div>
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-3" />
+						<label for="fakselect-item-3">Повреждение цинкового покрытия.</label>
+					</div>
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-4" />
+						<label for="fakselect-item-4">Пробоины стальных листов.</label>
+					</div>
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-5" />
+						<label for="fakselect-item-5">Поверхностная коррозия листов.</label>
+					</div>
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-6" />
+						<label for="fakselect-item-6">Выборочный ремонт.</label>
+					</div>
+					<div class="fakeSelect__item-wrapper">
+						<input type="checkbox" id="fakselect-item-7" />
+						<label for="fakselect-item-7">Просветы при осмотре со стороны чердака.</label>
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>
