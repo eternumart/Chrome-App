@@ -922,7 +922,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		<div class="fakeSelect__list">
 		</div>
 	</div>
-</div>`;
+	</div>`;
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
@@ -939,43 +939,25 @@ function launchApp(login, loginIsPossible, launchStatus) {
 	}
 
 	// Определение наличия iFrame на странице встраивания
-	try {
-		appVariables.iFrame = document.querySelector("#formCanvas");
-		if (appVariables.iFrame) {
-			appVariables.isIFrame = true;
-		}
-	} catch {
-		appVariables.isIFrame = false;
-	}
-
-	if (!appVariables.isIFrame) {
-		try {
-			appVariables.html = document;
-			appVariables.wholeAddress = appVariables.html.querySelector("#comboboxTextcomp_12339").value;
-		} catch {}
-	} else {
-		try {
-			appVariables.html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html");
-			appVariables.wholeAddress = appVariables.html.querySelector("#title").textContent;
-		} catch {
-			appVariables.wholeAddress = appVariables.html.querySelector("#comboboxTextcomp_12339").value;
-		}
-	}
+	appVariables.html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html") || document.querySelector("html");
+	appVariables.wholeAddress = document.querySelector("#title").textContent;
 
 	// Определение тегов head и body в документе
 	appVariables.htmlHead = appVariables.html.querySelector("head");
 	appVariables.htmlBody = appVariables.html.querySelector("body");
 
 	// Определение страницы встраивания с фото или с отчетом
-	if (appVariables.htmlBody.querySelector("#formData107")) {
-		appVariables.form = appVariables.htmlBody.querySelector("#formData107");
+	appVariables.form = appVariables.htmlBody.querySelector("#formData107") || appVariables.htmlBody.querySelector("#formData181");
+
+	if (appVariables.form.id === "formData107") {
 		appVariables.currentPage = "photo";
-		createPopup(appVariables.currentPage);
-	} else {
-		appVariables.form = appVariables.htmlBody.querySelector("#formData181");
-		appVariables.currentPage = "main";
-		createPopup(appVariables.currentPage);
 	}
+	// } else {
+	if (appVariables.form.id === "formData181") {
+		appVariables.currentPage = "main";
+	}
+
+	createPopup(appVariables.currentPage);
 	setToStorage(true, true, null, null);
 
 	appVariables.dragIco = appVariables.app.querySelector(".header__drag-button");
@@ -2525,7 +2507,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		appVariables.recomendatciiPoDopRabotam = appVariables.form.querySelector("#comp_12606");
 
 		// Подписывающие лица
-		for (let i = 1; i < appVariables.signatoriesRows.length; i++) {
+		for (let i = 0; i < appVariables.signatoriesRows.length; i++) {
 			if (!appVariables.signatoriesRows[i].querySelector("#comp_12340")) {
 				continue;
 			}
@@ -2549,7 +2531,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			resultsDefectsInputs.inputs.push(appVariables.fasadDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.balkonyDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.lodjiiDefecty);
-			resultsDefectsInputs.inputs.push(appVariables.krovlyaDefecty);
+			resultsDefectsInputs.inputs.push(appVariables.kozirkiDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.erkeryDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.vseBalkonyDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.stenyDefecty);
@@ -3697,6 +3679,15 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 
+		for (let i = 0; i < data["Подписывающие лица"].length; i++) {
+			for (let key in appVariables[i]) {
+				const neededObj = appVariables[i][key];
+				data["Подписывающие лица"]["Представители от"] = neededObj[i].value;
+				data["Подписывающие лица"]["ФИО должностного лица"] = neededObj[i].value;
+				data["Подписывающие лица"]["Должность и наименование организации"] = neededObj[i].value;
+			}
+		}
+
 		localStorage.setItem("MJIDATA", JSON.stringify(data));
 
 		appVariables.copyButton.textContent = "Скопировано";
@@ -3732,6 +3723,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		// РЕЗУЛЬТАТЫ ВЫБОРОЧНОГО ОБСЛЕДОВАНИЯ
 		// Крыша
 		// Кровля
+		debugger
 		appVariables.krovlyaDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Выявленные дефекты"];
 		appVariables.krovlyaPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["% деф. части"];
 		clickGenerator(appVariables.results, "#lookupTextcomp_12645", loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Оценка"]);
@@ -3767,8 +3759,8 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		clickGenerator(appVariables.results, "#lookupTextcomp_12650", loadData["Результаты выборочного обследования"]["Водоотвод"]["Оценка"]);
 
 		// Межпанельные стыки
-		appVariables.majpanelnyeStykiDefecty.querySelector("#comp_12652").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Выявленные дефекты"];
-		appVariables.majpanelnyeStykiPercent.querySelector("#comp_12654").value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["% деф. части"];
+		appVariables.majpanelnyeStykiDefecty.value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Выявленные дефекты"];
+		appVariables.majpanelnyeStykiPercent.value = loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["% деф. части"];
 		clickGenerator(appVariables.results, "#lookupTextcomp_12655", loadData["Результаты выборочного обследования"]["Межпанельные стыки"]["Оценка"]);
 
 		// Фасад
@@ -3840,7 +3832,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 		// Пандусы наружные
 		appVariables.mopPandusyNaruzhnieDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["Выявленные дефекты"];
-		aappVariables.mopPandusyNaruzhniePercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["% деф. части"];
+		appVariables.mopPandusyNaruzhniePercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["% деф. части"];
 		clickGenerator(appVariables.results, "#lookupTextcomp_12755", loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["Оценка"]);
 
 		// Пандусы внутри-подъездные
@@ -3992,7 +3984,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		clickGenerator(appVariables.results, "#lookupTextcomp_12798", loadData["Результаты выборочного обследования"]["Вентиляция"]["Оценка"]);
 
 		// Система промывки и прочистки стволов мусоропроводов
-		clickGenerator(appVariables.results, "#lookupTextcomp_126090", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Состояние"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12609", loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Состояние"]);
 		appVariables.musoroChistSistemaDefecty.value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Выявленные дефекты"];
 		appVariables.musoroChistSistemaPosledObsled.value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["№ и дата последнего обслед."];
 		appVariables.musoroChistSistemaOrganizacia.value = loadData["Результаты выборочного обследования"]["Система промывки и прочистки стволов мусоропроводов"]["Специализированная организация"];
@@ -4010,7 +4002,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		appVariables.gazohodyDefecty.value = loadData["Результаты выборочного обследования"]["Газоходы"]["Выявленные дефекты"];
 		appVariables.gazohodyPosledObsled.value = loadData["Результаты выборочного обследования"]["Газоходы"]["№ и дата последнего обслед."];
 		appVariables.gazohodyOrganizacia.value = loadData["Результаты выборочного обследования"]["Газоходы"]["Специализированная организация"];
-		clickGenerator(appVariables.results, "#ookupTextcomp_12690", loadData["Результаты выборочного обследования"]["Газоходы"]["Оценка"]);
+		clickGenerator(appVariables.results, "#lookupTextcomp_12690", loadData["Результаты выборочного обследования"]["Газоходы"]["Оценка"]);
 
 		// Лифты
 		clickGenerator(appVariables.results, "#lookupTextcomp_12613", loadData["Результаты выборочного обследования"]["Лифты"]["Состояние"]);
@@ -4097,9 +4089,9 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			if (!appVariables.signatoriesRows[i].querySelector("#comp_12340")) {
 				continue;
 			}
-			appVariables.licaOt[i].value = loadData["Подписывающие лица"]["Представители от"][i];
-			appVariables.LicaDoljnost[i].value = loadData["Подписывающие лица"]["Должность и наименование организации"][i];
-			appVariables.licaFio[i].value = loadData["Подписывающие лица"]["ФИО должностного лица"][i];
+			appVariables[i]["licaOt"].value = loadData["Подписывающие лица"]["Представители от"][i];
+			appVariables[i]["LicaDoljnost"].value = loadData["Подписывающие лица"]["Должность и наименование организации"][i];
+			appVariables[i]["licaFio"].value = loadData["Подписывающие лица"]["ФИО должностного лица"][i];
 		}
 
 		localStorage.setItem("DataLoaded", JSON.stringify({ address: loadData.address.address }));
@@ -4158,8 +4150,8 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		clickGenerator(appVariables.results, "#lookupTextcomp_12650", "-");
 
 		// Межпанельные стыки
-		appVariables.majpanelnyeStykiDefecty.querySelector("#comp_12652").value = "";
-		appVariables.majpanelnyeStykiPercent.querySelector("#comp_12654").value = "";
+		appVariables.majpanelnyeStykiDefecty.value = "";
+		appVariables.majpanelnyeStykiPercent.value = "";
 		clickGenerator(appVariables.results, "#lookupTextcomp_12655", "-");
 
 		// Фасад
@@ -4231,7 +4223,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 
 		// Пандусы наружные
 		appVariables.mopPandusyNaruzhnieDefecty.value = "";
-		aappVariables.mopPandusyNaruzhniePercent.value = "";
+		appVariables.mopPandusyNaruzhniePercent.value = "";
 		clickGenerator(appVariables.results, "#lookupTextcomp_12755", "-");
 
 		// Пандусы внутри-подъездные
@@ -4383,7 +4375,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		clickGenerator(appVariables.results, "#lookupTextcomp_12798", "-");
 
 		// Система промывки и прочистки стволов мусоропроводов
-		clickGenerator(appVariables.results, "#lookupTextcomp_126090", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12609", "-");
 		appVariables.musoroChistSistemaDefecty.value = "";
 		appVariables.musoroChistSistemaPosledObsled.value = "";
 		appVariables.musoroChistSistemaOrganizacia.value = "";
@@ -4401,7 +4393,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		appVariables.gazohodyDefecty.value = "";
 		appVariables.gazohodyPosledObsled.value = "";
 		appVariables.gazohodyOrganizacia.value = "";
-		clickGenerator(appVariables.results, "#ookupTextcomp_12690", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12690", "-");
 
 		// Лифты
 		clickGenerator(appVariables.results, "#lookupTextcomp_12613", "-");
@@ -4480,7 +4472,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		clickGenerator(appVariables.results, "#lookupTextcomp_12745", "-");
 
 		appVariables.dopolnitDannye.value = "";
-		clickGenerator(appVariables.results, "#lookupTextcomp_12350", "-");
+		clickGenerator(appVariables.results, "#lookupTextcomp_12350", "Н/и (не имеется)");
 		appVariables.recomendatciiPoDopRabotam.value = "";
 
 		// Подписывающие лица
@@ -4488,16 +4480,16 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			if (!appVariables.signatoriesRows[i].querySelector("#comp_12340")) {
 				continue;
 			}
-			appVariables.licaOt[i].value = "";
-			appVariables.LicaDoljnost[i].value = "";
-			appVariables.licaFio[i].value = "";
+			appVariables[i]["licaOt"].value = "";
+			appVariables[i]["LicaDoljnost"].value = "";
+			appVariables[i]["licaFio"].value = "";
 		}
 
-		appVariables.cleanButton.textContent = "Очищено";
-		appVariables.cleanButton.classList.add("main__button_done");
+		appVariables.clearDataButton.textContent = "Очищено";
+		appVariables.clearDataButton.classList.add("main__button_done");
 		setTimeout(() => {
-			appVariables.cleanButton.textContent = "Очистка отчета";
-			appVariables.cleanButton.classList.remove("main__button_done");
+			appVariables.clearDataButton.textContent = "Очистка отчета";
+			appVariables.clearDataButton.classList.remove("main__button_done");
 		}, 1500);
 	}
 
@@ -4509,7 +4501,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			return;
 		}
 
-		const files = formInput.files;
+		const files = appVariables.formInput.files;
 		let counter = 0;
 		if (files.length < 1) {
 			submitButton.classList.add("form__button_error");
@@ -4577,20 +4569,41 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		}
 	}
 
+	// function clickGenerator(parent, id, value) {
+	// 	try {
+	// 		const element = parent.querySelector(id);
+	// 		const dataElement = element.parentElement.nextElementSibling;
+	// 		const listItems = dataElement.querySelectorAll("li");
+	// 		listItems.forEach((item) => {
+	// 			const a = item.querySelector("a");
+	// 			if (a.textContent === value) {
+	// 				a.click();
+	// 			}
+	// 		});
+	// 	} catch {
+	// 		console.error(`clickGenerator failed: can't click at: ${id}`);
+	// 		return;
+	// 	}
+	// }
+
 	function clickGenerator(parent, id, value) {
 		try {
 			const element = parent.querySelector(id);
 			const dataElement = element.parentElement.nextElementSibling;
 			const listItems = dataElement.querySelectorAll("li");
-			element.classList.add("click");
 			listItems.forEach((item) => {
 				const a = item.querySelector("a");
 				if (a.textContent === value) {
-					a.click();
+					const event = new MouseEvent('click', {
+						'view': window,
+						'bubbles': true,
+						'cancelable': true
+					});
+					a.dispatchEvent(event);
 				}
 			});
 		} catch {
-			console.error("clickGenerator failed: can't click");
+			console.error(`clickGenerator failed: can't click at: ${id}`);
 			return;
 		}
 	}
@@ -5042,6 +5055,16 @@ function launchApp(login, loginIsPossible, launchStatus) {
 					},
 					conditionNode: appVariables["options"]["ХВС"]["Материал трубопроводов"],
 				},
+				"Внутренний пожарный водопровод": {
+					conditions: {
+						"Безусловно": ["Незаполненность системы водой.",
+							"Коррозия, свищи и хомуты на трубопроводах.",
+							"Разукомплектованность или отсутствие рукавов, стволов.",
+							"Недействующие повысительные насосы.",
+							"Коррозия трубопроводов, соединений, арматуры."],
+					},
+					conditionNode: false,
+				},
 			},
 			Канализация: {
 				"Тех.подполье/тех.этаж": {
@@ -5124,7 +5147,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 				},
 			},
 			"Система ЭС": {
-				"Система ЭС": {
+				"Система ЭС (ВРУ)": {
 					conditions: {
 						Безусловно: ["Устаревание, утрата эластичности изоляции.", "Скрутки, повреждение изоляции", "Следы перегрева контактных соединений.", "Применение проводов с алюминиевыми жилами.", "Неисправность этажных распределительных шкафов", "Подтопление ВРУ.", "Неблагоприятный ТВР в ВРУ."],
 					},
@@ -5132,7 +5155,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 				},
 			},
 			ППАиДУ: {
-				ППАиДУ: {
+				"Система ППАиДУ": {
 					conditions: {
 						Безусловно: ["Неисправность системы.", "Разукомплектованность вытяжных вентиляторов.", "При апробации не включается.", "Проверено апробацией."],
 					},
@@ -5181,16 +5204,15 @@ function launchApp(login, loginIsPossible, launchStatus) {
 						let listOptions, conditionNode;
 						try {
 							conditionNode = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`];
-							console.info(`${groupName}: ${rowName} - условие ${conditionNode.value}`);
-						} catch {
-							console.info(`${groupName}: ${rowName} - безусловно`);
-						}
+						} catch {}
 
 						if (conditionNode) {
 							const conditionValue = `${conditionNode.value}`;
 							const conditions = selectsValues[`${groupName}`][`${rowName}`][`conditions`];
+							console.info(`${groupName}: ${rowName} - условие ${conditionNode.value}`);
 							listOptions = conditions[`${conditionValue}`];
 						} else {
+							console.info(`${groupName}: ${rowName} - безусловно`);
 							if (!selectsValues[`${groupName}`][`${rowName}`]) {
 								listOptions = ["#", "#"];
 								console.info("listOptions пуст");
@@ -5223,9 +5245,6 @@ function launchApp(login, loginIsPossible, launchStatus) {
 							});
 							input.value = resultValue.join(" ");
 						});
-						// input.addEventListener("dbclick", () => {
-						// 	openCloseFakeSelect(currentSelect);
-						// });
 					}
 				}
 			}
@@ -5251,5 +5270,54 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		} else {
 			selectList.classList.remove("fakeSelect_opened");
 		}
+	}
+
+	function setRatings() {
+		searchAllInputs();
+
+		const rates = {
+			Крыша: {
+				Кровля: {
+					У: [3, 5, 10, 15, 20, 25],
+					Н: [30, 35, 40, 45, 50, 55],
+					НОР: null,
+					Р: null,
+					ОГР: null,
+					А: [60, 65, 70, 75, 80],
+				},
+				Свесы: {
+					У: [3, 5, 10, 15, 20, 26],
+					Н: [30, 35, 40, 45, 50, 55],
+					НОР: null,
+					Р: null,
+					ОГР: null,
+					А: [60, 65, 70, 75, 80],
+				},
+				"Стропильная система": {
+					У: null,
+					Н: null,
+					НОР: [3],
+					Р: [5, 10, 15, 20, 25],
+					ОГР: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+					А: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80],
+				},
+				Чердак: {
+					У: [3, 5, 10, 15, 20, 26],
+					Н: [30, 35, 40, 45, 50, 55],
+					НОР: null,
+					Р: null,
+					ОГР: null,
+					А: [60, 65, 70, 75, 80],
+				},
+				"Покрытие ж/б": {
+					У: null,
+					Н: null,
+					НОР: [3],
+					Р: [5, 10, 15, 20, 25],
+					ОГР: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+					А: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80],
+				},
+			},
+		};
 	}
 }
