@@ -4461,30 +4461,30 @@ function launchApp(login, loginIsPossible, launchStatus) {
 		const files = appVariables.formInput.files;
 		let counter = 0;
 		if (files.length < 1) {
-			submitButton.classList.add("form__button_error");
-			submitButton.value = "Ошибка!";
+			appVariables.submitButton.classList.add("form__button_error");
+			appVariables.submitButton.value = "Ошибка!";
 			setTimeout(() => {
-				submitButton.classList.remove("form__button_error");
-				submitButton.value = "Загрузить";
+				appVariables.submitButton.classList.remove("form__button_error");
+				appVariables.submitButton.value = "Загрузить";
 			}, 1500);
 			return;
 		}
 		const interval = setInterval(upload, 3000);
-		const saveButton = html.querySelector("#buttonFormSave");
-		const addImgBtnContainer = html.querySelector("#\\32 1184 > caption");
+		const saveButton = appVariables.html.querySelector("#buttonFormSave");
+		const addImgBtnContainer = appVariables.html.querySelector("#\\32 1184 > caption");
 		const addImgButton = addImgBtnContainer.querySelector(".button");
 
 		function upload() {
 			// 1. Клик по кнопке добавления поля
 			addImgButton.click();
 
-			const photoTable = html.querySelector("#\\32 1184");
+			const photoTable = appVariables.html.querySelector("#\\32 1184");
 			const downloadInputs = photoTable.querySelectorAll(".fileLoad");
-			const downloadInput = downloadInputs[downloadlength - 1];
+			const downloadInput = downloadInputs[downloadInputs.length - 1];
 			const textareas = photoTable.querySelectorAll("textarea");
 			const currentTextarea = textareas[textareas.length - 1];
 			const currentFile = files[`${counter}`];
-			const prepareDate = inputDate.value.split("-");
+			const prepareDate = appVariables.inputDate.value.split("-");
 			const downloadDate = `Дата загрузки: ${prepareDate[2]}.${prepareDate[1]}.${prepareDate[0]} г.`;
 
 			currentTextarea.value = downloadDate;
@@ -4514,12 +4514,12 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			if (counter >= files.length) {
 				clearInterval(interval);
 				setTimeout(() => {
-					saveButton.click();
-					submitButton.value = "Сохранено";
-					submitButton.classList.add("form__button_done");
+					//saveButton.click();
+					appVariables.submitButton.value = "Сохранено";
+					appVariables.submitButton.classList.add("form__button_done");
 					setTimeout(() => {
-						submitButton.value = "Загрузить";
-						submitButton.classList.remove("form__button_done");
+						appVariables.submitButton.value = "Загрузить";
+						appVariables.submitButton.classList.remove("form__button_done");
 					}, 1500);
 				}, 3000);
 			}
