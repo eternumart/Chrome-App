@@ -47,6 +47,24 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				});
 			});
 	}
+	if (request.contentScriptQuery == "appdata") {
+		console.log(request.url)
+		await fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				console.log("Пришел ответ с данными")
+				chrome.runtime.sendMessage({
+					data: res,
+					contentScriptQuery: "appdata",
+				});
+			});
+	}
 	if (request.contentScriptQuery == "checkusid") {
 		await fetch(`${request.url}`, {
 			method: "POST",
