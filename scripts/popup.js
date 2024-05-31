@@ -4514,7 +4514,7 @@ function launchApp(login, loginIsPossible, launchStatus) {
 			if (counter >= files.length) {
 				clearInterval(interval);
 				setTimeout(() => {
-					//saveButton.click();
+					saveButton.click();
 					appVariables.submitButton.value = "Сохранено";
 					appVariables.submitButton.classList.add("form__button_done");
 					setTimeout(() => {
