@@ -338,7 +338,7 @@ function initialization(login, loginIsPossible, launchStatus) {
 			});
 			initLoader(loginForm, false)
 		} else {
-			setTimeout(init, 1000);
+			setTimeout(init, 200);
 		}
 	}
 	init();
