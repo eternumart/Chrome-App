@@ -3113,13 +3113,11 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
 
-		for (let i = 0; i < data["Подписывающие лица"].length; i++) {
-			for (let key in appVariables[i]) {
-				const neededObj = appVariables[i][key];
-				data["Подписывающие лица"]["Представители от"] = neededObj[i].value;
-				data["Подписывающие лица"]["ФИО должностного лица"] = neededObj[i].value;
-				data["Подписывающие лица"]["Должность и наименование организации"] = neededObj[i].value;
-			}
+		for (let counter = 1; counter <= 4; counter++) {
+			const neededObj = appVariables[counter];
+			data["Подписывающие лица"]["Представители от"][counter] = neededObj["licaOt"].value;
+			data["Подписывающие лица"]["ФИО должностного лица"][counter] = neededObj["licaFio"].value;
+			data["Подписывающие лица"]["Должность и наименование организации"][counter] = neededObj["LicaDoljnost"].value;
 		}
 
 		localStorage.setItem("MJIDATA", JSON.stringify(data));
@@ -3254,14 +3252,14 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 
 		// Места общего пользования
 		// Вестибюли
-		appVariables.mopVestibuliDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Выявленные дефекты"];
-		appVariables.mopVestibuliPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["% деф. части"];
-		clickGenerator(appVariables.mopVestibuliOcenka, loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Оценка"], true);
+		appVariables.mopVestibuliDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Выявленные дефекты"];
+		appVariables.mopVestibuliPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["% деф. части"];
+		clickGenerator(appVariables.mopVestibuliOcenka, loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Оценка"], true);
 
 		// Крыльца
-		appVariables.mopKrilcaDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Выявленные дефекты"];
-		appVariables.mopKrilcaPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["% деф. части"];
-		clickGenerator(appVariables.mopKrilcaOcenka, loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopVestibuliName]["Оценка"], true);
+		appVariables.mopKrilcaDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Выявленные дефекты"];
+		appVariables.mopKrilcaPercent.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["% деф. части"];
+		clickGenerator(appVariables.mopKrilcaOcenka, loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopKrilcaName]["Оценка"], true);
 
 		// Пандусы наружные
 		appVariables.mopPandusyNaruzhnieDefecty.value = loadData["Результаты выборочного обследования"]["Места общего пользования"][appVariables.mopPandusyNaruzhnieName]["Выявленные дефекты"];

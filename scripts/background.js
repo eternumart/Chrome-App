@@ -1,4 +1,4 @@
-console.log("MJI-Manager started succsessfully");
+console.log("МЖИ менеджер запущен");
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
 	if (request.contentScriptQuery == "activation") {
@@ -54,7 +54,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			headers: {
 				"Content-Type": "application/json;charset=utf-8",
 			},
-			body: JSON.stringify({ data: request.data }),
+			body: JSON.stringify({ data: request.data}),
 		})
 			.then(checkResponse)
 			.then((res) => {
