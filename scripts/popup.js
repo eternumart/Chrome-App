@@ -20,6 +20,8 @@ const activateFormButton = activateForm.querySelector("#activate-btn");
 const activateFormErrors = activateForm.querySelectorAll(".auth__error");
 const activateFormKeyError = activateForm.querySelector("#error-key");
 
+const serverError = document.querySelector(".server-error");
+
 const loader = document.querySelector(".loader");
 
 // Конфиг Out & Local // Временно. Далее в планах применение только с VPN. Уберем getCurrentIP
@@ -37,8 +39,15 @@ const server = {
 let currentState = false;
 let currentIP = "";
 let appData;
+let timeout = undefined;
 
-getCurrentIP();
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.contentScriptQuery == "Error") {
+		console.log(request.error);
+		serverError.classList.add("server-error_visible");
+		serverError.textContent = `Ошибка в процессе ${request.flow}. ${request.error}`;
+	}
+});
 
 loggedExitButton.addEventListener("click", signOut);
 loginForm.addEventListener("submit", (evt) => {
@@ -55,17 +64,24 @@ formsTabs.forEach((tab) => {
 	});
 });
 
+getCurrentIP();
+
 function getCurrentIP() {
-	console.log("IP узнали");
 	if (currentIP !== "") {
 		return;
 	}
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-		if (request.contentScriptQuery == "checkIP") {
+		if (request.contentScriptQuery == "checkIP" && request.url !== undefined) {
 			currentIP = `http://${request.url}/`;
 			checkLogin(undefined, true, true);
 			getAppData();
-			console.log(`Current IP: ${currentIP}`);
+			console.log(`IP сервера: ${currentIP}`);
+			if (timeout !== undefined) {
+				clearInterval(timeout);
+			}
+		}
+		if (request.url === undefined) {
+			timeout = setInterval(getCurrentIP, 3000);
 		}
 	});
 
@@ -323,7 +339,7 @@ function refresh() {
 // Инициализация запуска рабочего окна
 function initialization(login, loginIsPossible, launchStatus) {
 	console.log("Запуск приложения");
-	initLoader(loginForm, true)
+	initLoader(loginForm, true);
 	function init() {
 		if (appData) {
 			chrome.tabs.query({ active: true }, (tabs) => {
@@ -336,7 +352,7 @@ function initialization(login, loginIsPossible, launchStatus) {
 					});
 				}
 			});
-			initLoader(loginForm, false)
+			initLoader(loginForm, false);
 		} else {
 			setTimeout(init, 200);
 		}
@@ -3938,7 +3954,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			const dataTransfer = new DataTransfer();
 			dataTransfer.items.add(currentFile);
 			downloadInput.files = dataTransfer.files;
-			console.log(downloadInput.files);
 			downloadInput.dispatchEvent(new Event("change"));
 
 			counter++;
@@ -4080,60 +4095,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		}
 	}
 
-	function setRatings() {
-		searchAllInputs();
-
-		const rates = {
-			Крыша: {
-				Кровля: {
-					У: [3, 5, 10, 15, 20, 25],
-					Н: [30, 35, 40, 45, 50, 55],
-					НОР: null,
-					Р: null,
-					ОГР: null,
-					А: [60, 65, 70, 75, 80],
-				},
-				Свесы: {
-					У: [3, 5, 10, 15, 20, 26],
-					Н: [30, 35, 40, 45, 50, 55],
-					НОР: null,
-					Р: null,
-					ОГР: null,
-					А: [60, 65, 70, 75, 80],
-				},
-				"Стропильная система": {
-					У: null,
-					Н: null,
-					НОР: [3],
-					Р: [5, 10, 15, 20, 25],
-					ОГР: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
-					А: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80],
-				},
-				Чердак: {
-					У: [3, 5, 10, 15, 20, 26],
-					Н: [30, 35, 40, 45, 50, 55],
-					НОР: null,
-					Р: null,
-					ОГР: null,
-					А: [60, 65, 70, 75, 80],
-				},
-				"Покрытие ж/б": {
-					У: null,
-					Н: null,
-					НОР: [3],
-					Р: [5, 10, 15, 20, 25],
-					ОГР: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
-					А: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80],
-				},
-				"Все элементы": {
-					У: null,
-					Н: [],
-					НОР: null,
-					Р: [],
-					ОГР: [],
-					А: [],
-				},
-			},
-		};
+	function setRatings(rateInput, percentInput, rowName) {
+		const ratesData = appData.data.ratesData;
 	}
 }

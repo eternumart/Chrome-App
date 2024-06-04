@@ -15,6 +15,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					data: res,
 					contentScriptQuery: "activation",
 				});
+			})
+			.catch((err) => {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "Error",
+					error: `${err}`,
+					flow: "activation",
+				});
 			});
 	}
 	if (request.contentScriptQuery == "setUsid") {
@@ -29,7 +36,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			.then((res) => {
 				chrome.runtime.sendMessage(res);
 			});
-		return true; // Will respond asynchronously.
+		return true;
 	}
 	if (request.contentScriptQuery == "logIn") {
 		await fetch(`${request.url}`, {
@@ -45,23 +52,36 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					data: res,
 					contentScriptQuery: "logIn",
 				});
+			})
+			.catch((err) => {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "Error",
+					error: `${err}`,
+					flow: "logIn",
+				});
 			});
 	}
 	if (request.contentScriptQuery == "appdata") {
-		console.log(request.url)
 		await fetch(`${request.url}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json;charset=utf-8",
 			},
-			body: JSON.stringify({ data: request.data}),
+			body: JSON.stringify({ data: request.data }),
 		})
 			.then(checkResponse)
 			.then((res) => {
-				console.log("Пришел ответ с данными")
+				console.log("Пришел ответ с данными");
 				chrome.runtime.sendMessage({
 					data: res,
 					contentScriptQuery: "appdata",
+				});
+			})
+			.catch((err) => {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "Error",
+					error: `${err}`,
+					flow: "appdata",
 				});
 			});
 	}
@@ -80,22 +100,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	}
 	if (request.contentScriptQuery == "checkIP") {
 		const variants = request.data;
-		fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		})
-			.then(checkResponse)
-			.then((res) => {
-				chrome.runtime.sendMessage({
-					contentScriptQuery: "checkIP",
-					url: res.IP,
-				});
-			})
-			.catch((err) => {});
+		let result = undefined;
 
-		fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
+		await fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -103,16 +110,51 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		})
 			.then(checkResponse)
 			.then((res) => {
-				chrome.runtime.sendMessage({
-					contentScriptQuery: "checkIP",
-					url: res.IP,
-				});
+				result = res.IP;
+				if (result !== undefined) {
+					chrome.runtime.sendMessage({
+						contentScriptQuery: "checkIP",
+						url: res.IP,
+					});
+				}
 			})
-			.catch((err) => {});
+			.catch((err) => {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "Error",
+					error: `${err}`,
+					flow: "checkip",
+				});
+			});
+
+		await fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+			.then(checkResponse)
+			.then((res) => {
+				result = res.IP;
+				if (result !== undefined) {
+					chrome.runtime.sendMessage({
+						contentScriptQuery: "checkIP",
+						url: res.IP,
+					});
+				}
+			})
+			.catch((err) => {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "Error",
+					error: `${err}`,
+					flow: "checkip",
+				});
+			});
 	}
+	
 });
 
 function checkResponse(res) {
+	console.log(res.status);
 	if (res.ok) {
 		return res.json();
 	}

@@ -370,12 +370,13 @@
     transform: rotate(360deg);
   }
 }
-
-.fakeSelect__selector:hover {
-  background: #fff;
-  transition: 0.3s;
+.mji-manager-app .server-error {
+  margin: 0;
+  padding-top: 10px;
+  font-size: 18px;
+  color: red;
+  display: none;
 }
-.fakeSelect__selector:hover svg path {
-  background: #1f5473;
-  transition: 0.3s;
+.mji-manager-app .server-error_visible {
+  display: initial;
 }
