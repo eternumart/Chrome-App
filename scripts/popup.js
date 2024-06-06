@@ -43,7 +43,9 @@ let timeout = undefined;
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.contentScriptQuery == "Error") {
-		console.log(request.error);
+		if (request.flow === "checkip" && currentIP !== "") {
+			return;
+		}
 		serverError.classList.add("server-error_visible");
 		serverError.textContent = `Ошибка в процессе ${request.flow}. ${request.error}`;
 	}
@@ -342,6 +344,7 @@ function initialization(login, loginIsPossible, launchStatus) {
 	initLoader(loginForm, true);
 	function init() {
 		if (appData) {
+			serverError.classList.remove("server-error_visible");
 			chrome.tabs.query({ active: true }, (tabs) => {
 				const tab = tabs[0];
 				if (tab) {
@@ -4023,10 +4026,15 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 						currentSelectOpenButton.addEventListener("click", () => {
 							openCloseFakeSelect(currentSelect);
 						});
-
-						let listOptions, conditionNode;
+						debugger
+						let listOptions, conditionNode, objAddress, objAddressOpt, objAddressGroup, objAddressRow;
 						try {
-							conditionNode = JSON.parse(selectsValues[`${groupName}`][`${rowName}`][`conditionNode`]);
+							objAddress = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`]["appVariables"];
+							objAddressOpt = objAddress[0];
+							objAddressGroup = objAddress[1];
+							objAddressRow = objAddress[2];
+							conditionNode = appVariables[objAddressOpt][objAddressGroup][objAddressRow]
+							//conditionNode = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`];
 						} catch {}
 
 						if (conditionNode) {
@@ -4043,13 +4051,13 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 								listOptions = selectsValues[`${groupName}`][`${rowName}`][`conditions`]["Безусловно"];
 							}
 						}
-
+						debugger;
 						listOptions.forEach((item) => {
 							const listItem = `
-					<div class="fakeSelect__item-wrapper">
-						<input type="checkbox" id="fakselect-item-${counterItems}" />
-						<label for="fakselect-item-${counterItems}">${item}</label>
-					</div>`;
+								<div class="fakeSelect__item-wrapper">
+									<input type="checkbox" id="fakselect-item-${counterItems}" />
+									<label for="fakselect-item-${counterItems}">${item}</label>
+								</div>`;
 							currentSelectList.insertAdjacentHTML("beforeend", listItem);
 							counterItems += 1;
 						});

@@ -154,7 +154,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 });
 
 function checkResponse(res) {
-	console.log(res.status);
 	if (res.ok) {
 		return res.json();
 	}
