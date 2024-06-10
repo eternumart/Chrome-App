@@ -72,15 +72,17 @@ function getCurrentIP() {
 	if (currentIP !== "") {
 		return;
 	}
+	initLoader(loginForm, true);
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "checkIP" && request.url !== undefined) {
 			currentIP = `http://${request.url}/`;
 			checkLogin(undefined, true, true);
 			getAppData();
 			console.log(`IP сервера: ${currentIP}`);
-			if (timeout !== undefined) {
+			if (appData) {
 				clearInterval(timeout);
 			}
+			initLoader(loginForm, false);
 		}
 		if (request.url === undefined) {
 			timeout = setInterval(getCurrentIP, 3000);
@@ -218,6 +220,7 @@ function changePopupState() {
 
 function checkLogin(log, loginIsPossible, launchStatus) {
 	console.log("Запуск проверки логина");
+	initLoader(loginForm, true);
 	let currentLogin = "";
 	chrome.storage.local.get(["logged"]).then((result) => {
 		if (result.logged !== undefined) {
@@ -370,6 +373,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		empty: true,
 		inputs: [],
 	};
+	const allRatesPercentsInputs = {};
 
 	// Предотвращение двойного старта
 	if (!localStorage.getItem("status")) {
@@ -4026,14 +4030,14 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 						currentSelectOpenButton.addEventListener("click", () => {
 							openCloseFakeSelect(currentSelect);
 						});
-						debugger
+						debugger;
 						let listOptions, conditionNode, objAddress, objAddressOpt, objAddressGroup, objAddressRow;
 						try {
 							objAddress = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`]["appVariables"];
 							objAddressOpt = objAddress[0];
 							objAddressGroup = objAddress[1];
 							objAddressRow = objAddress[2];
-							conditionNode = appVariables[objAddressOpt][objAddressGroup][objAddressRow]
+							conditionNode = appVariables[objAddressOpt][objAddressGroup][objAddressRow];
 							//conditionNode = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`];
 						} catch {}
 
@@ -4103,7 +4107,120 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		}
 	}
 
-	function setRatings(rateInput, percentInput, rowName) {
-		const ratesData = appData.data.ratesData;
+	function setRatings() {
+		const ratesData = appData.ratesData;
+		searchAllInputs();
+
+		for (let key in appVariables) {
+			if (key.includes("Ocenka") && !key.includes("Proshl")) {
+				const name = key.replace("Ocenka", "");
+
+				if (!allRatesPercentsInputs[name]) {
+					allRatesPercentsInputs[name] = new Object();
+				}
+				allRatesPercentsInputs[name]["Ocenka"] = appVariables[key];
+			}
+			if (key.includes("Percent")) {
+				const name = key.replace("Percent", "");
+				if (!allRatesPercentsInputs[name]) {
+					allRatesPercentsInputs[name] = new Object();
+				}
+				allRatesPercentsInputs[name]["Percent"] = appVariables[key];
+			}
+		}
+
+		for (let key in allRatesPercentsInputs) {
+			if (!allRatesPercentsInputs[key]["Percent"]) {
+				break;
+			}
+			const dataElement = allRatesPercentsInputs[key]["Ocenka"].parentElement.nextElementSibling;
+			const listItems = dataElement.querySelectorAll("li");
+
+			allRatesPercentsInputs[key]["Percent"].addEventListener("change", (evt) => {
+				checkPercentValidity(evt.target.value, evt.target);
+				checkRatePercent(evt.target.value, "Percent", evt.target, dataElement);
+			});
+			listItems.forEach((item) => {
+				item.addEventListener("click", () => {
+					checkRatePercent(item.textContent, "Ocenka", item, allRatesPercentsInputs[key]["Percent"]);
+				});
+			});
+		}
+
+		function checkRatePercent(value, inputType, input, siblingInput) {
+			let rowName, validRate;
+			const valueToNumber = Number(value);
+			const groupTable = input.closest(".groupBorder");
+			const groupName = groupTable.querySelector("legend").textContent;
+			if (inputType === "Percent") {
+				rowName = input.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
+			}
+			if (inputType === "Ocenka") {
+				rowName = input.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
+			}
+
+			const conditions = ratesData[groupName][rowName];
+
+			for (let ocenka in conditions) {
+				validRate = conditions[ocenka].find((num) => num == valueToNumber);
+			}
+
+			if (validRate) {
+				if (inputType === "Percent") {
+					console.log(siblingInput.value == validRate);
+				}
+				if (inputType === "Ocenka") {
+					console.log(input.value == validRate);
+				}
+			}
+
+			console.log(`Ne nu a cho, ${groupName}, ${rowName} so znacheniem ${value} tak to!`);
+		}
+
+		function checkPercentValidity(value, input) {
+			const validValues = [3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
+
+			if (value < 3) {
+				input.value = 3;
+			}
+
+			for (let i = 1; i < validValues.length; i++) {
+				const low = Math.abs(Number(value) - validValues[i - 1]);
+				const mid = Math.abs(Number(value) - validValues[i]);
+				const high = Math.abs(Number(value) - validValues[i + 1]);
+
+				if (low > 2 && mid > 2 && high > 2) {
+					continue;
+				}
+
+				const differs = [low, mid, high];
+				const result = differs.indexOf(Math.min(...differs));
+				let end = false;
+
+				switch (result) {
+					case 0: {
+						input.value = validValues[i - 1];
+						end = true;
+						break;
+					}
+					case 1: {
+						input.value = validValues[i];
+						end = true;
+						break;
+					}
+					case 2: {
+						input.value = validValues[i + 1];
+						end = true;
+						break;
+					}
+					default: {
+						continue;
+					}
+				}
+				if (end) {
+					break;
+				}
+			}
+		}
 	}
 }

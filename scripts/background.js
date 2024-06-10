@@ -102,7 +102,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		const variants = request.data;
 		let result = undefined;
 
-		await fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
+		fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -119,14 +119,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 			})
 			.catch((err) => {
-				chrome.runtime.sendMessage({
-					contentScriptQuery: "Error",
-					error: `${err}`,
-					flow: "checkip",
-				});
+				console.log("Внешний IP");
 			});
 
-		await fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
+		fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -143,14 +139,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 			})
 			.catch((err) => {
-				chrome.runtime.sendMessage({
-					contentScriptQuery: "Error",
-					error: `${err}`,
-					flow: "checkip",
-				});
+				console.log("Локальный IP");
 			});
 	}
-	
 });
 
 function checkResponse(res) {
