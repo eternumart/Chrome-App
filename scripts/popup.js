@@ -1342,7 +1342,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 
 			switch (appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent) {
 				case "Кровля":
-					appVariables.krovlaName = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent;
+					appVariables.krovlyaName = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12641").textContent;
 					appVariables.krovlyaDefecty = appVariables.resultsRoofRows[i].querySelector("#comp_12642");
 					appVariables.krovlyaPercent = appVariables.resultsRoofRows[i].querySelector("#comp_12644");
 					appVariables.krovlyaProshlOcenka = appVariables.resultsRoofRows[i].querySelector("#lookupTextcomp_12643");
@@ -3178,9 +3178,9 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		// РЕЗУЛЬТАТЫ ВЫБОРОЧНОГО ОБСЛЕДОВАНИЯ
 		// Крыша
 		// Кровля
-		appVariables.krovlyaDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Выявленные дефекты"];
-		appVariables.krovlyaPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["% деф. части"];
-		clickGenerator(appVariables.krovlyaOcenka, loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlaName]["Оценка"], true);
+		appVariables.krovlyaDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlyaName]["Выявленные дефекты"];
+		appVariables.krovlyaPercent.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlyaName]["% деф. части"];
+		clickGenerator(appVariables.krovlyaOcenka, loadData["Результаты выборочного обследования"]["Крыша"][appVariables.krovlyaName]["Оценка"], true);
 
 		// Свесы
 		appVariables.svesyDefecty.value = loadData["Результаты выборочного обследования"]["Крыша"][appVariables.svesyName]["Выявленные дефекты"];
@@ -4114,7 +4114,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		for (let key in appVariables) {
 			if (key.includes("Ocenka") && !key.includes("Proshl")) {
 				const name = key.replace("Ocenka", "");
-
 				if (!allRatesPercentsInputs[name]) {
 					allRatesPercentsInputs[name] = new Object();
 				}
@@ -4126,6 +4125,14 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 					allRatesPercentsInputs[name] = new Object();
 				}
 				allRatesPercentsInputs[name]["Percent"] = appVariables[key];
+				allRatesPercentsInputs[name]["Group"] = appVariables[key].closest(".groupBorder").querySelector("legend").textContent;
+			}
+			if(key.includes("Name")) {
+				const name = key.replace("Name", "");
+				if (!allRatesPercentsInputs[name]) {
+					allRatesPercentsInputs[name] = new Object();
+				}
+				allRatesPercentsInputs[name]["name"] = appVariables[key];
 			}
 		}
 
@@ -4148,43 +4155,71 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		}
 
 		function checkRatePercent(value, inputType, input, siblingInput) {
-			let rowName, validRate;
-			const valueToNumber = Number(value);
-			const groupTable = input.closest(".groupBorder");
-			const groupName = groupTable.querySelector("legend").textContent;
+			let rowName, validPercent, conditions, rate, percentToValidRateIsEqueal;
+			const groupName = input.closest(".groupBorder").querySelector("legend").textContent;
+
 			if (inputType === "Percent") {
 				rowName = input.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
+				const valueToNumber = Number(value);
+				conditions = ratesData[groupName][rowName];
+
+				for (let ocenka in conditions) {
+					if (conditions[ocenka] === "algorythm A") {
+						algorythmA(allRatesPercentsInputs, input, siblingInput, groupName);
+						return;
+					}
+					if (conditions[ocenka] === "algorythm B") {
+						algorythmB(allRatesPercentsInputs, input, siblingInput.parentElement.querySelector("input"), groupName);
+						return;
+					}
+					if (conditions[ocenka] === "algorytm C") {
+						algorythmC(allRatesPercentsInputs, input, siblingInput.parentElement.querySelector("input"), groupName);
+						return;
+					}
+				}
+
+				for (let ocenka in conditions) {
+					validPercent = conditions[ocenka].find((num) => num == valueToNumber);
+					if (validPercent) {
+						rate = ocenka;
+					}
+				}
+				const siblingItem = siblingInput.parentElement.querySelector("input");
+				if (siblingItem.value !== rate) {
+					siblingItem.parentElement.classList.add("inputErrorValidity");
+				} else {
+					siblingItem.parentElement.classList.remove("inputErrorValidity");
+					input.classList.remove("inputErrorValidity");
+					input.style.borderColor = null;
+				}
 			}
 			if (inputType === "Ocenka") {
 				rowName = input.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
-			}
-
-			const conditions = ratesData[groupName][rowName];
-
-			for (let ocenka in conditions) {
-				validRate = conditions[ocenka].find((num) => num == valueToNumber);
-			}
-
-			if (validRate) {
-				if (inputType === "Percent") {
-					console.log(siblingInput.value == validRate);
+				conditions = ratesData[groupName][rowName];
+				const validRatesArr = conditions[value];
+				if (validRatesArr) {
+					percentToValidRateIsEqueal = validRatesArr.find((num) => num === Number(siblingInput.value));
 				}
-				if (inputType === "Ocenka") {
-					console.log(input.value == validRate);
+				if (!percentToValidRateIsEqueal || !validRatesArr) {
+					siblingInput.classList.add("inputErrorValidity");
+				} else {
+					siblingInput.classList.remove("inputErrorValidity");
+					input.parentElement.parentElement.previousElementSibling.classList.remove("inputErrorValidity");
+					input.parentElement.parentElement.previousElementSibling.style.borderColor = null;
 				}
 			}
-
-			console.log(`Ne nu a cho, ${groupName}, ${rowName} so znacheniem ${value} tak to!`);
 		}
 
 		function checkPercentValidity(value, input) {
+			if (input.value === "") {
+				return;
+			}
 			const validValues = [3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
 
 			if (value < 3) {
 				input.value = 3;
 			}
-
-			for (let i = 1; i < validValues.length; i++) {
+			for (let i = 1; i < validValues.length; i += 2) {
 				const low = Math.abs(Number(value) - validValues[i - 1]);
 				const mid = Math.abs(Number(value) - validValues[i]);
 				const high = Math.abs(Number(value) - validValues[i + 1]);
@@ -4222,5 +4257,39 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 				}
 			}
 		}
+
+		function algorythmA(rowsInputs, input, siblingInput, groupName) {
+			debugger
+			const rates = [];
+			let rowNameTranslite = ""
+			let maxPercent = 0;
+			for (let row in rowsInputs) {
+				if(rowsInputs[row]["name"] === "Все элементы") {
+					rowNameTranslite = row;
+					break;
+				}
+				const group = rowsInputs[row]["Group"];
+				if (group === groupName) {
+					if(maxPercent < rowsInputs[row]["Percent"].value) {
+						maxPercent = rowsInputs[row]["Percent"].value;
+					}
+					rates.push({
+						"Percent": rowsInputs[row]["Percent"].value,
+						"Ocenka": rowsInputs[row]["Ocenka"].value,
+					})
+				}
+			}
+			input.value = maxPercent;
+
+			if (rates.find(rate => rate["Ocenka"] === "А")) {
+				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], "А", true);
+			}
+		}
+
+		function algorythmB() {}
+
+		function algorythmC() {}
 	}
+
+	setRatings();
 }
