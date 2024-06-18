@@ -4038,7 +4038,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 							objAddressGroup = objAddress[1];
 							objAddressRow = objAddress[2];
 							conditionNode = appVariables[objAddressOpt][objAddressGroup][objAddressRow];
-							//conditionNode = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`];
 						} catch {}
 
 						if (conditionNode) {
@@ -4055,7 +4054,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 								listOptions = selectsValues[`${groupName}`][`${rowName}`][`conditions`]["Безусловно"];
 							}
 						}
-						debugger;
 						listOptions.forEach((item) => {
 							const listItem = `
 								<div class="fakeSelect__item-wrapper">
@@ -4127,7 +4125,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 				allRatesPercentsInputs[name]["Percent"] = appVariables[key];
 				allRatesPercentsInputs[name]["Group"] = appVariables[key].closest(".groupBorder").querySelector("legend").textContent;
 			}
-			if(key.includes("Name")) {
+			if (key.includes("Name")) {
 				const name = key.replace("Name", "");
 				if (!allRatesPercentsInputs[name]) {
 					allRatesPercentsInputs[name] = new Object();
@@ -4155,8 +4153,12 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		}
 
 		function checkRatePercent(value, inputType, input, siblingInput) {
-			let rowName, validPercent, conditions, rate, percentToValidRateIsEqueal;
+			let rowName, validPercent, conditions, rate, percentToValidRateIsEqual;
 			const groupName = input.closest(".groupBorder").querySelector("legend").textContent;
+			if (!localStorage.getItem("inputs")) {
+				localStorage.setItem("inputs", JSON.stringify([]));
+			}
+			const localInputs = JSON.parse(localStorage.getItem("inputs"));
 
 			if (inputType === "Percent") {
 				rowName = input.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
@@ -4165,15 +4167,15 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 
 				for (let ocenka in conditions) {
 					if (conditions[ocenka] === "algorythm A") {
-						algorythmA(allRatesPercentsInputs, input, siblingInput, groupName);
+						algorythmA(allRatesPercentsInputs, input, groupName);
 						return;
 					}
 					if (conditions[ocenka] === "algorythm B") {
-						algorythmB(allRatesPercentsInputs, input, siblingInput.parentElement.querySelector("input"), groupName);
+						algorythmB(allRatesPercentsInputs, input, groupName);
 						return;
 					}
-					if (conditions[ocenka] === "algorytm C") {
-						algorythmC(allRatesPercentsInputs, input, siblingInput.parentElement.querySelector("input"), groupName);
+					if (conditions[ocenka] === "algorythm C") {
+						algorythmC(allRatesPercentsInputs, input, groupName);
 						return;
 					}
 				}
@@ -4190,24 +4192,46 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 				} else {
 					siblingItem.parentElement.classList.remove("inputErrorValidity");
 					input.classList.remove("inputErrorValidity");
-					input.style.borderColor = null;
+					input.style.borderColor = "#D0D0D0 !important";
 				}
 			}
 			if (inputType === "Ocenka") {
 				rowName = input.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
 				conditions = ratesData[groupName][rowName];
 				const validRatesArr = conditions[value];
-				if (validRatesArr) {
-					percentToValidRateIsEqueal = validRatesArr.find((num) => num === Number(siblingInput.value));
+				if (typeof validRatesArr == "string") {
+					return;
 				}
-				if (!percentToValidRateIsEqueal || !validRatesArr) {
+				if (validRatesArr) {
+					percentToValidRateIsEqual = validRatesArr.find((num) => num === Number(siblingInput.value));
+				}
+				if (!percentToValidRateIsEqual || !validRatesArr) {
 					siblingInput.classList.add("inputErrorValidity");
 				} else {
 					siblingInput.classList.remove("inputErrorValidity");
 					input.parentElement.parentElement.previousElementSibling.classList.remove("inputErrorValidity");
-					input.parentElement.parentElement.previousElementSibling.style.borderColor = null;
+					input.parentElement.parentElement.previousElementSibling.classList.remove("dataMarker");
 				}
 			}
+
+			const localGroup = localInputs.find((arr) => arr.rowName === rowName);
+			if (localGroup && localGroup.rowName === rowName) {
+				if (inputType === "Percent") {
+					localGroup.percent = value;
+				}
+				if (inputType === "Ocenka") {
+					localGroup.ocenka = value;
+				}
+			} else {
+				localInputs.push({
+					group: `${groupName}`,
+					rowName: `${rowName}`,
+					percent: `${inputType === "Percent" ? value : ""}`,
+					ocenka: `${inputType === "Ocenka" ? value : ""}`,
+				});
+			}
+
+			localStorage.setItem("inputs", JSON.stringify(localInputs));
 		}
 
 		function checkPercentValidity(value, input) {
@@ -4258,37 +4282,173 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			}
 		}
 
-		function algorythmA(rowsInputs, input, siblingInput, groupName) {
-			debugger
+		function algorythmA(rowsInputs, input, groupName) {
 			const rates = [];
-			let rowNameTranslite = ""
+			let resultRate = "";
+			let rowNameTranslite = "";
 			let maxPercent = 0;
 			for (let row in rowsInputs) {
-				if(rowsInputs[row]["name"] === "Все элементы") {
-					rowNameTranslite = row;
-					break;
-				}
-				const group = rowsInputs[row]["Group"];
-				if (group === groupName) {
-					if(maxPercent < rowsInputs[row]["Percent"].value) {
+				if (rowsInputs[row]["Group"] === groupName) {
+					if (rowsInputs[row]["name"] === "Все элементы") {
+						rowNameTranslite = row;
+						break;
+					}
+					if (maxPercent < rowsInputs[row]["Percent"].value) {
 						maxPercent = rowsInputs[row]["Percent"].value;
 					}
 					rates.push({
-						"Percent": rowsInputs[row]["Percent"].value,
-						"Ocenka": rowsInputs[row]["Ocenka"].value,
-					})
+						RowName: `${rowsInputs[row]["name"]}`,
+						Percent: rowsInputs[row]["Percent"].value,
+						Ocenka: rowsInputs[row]["Ocenka"].value,
+					});
 				}
 			}
 			input.value = maxPercent;
 
-			if (rates.find(rate => rate["Ocenka"] === "А")) {
-				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], "А", true);
+			if (rates.find((rate) => rate["Ocenka"] === "А")) {
+				resultRate = "А";
+				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+				return;
 			}
+			if (resultRate !== "") {
+				return;
+			}
+			rates.forEach((rate) => {
+				switch (rate.RowName) {
+					case "Стропильная система":
+						if (rate.Ocenka === "ОГР") {
+							resultRate = "ОГР";
+							clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+						}
+						return;
+					case "Покрытие ж/б":
+						if (rate.Ocenka === "ОГР") {
+							resultRate = "ОГР";
+							clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+						}
+						return;
+				}
+			});
+			if (resultRate !== "") {
+				return;
+			}
+			rates.forEach((rate) => {
+				switch (rate.RowName) {
+					case "Кровля":
+						if (rate.Ocenka === "Н") {
+							resultRate = "Н";
+							clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+							return;
+						}
+						break;
+					case "Свесы":
+						if (rate.Ocenka === "Н") {
+							resultRate = "Н";
+							clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+							return;
+						}
+						break;
+					case "Чердак":
+						if (rate.Ocenka === "Н") {
+							resultRate = "Н";
+							clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+							return;
+						}
+						break;
+				}
+			});
+			if (resultRate !== "") {
+				return;
+			}
+			resultRate = "Р";
+			clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
 		}
 
-		function algorythmB() {}
+		function algorythmB(rowsInputs, input, groupName) {
+			const rates = [];
+			let resultRate = "";
+			let rowNameTranslite = "";
+			let maxPercent = 0;
+			for (let row in rowsInputs) {
+				if (rowsInputs[row]["Group"] === groupName) {
+					if (rowsInputs[row]["name"] === "Все элементы" || rowsInputs[row]["name"] === "Вся система") {
+						rowNameTranslite = row;
+						break;
+					}
+					if (maxPercent < rowsInputs[row]["Percent"].value) {
+						maxPercent = rowsInputs[row]["Percent"].value;
+					}
+					rates.push({
+						RowName: `${rowsInputs[row]["name"]}`,
+						Percent: rowsInputs[row]["Percent"].value,
+						Ocenka: rowsInputs[row]["Ocenka"].value,
+					});
+				}
+			}
+			input.value = maxPercent;
 
-		function algorythmC() {}
+			if (rates.find((rate) => rate["Ocenka"] === "А")) {
+				resultRate = "А";
+				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+				return;
+			}
+			if (resultRate !== "") {
+				return;
+			}
+			if (rates.find((rate) => rate["Ocenka"] === "ОГР")) {
+				resultRate = "ОГР";
+				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+				return;
+			}
+			if (resultRate !== "") {
+				return;
+			}
+			resultRate = "Р";
+			clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+		}
+
+		function algorythmC(rowsInputs, input, groupName) {
+			const rates = [];
+			let resultRate = "";
+			let rowNameTranslite = "";
+			let maxPercent = 0;
+			for (let row in rowsInputs) {
+				if (rowsInputs[row]["Group"] === groupName) {
+					if (rowsInputs[row]["name"] === "Все элементы" || rowsInputs[row]["name"] === "Вся система") {
+						rowNameTranslite = row;
+						break;
+					}
+					if (maxPercent < rowsInputs[row]["Percent"].value) {
+						maxPercent = rowsInputs[row]["Percent"].value;
+					}
+					rates.push({
+						RowName: `${rowsInputs[row]["name"]}`,
+						Percent: rowsInputs[row]["Percent"].value,
+						Ocenka: rowsInputs[row]["Ocenka"].value,
+					});
+				}
+			}
+			input.value = maxPercent;
+
+			if (rates.find((rate) => rate["Ocenka"] === "А")) {
+				resultRate = "А";
+				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+				return;
+			}
+			if (resultRate !== "") {
+				return;
+			}
+			if (rates.find((rate) => rate["Ocenka"] === "Н")) {
+				resultRate = "Н";
+				clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+				return;
+			}
+			if (resultRate !== "") {
+				return;
+			}
+			resultRate = "Р";
+			clickGenerator(appVariables[`${rowNameTranslite}Ocenka`], resultRate, true);
+		}
 	}
 
 	setRatings();
