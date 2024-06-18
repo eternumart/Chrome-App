@@ -4155,10 +4155,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		function checkRatePercent(value, inputType, input, siblingInput) {
 			let rowName, validPercent, conditions, rate, percentToValidRateIsEqual;
 			const groupName = input.closest(".groupBorder").querySelector("legend").textContent;
-			if (!localStorage.getItem("inputs")) {
-				localStorage.setItem("inputs", JSON.stringify([]));
-			}
-			const localInputs = JSON.parse(localStorage.getItem("inputs"));
 
 			if (inputType === "Percent") {
 				rowName = input.parentElement.parentElement.firstElementChild.nextElementSibling.querySelector("span").textContent;
@@ -4213,25 +4209,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 					input.parentElement.parentElement.previousElementSibling.classList.remove("dataMarker");
 				}
 			}
-
-			const localGroup = localInputs.find((arr) => arr.rowName === rowName);
-			if (localGroup && localGroup.rowName === rowName) {
-				if (inputType === "Percent") {
-					localGroup.percent = value;
-				}
-				if (inputType === "Ocenka") {
-					localGroup.ocenka = value;
-				}
-			} else {
-				localInputs.push({
-					group: `${groupName}`,
-					rowName: `${rowName}`,
-					percent: `${inputType === "Percent" ? value : ""}`,
-					ocenka: `${inputType === "Ocenka" ? value : ""}`,
-				});
-			}
-
-			localStorage.setItem("inputs", JSON.stringify(localInputs));
 		}
 
 		function checkPercentValidity(value, input) {
