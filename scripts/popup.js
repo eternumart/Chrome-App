@@ -4076,7 +4076,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 									resultValue.push(value.textContent);
 								}
 							});
-							input.value = resultValue.join(" ");
+							input.value = `${input.value} ${resultValue.join(" ")}`;
 						});
 					}
 				}
