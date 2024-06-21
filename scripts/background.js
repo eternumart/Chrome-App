@@ -61,6 +61,29 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				});
 			});
 	}
+	if (request.contentScriptQuery == "savefio") {
+		await fetch(`${request.url}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+			body: JSON.stringify({ data: request.data }),
+		})
+			.then(checkResponse)
+			.then((res) => {
+				chrome.runtime.sendMessage({
+					data: res,
+					contentScriptQuery: "savefio",
+				});
+			})
+			.catch((err) => {
+				chrome.runtime.sendMessage({
+					contentScriptQuery: "Error",
+					error: `${err}`,
+					flow: "savefio",
+				});
+			});
+	}
 	if (request.contentScriptQuery == "appdata") {
 		await fetch(`${request.url}`, {
 			method: "POST",

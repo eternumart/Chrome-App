@@ -482,12 +482,23 @@ $color-error: #9f0000;
 
 		&__fio {
 			border: none;
-			padding: 0 0 2px 4px;
+			padding: 4px;
 			font-size: 18px;
 			color: $color-coal;
 			border-bottom: 1px solid $color-brand;
 			outline: none;
 			font-style: normal;
+			transition: 0.3s;
+
+			&_saved {
+				border: 1px solid $color-success;
+				transition: 0.3s;
+			}
+
+			&_error {
+				border: 1px solid $color-error;
+				transition: 0.3s;
+			}
 		}
 	}
 }

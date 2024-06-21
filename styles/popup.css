@@ -412,10 +412,19 @@
 }
 .mji-manager-app .account__fio {
   border: none;
-  padding: 0 0 2px 4px;
+  padding: 4px;
   font-size: 18px;
   color: #181818;
   border-bottom: 1px solid #1f5473;
   outline: none;
   font-style: normal;
+  transition: 0.3s;
+}
+.mji-manager-app .account__fio_saved {
+  border: 1px solid #00931a;
+  transition: 0.3s;
+}
+.mji-manager-app .account__fio_error {
+  border: 1px solid #9f0000;
+  transition: 0.3s;
 }

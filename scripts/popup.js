@@ -40,7 +40,7 @@ const server = {
 
 let currentState = false;
 let currentIP = "";
-let appData;
+let appData = undefined;
 let timeout = undefined;
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -69,15 +69,46 @@ formsTabs.forEach((tab) => {
 });
 
 loggedLogin.addEventListener("click", showAccountInfo)
+accountFio.addEventListener("change", saveUserFio);
 
 getCurrentIP();
 
 function showAccountInfo() {
 	accountInfo.classList.toggle("account_hidden");
-	accountFio.addListener("change", changeFio)
+}
+
+function saveUserFio() {
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		if (request.contentScriptQuery == "savefio") {
+			console.log(request)
+			if (request.data) {
+				accountFio.classList.add("account__fio_saved");
+				setTimeout(()=>{
+					accountFio.classList.remove("account__fio_saved");
+				},500)
+				chrome.storage.local.set({fio: `${request.data.fio}` })
+			} else {
+				accountFio.classList.add("account__fio_error");
+				setTimeout(()=>{
+					accountFio.classList.remove("account__fio_error");
+				},500)
+			}
+		}
+	});
+	chrome.runtime.sendMessage({
+		contentScriptQuery: "savefio",
+		data: {
+			login: loggedLogin.textContent,
+			fio: accountFio.value,
+		},
+		url: `${currentIP}savefio`,
+	});
 }
 
 function getCurrentIP() {
+	if (appData !== undefined) {
+		clearInterval(timeout);
+	}
 	if (currentIP !== "") {
 		return;
 	}
@@ -88,9 +119,7 @@ function getCurrentIP() {
 			checkLogin(undefined, true, true);
 			getAppData();
 			console.log(`IP сервера: ${currentIP}`);
-			if (appData) {
-				clearInterval(timeout);
-			}
+
 			initLoader(loginForm, false);
 		}
 		if (request.url === undefined) {
@@ -104,11 +133,21 @@ function getCurrentIP() {
 	});
 }
 
+function randomFio () {
+	fioArr = ["А. Я. Забывчивый", "У. Е. Денюжкин", "Ф. Ф. Ристайлов", "Е. Б. Мамкович", "К. С. Игроманов", "Ж. Е. Кавказов"];
+	const randomIndex = Math.floor(Math.random() * fioArr.length);
+	const randomValue = fioArr[randomIndex];
+
+	return randomValue;
+}
+
 function signOut() {
 	console.log("Вышли из приложения");
 	authContainer.classList.remove("auth_hidden");
 	loggedContainer.classList.add("logged_hidden");
 	loggedLogin.textContent = "#####";
+	accountFio.value = "#. #. #####";
+	accountInfo.classList.add("account_hidden")
 	chrome.storage.local.clear();
 	refresh();
 }
@@ -180,6 +219,9 @@ function initLoader(form, flag) {
 		loader.classList.remove("loader_loading");
 		form.classList.add("auth__form_active");
 	}
+	if (flag === "clear") {
+		loader.classList.remove("loader_loading");
+	}
 }
 
 function logIn(log, pass, form, evt) {
@@ -189,9 +231,14 @@ function logIn(log, pass, form, evt) {
 	initLoader(form, true);
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "logIn") {
+			let fio = "";
 			if (request.data.loginIsPossible === true && request.data.activated) {
-				chrome.storage.local.set({ logged: `${log}` }).then(() => {
-					accountFio.value = request.data.fio
+				if(request.data.fio) {
+					fio = request.data.fio
+				} else {
+					fio = randomFio();
+				}
+				chrome.storage.local.set({ logged: `${log}`, fio: `${fio}` }).then(() => {
 					checkLogin(log, request.data.loginIsPossible, true);
 					initLoader(form, false);
 				});
@@ -218,11 +265,10 @@ function logIn(log, pass, form, evt) {
 	}
 }
 
-function changePopupState() {
-	if (!currentState) {
-		authContainer.classList.toggle("auth_hidden");
-		loggedContainer.classList.toggle("logged_hidden");
-		currentState = true;
+function changePopupState(status) {
+	if (status === "logged") {
+		authContainer.classList.add("auth_hidden");
+		loggedContainer.classList.remove("logged_hidden");
 	} else {
 		return;
 	}
@@ -232,6 +278,13 @@ function checkLogin(log, loginIsPossible, launchStatus) {
 	console.log("Запуск проверки логина");
 	initLoader(loginForm, true);
 	let currentLogin = "";
+	let currentFio = "";
+	chrome.storage.local.get(["fio"]).then((result) => {
+		if(result.fio !== undefined) {
+			accountFio.value = result.fio;
+			currentFio = result.fio;
+		}
+	});
 	chrome.storage.local.get(["logged"]).then((result) => {
 		if (result.logged !== undefined) {
 			if (log !== undefined && log !== result.logged) {
@@ -241,9 +294,9 @@ function checkLogin(log, loginIsPossible, launchStatus) {
 				loggedLogin.textContent = result.logged;
 				currentLogin = result.logged;
 			}
-			changePopupState();
+			changePopupState("logged");
 			checkLayoutBeforeInit();
-			initialization(currentLogin, loginIsPossible, launchStatus);
+			initialization(`${currentFio}, ${currentLogin}`, loginIsPossible, launchStatus);
 		}
 	});
 }
@@ -3161,7 +3214,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
 			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
-		debugger
+
 		for (let counter = 1; counter <= 4; counter++) {
 			const neededObj = appVariables[counter];
 			data["Подписывающие лица"]["Представители от"][counter] = neededObj["licaOt"].value;
