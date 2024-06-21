@@ -3135,7 +3135,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Выполнен, год"] = neededObj.vypolnenGod.value;
 			data["Выполнение рекомендаций по кап. ремонту"]["Канализация"][neededObj.name]["Факт. объем, %"] = neededObj.factObjom.value;
 		}
-
+		debugger
 		for (let counter = 1; counter <= 4; counter++) {
 			const neededObj = appVariables[counter];
 			data["Подписывающие лица"]["Представители от"][counter] = neededObj["licaOt"].value;
