@@ -4,6 +4,8 @@ const authContainer = document.querySelector(".auth");
 const loggedContainer = document.querySelector(".logged");
 const loggedLogin = loggedContainer.querySelector(".logged__login");
 const loggedExitButton = loggedContainer.querySelector(".logged__button");
+const accountInfo = document.querySelector(".account");
+const accountFio = accountInfo.querySelector(".account__fio");
 
 const loginForm = document.querySelector(".auth__form_login");
 const loginFormLogin = loginForm.querySelector("#login");
@@ -66,7 +68,14 @@ formsTabs.forEach((tab) => {
 	});
 });
 
+loggedLogin.addEventListener("click", showAccountInfo)
+
 getCurrentIP();
+
+function showAccountInfo() {
+	accountInfo.classList.toggle("account_hidden");
+	accountFio.addListener("change", changeFio)
+}
 
 function getCurrentIP() {
 	if (currentIP !== "") {
@@ -182,6 +191,7 @@ function logIn(log, pass, form, evt) {
 		if (request.contentScriptQuery == "logIn") {
 			if (request.data.loginIsPossible === true && request.data.activated) {
 				chrome.storage.local.set({ logged: `${log}` }).then(() => {
+					accountFio.value = request.data.fio
 					checkLogin(log, request.data.loginIsPossible, true);
 					initLoader(form, false);
 				});
@@ -373,6 +383,12 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		empty: true,
 		inputs: [],
 	};
+	const representativesInputs = {
+		empty: true,
+		licaOt: [],
+		licaFio: [],
+		LicaDoljnost: []
+	};
 	const allRatesPercentsInputs = {};
 
 	// Предотвращение двойного старта
@@ -394,6 +410,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 	const stylesLayout = appData.appLayout.stylesLayout;
 	const fakeSelectList = appData.appLayout.fakeSelectList;
 	const selectsValues = appData.defectsData;
+	const representatives = appData.representatives;
 
 	// Определение наличия iFrame на странице встраивания
 	appVariables.html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html") || document.querySelector("html");
@@ -1974,6 +1991,13 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			appVariables[i]["licaOt"] = appVariables.signatoriesRows[i].querySelector("#comp_12340");
 			appVariables[i]["LicaDoljnost"] = appVariables.signatoriesRows[i].querySelector("#comp_12341");
 			appVariables[i]["licaFio"] = appVariables.signatoriesRows[i].querySelector("#comp_12342");
+
+			if (representativesInputs.empty){
+				representativesInputs.LicaDoljnost.push(appVariables[i]["LicaDoljnost"]);
+				representativesInputs.licaOt.push(appVariables[i]["licaOt"]);
+				representativesInputs.licaFio.push(appVariables[i]["licaFio"])
+				representativesInputs.empty = false;
+			}
 		}
 
 		if (resultsDefectsInputs.empty) {
@@ -2040,6 +2064,8 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			resultsDefectsInputs.inputs.push(appVariables.pozharOpoveshenDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.sistemaGsDefecty);
 			resultsDefectsInputs.inputs.push(appVariables.sistemaVideonabDefecty);
+
+			resultsDefectsInputs.empty = false;
 		}
 	}
 
@@ -4047,13 +4073,11 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 						if (conditionNode) {
 							const conditionValue = `${conditionNode.value}`;
 							const conditions = selectsValues[`${groupName}`][`${rowName}`][`conditions`];
-							console.info(`${groupName}: ${rowName} - условие ${conditionNode.value}`);
 							listOptions = conditions[`${conditionValue}`];
 						} else {
 							console.info(`${groupName}: ${rowName} - безусловно`);
 							if (!selectsValues[`${groupName}`][`${rowName}`]) {
 								listOptions = ["#", "#"];
-								console.info("listOptions пуст");
 							} else {
 								listOptions = selectsValues[`${groupName}`][`${rowName}`][`conditions`]["Безусловно"];
 							}
@@ -4095,6 +4119,12 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 				}
 			}
 		});
+
+		Object.keys(representativesInputs).forEach(key => {
+			representativesInputs[key].forEach(input => {
+				
+			})
+		})
 
 		appVariables.fakeSelectsButton.textContent = "Создано!";
 		appVariables.fakeSelectsButton.classList.add("main__button_done");

@@ -2,7 +2,7 @@
 .mji-manager-app {
   font-family: Inter;
   z-index: 999;
-  background: #fff;
+  background: #ffffff;
   width: 410px;
   top: 50px;
   right: 20px;
@@ -56,7 +56,7 @@
   width: 24px;
 }
 .mji-manager-app .header__title {
-  color: #1a1a18;
+  color: #181818;
   font-size: 20px;
   font-style: normal;
   font-weight: 400;
@@ -173,7 +173,7 @@
     fill: #787878;
   }
   50% {
-    fill: #008000;
+    fill: #00931a;
   }
   100% {
     fill: #787878;
@@ -193,7 +193,7 @@
   background: #e9e9e9;
   width: 50%;
   padding: 8px;
-  color: #1a1a18;
+  color: #181818;
   text-align: center;
   font-size: 14px;
   font-style: normal;
@@ -206,7 +206,7 @@
 }
 .mji-manager-app .tabs__button_active {
   background: #1f5473;
-  color: #fff;
+  color: #ffffff;
 }
 .mji-manager-app .main {
   padding: 0 10px 20px 10px;
@@ -222,7 +222,7 @@
 .mji-manager-app .main__button {
   outline: none;
   border: none;
-  color: #1a1a18;
+  color: #181818;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -262,7 +262,7 @@
   background: #1f5473;
   padding: 10px 30px;
   margin-right: 10px;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
   transition: opacity 0.3s;
   font-size: 14px;
@@ -290,7 +290,7 @@
   outline: none;
   border: none;
   background: #1f5473;
-  color: #fff;
+  color: #ffffff;
   transition: 0.3s;
   font-size: 14px;
   font-style: normal;
@@ -327,12 +327,21 @@
 .mji-manager-app .logged__login {
   color: #1f5473;
   font-weight: 800;
+  outline: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.mji-manager-app .logged__login:hover {
+  opacity: 0.7;
+  transition: 0.3s;
 }
 .mji-manager-app .logged__bottom button {
   outline: none;
   border: none;
   background: #1f5473;
-  color: #fff;
+  color: #ffffff;
   transition: 0.3s;
   font-size: 14px;
   font-style: normal;
@@ -373,7 +382,7 @@
   margin: 0;
   padding-top: 10px;
   font-size: 18px;
-  color: red;
+  color: #e2000f;
   display: none;
 }
 .mji-manager-app .server-error_visible {
@@ -385,4 +394,28 @@
   right: 20px;
   color: #181818;
   font-size: 10px;
+}
+.mji-manager-app .account {
+  border-top: 1px solid #e2000f;
+  margin-top: 20px;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mji-manager-app .account_hidden {
+  display: none;
+}
+.mji-manager-app .account__login {
+  font-size: 18px;
+  color: #181818;
+}
+.mji-manager-app .account__fio {
+  border: none;
+  padding: 0 0 2px 4px;
+  font-size: 18px;
+  color: #181818;
+  border-bottom: 1px solid #1f5473;
+  outline: none;
+  font-style: normal;
 }

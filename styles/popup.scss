@@ -1,15 +1,22 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
 
+$color-brand: #1f5473;
+$color-brand-red: #e2000f;
+$color-coal: #181818;
+$color-white: #ffffff;
+$color-grey: #e9e9e9;
+$color-success: #00931a;
+$color-error: #9f0000;
+
 .mji-manager-app {
 	font-family: Inter;
 	z-index: 999;
-	background: #fff;
+	background: $color-white;
 	width: 410px;
 	top: 50px;
 	right: 20px;
 	border-radius: 10px;
 	padding: 20px 10px;
-	//display: none;
 
 	&_minimized {
 		top: unset !important;
@@ -55,7 +62,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 14px 10px;
-		border-bottom: 1px solid #e9e9e9;
+		border-bottom: 1px solid $color-grey;
 	}
 
 	.header__title-wrapper {
@@ -69,7 +76,7 @@
 	}
 
 	.header__title {
-		color: #1a1a18;
+		color: $color-coal;
 		font-size: 20px;
 		font-style: normal;
 		font-weight: 400;
@@ -203,7 +210,7 @@
 			fill: #787878;
 		}
 		50% {
-			fill: #008000;
+			fill: $color-success;
 		}
 		100% {
 			fill: #787878;
@@ -213,7 +220,7 @@
 	.tabs {
 		display: flex;
 		width: 100%;
-		border-bottom: 1px solid #e9e9e9;
+		border-bottom: 1px solid $color-grey;
 		margin-bottom: 20px;
 	}
 
@@ -222,10 +229,10 @@
 		border: none;
 		transition: 0.3s;
 		cursor: pointer;
-		background: #e9e9e9;
+		background: $color-grey;
 		width: 50%;
 		padding: 8px;
-		color: #1a1a18;
+		color: $color-coal;
 		text-align: center;
 
 		font-size: 14px;
@@ -240,8 +247,8 @@
 	}
 
 	.tabs__button_active {
-		background: #1f5473;
-		color: #fff;
+		background: $color-brand;
+		color: $color-white;
 	}
 
 	.main {
@@ -259,12 +266,12 @@
 	.main__button {
 		outline: none;
 		border: none;
-		color: #1a1a18;
+		color: $color-coal;
 		font-size: 14px;
 		font-style: normal;
 		font-weight: 400;
 		line-height: 100%;
-		background: #e9e9e9;
+		background: $color-grey;
 		padding: 10px 0;
 		transition: opacity 0.3s;
 	}
@@ -274,10 +281,10 @@
 		cursor: pointer;
 	}
 	.main__button_done {
-		color: #00931a !important;
+		color: $color-success !important;
 	}
 	.main__button_error {
-		color: #9f0000 !important;
+		color: $color-error !important;
 	}
 	.form__field {
 		display: flex;
@@ -298,10 +305,10 @@
 	.form__input[type="file"]::file-selector-button {
 		width: 190px;
 		border: none;
-		background: #1f5473;
+		background: $color-brand;
 		padding: 10px 30px;
 		margin-right: 10px;
-		color: #fff;
+		color: $color-white;
 		cursor: pointer;
 		transition: opacity 0.3s;
 		font-size: 14px;
@@ -315,7 +322,7 @@
 	}
 	.form__input[type="date"] {
 		width: 190px;
-		border: 1px solid #1f5473;
+		border: 1px solid $color-brand;
 		padding: 11px 10px;
 		color: #1a1a18;
 		font-size: 12px;
@@ -329,8 +336,8 @@
 		width: 190px;
 		outline: none;
 		border: none;
-		background: #1f5473;
-		color: #fff;
+		background: $color-brand;
+		color: $color-white;
 		transition: 0.3s;
 		font-size: 14px;
 		font-style: normal;
@@ -345,7 +352,7 @@
 		}
 
 		.form__button_done {
-			background: #00931a !important;
+			background: $color-success !important;
 		}
 	}
 
@@ -372,16 +379,26 @@
 		}
 
 		&__login {
-			color: #1f5473;
+			color: $color-brand;
 			font-weight: 800;
+			outline: none;
+			border: none;
+			background: transparent;
+			cursor: pointer;
+			transition: .3s;
+
+			&:hover {
+				opacity: .7;
+				transition: .3s;
+			}
 		}
 
 		&__bottom {
 			button {
 				outline: none;
 				border: none;
-				background: #1f5473;
-				color: #fff;
+				background: $color-brand;
+				color: $color-white;
 				transition: 0.3s;
 				font-size: 14px;
 				font-style: normal;
@@ -430,7 +447,7 @@
 		margin: 0;
 		padding-top: 10px;
 		font-size: 18px;
-		color: red;
+		color: $color-brand-red;
 		display: none;
 
 		&_visible {
@@ -442,7 +459,35 @@
 		position: absolute;
 		top: 5px;
 		right: 20px;
-		color: #181818;
+		color: $color-coal;
 		font-size: 10px;
+	}
+
+	.account {
+		border-top: 1px solid $color-brand-red;
+		margin-top: 20px;
+		padding-top: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+
+		&_hidden {
+			display: none;
+		}
+
+		&__login {
+			font-size: 18px;
+			color: $color-coal;
+		}
+
+		&__fio {
+			border: none;
+			padding: 0 0 2px 4px;
+			font-size: 18px;
+			color: $color-coal;
+			border-bottom: 1px solid $color-brand;
+			outline: none;
+			font-style: normal;
+		}
 	}
 }
