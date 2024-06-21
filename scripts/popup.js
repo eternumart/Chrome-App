@@ -4017,6 +4017,8 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			const rowName = container.previousElementSibling.querySelector("span").textContent;
 			const groupName = groupTable.querySelector("legend").textContent;
 
+			input.style.boxSizing = "border-box";
+
 			if (selectsValues[groupName]) {
 				if (rowName !== "Все элементы" && rowName !== "Вся система") {
 					if (!container.querySelector(".fakeSelect")) {
@@ -4028,12 +4030,14 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 						const currentSelectCloseBtn = currentSelect.querySelector(".fakeSelect__close-selector");
 
 						currentSelectOpenButton.addEventListener("click", () => {
-							openCloseFakeSelect(currentSelect);
+							openFakeSelect(currentSelect);
 						});
-						debugger;
+						currentSelectCloseBtn.addEventListener("click", () => {
+							closeFakeSelect(currentSelect);
+						});
 						let listOptions, conditionNode, objAddress, objAddressOpt, objAddressGroup, objAddressRow;
 						try {
-							objAddress = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`]["appVariables"];
+							objAddress = selectsValues[`${groupName}`][`${rowName}`][`conditionNode`]["appVariables"] || selectsValues[`${groupName}`][`${rowName}`][`conditionNode`];
 							objAddressOpt = objAddress[0];
 							objAddressGroup = objAddress[1];
 							objAddressRow = objAddress[2];
@@ -4054,6 +4058,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 								listOptions = selectsValues[`${groupName}`][`${rowName}`][`conditions`]["Безусловно"];
 							}
 						}
+
 						listOptions.forEach((item) => {
 							const listItem = `
 								<div class="fakeSelect__item-wrapper">
@@ -4073,10 +4078,18 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 								const value = item.querySelector("label");
 
 								if (checkbox.checked) {
-									resultValue.push(value.textContent);
+									if (!input.value.includes(value.textContent)) {
+										resultValue.push(value.textContent);
+									}
+								} else {
+									const sentences = splitBySentences(input.value);
+									const toDelete = sentences.find((str) => `${str}.` === value.textContent);
+									if (toDelete) {
+										input.value = input.value.trimStart().trimEnd().replace(`${toDelete}.`, "");
+									}
 								}
 							});
-							input.value = `${input.value} ${resultValue.join(" ")}`;
+							input.value = `${input.value.trimStart().trimEnd()} ${resultValue.join(" ").trimStart().trimEnd()}`.trimStart().trimEnd();
 						});
 					}
 				}
@@ -4091,18 +4104,28 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		}, 1500);
 	}
 
-	function openCloseFakeSelect(selectList) {
-		if (!selectList.classList.contains("fakeSelect_opened")) {
-			if (appVariables.htmlBody.querySelector(".fakeSelect_opened")) {
-				appVariables.htmlBody.querySelector(".fakeSelect_opened").classList.remove("fakeSelect_opened");
-			}
-			selectList.classList.add("fakeSelect_opened");
-			selectList.querySelector(".fakeSelect__close-selector").addEventListener("click", () => {
-				openCloseFakeSelect(selectList);
-			});
-		} else {
-			selectList.classList.remove("fakeSelect_opened");
+	function splitBySentences(text) {
+		if(text === ""){
+			return [""]
 		}
+		const regex = /[.!?]\s+/g;
+		const sentences = text.trimStart().split(regex);
+		const clearedSentences = [];
+		for(let i = 0; i < sentences.length; i++){
+			clearedSentences.push(sentences[i].replace(".", ""))
+		}
+		return clearedSentences;
+	  }
+
+	function openFakeSelect(selectList) {
+		if (appVariables.htmlBody.querySelector(".fakeSelect_opened")) {
+			closeFakeSelect(appVariables.htmlBody.querySelector(".fakeSelect_opened"));
+		}
+		selectList.classList.add("fakeSelect_opened");
+	}
+
+	function closeFakeSelect(selectList) {
+		selectList.classList.remove("fakeSelect_opened");
 	}
 
 	function setRatings() {
