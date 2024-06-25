@@ -68,7 +68,7 @@ formsTabs.forEach((tab) => {
 	});
 });
 
-loggedLogin.addEventListener("click", showAccountInfo)
+loggedLogin.addEventListener("click", showAccountInfo);
 accountFio.addEventListener("change", saveUserFio);
 
 getCurrentIP();
@@ -80,18 +80,18 @@ function showAccountInfo() {
 function saveUserFio() {
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.contentScriptQuery == "savefio") {
-			console.log(request)
+			console.log(request);
 			if (request.data) {
 				accountFio.classList.add("account__fio_saved");
-				setTimeout(()=>{
+				setTimeout(() => {
 					accountFio.classList.remove("account__fio_saved");
-				},500)
-				chrome.storage.local.set({fio: `${request.data.fio}` })
+				}, 500);
+				chrome.storage.local.set({ fio: `${request.data.fio}` });
 			} else {
 				accountFio.classList.add("account__fio_error");
-				setTimeout(()=>{
+				setTimeout(() => {
 					accountFio.classList.remove("account__fio_error");
-				},500)
+				}, 500);
 			}
 		}
 	});
@@ -133,7 +133,7 @@ function getCurrentIP() {
 	});
 }
 
-function randomFio () {
+function randomFio() {
 	fioArr = ["А. Я. Забывчивый", "У. Е. Денюжкин", "Ф. Ф. Ристайлов", "Е. Б. Мамкович", "К. С. Игроманов", "Ж. Е. Кавказов"];
 	const randomIndex = Math.floor(Math.random() * fioArr.length);
 	const randomValue = fioArr[randomIndex];
@@ -147,7 +147,7 @@ function signOut() {
 	loggedContainer.classList.add("logged_hidden");
 	loggedLogin.textContent = "#####";
 	accountFio.value = "#. #. #####";
-	accountInfo.classList.add("account_hidden")
+	accountInfo.classList.add("account_hidden");
 	chrome.storage.local.clear();
 	refresh();
 }
@@ -233,8 +233,8 @@ function logIn(log, pass, form, evt) {
 		if (request.contentScriptQuery == "logIn") {
 			let fio = "";
 			if (request.data.loginIsPossible === true && request.data.activated) {
-				if(request.data.fio) {
-					fio = request.data.fio
+				if (request.data.fio) {
+					fio = request.data.fio;
 				} else {
 					fio = randomFio();
 				}
@@ -280,7 +280,7 @@ function checkLogin(log, loginIsPossible, launchStatus) {
 	let currentLogin = "";
 	let currentFio = "";
 	chrome.storage.local.get(["fio"]).then((result) => {
-		if(result.fio !== undefined) {
+		if (result.fio !== undefined) {
 			accountFio.value = result.fio;
 			currentFio = result.fio;
 		}
@@ -296,7 +296,7 @@ function checkLogin(log, loginIsPossible, launchStatus) {
 			}
 			changePopupState("logged");
 			checkLayoutBeforeInit();
-			initialization(`${currentFio}, ${currentLogin}`, loginIsPossible, launchStatus);
+			initialization(currentFio, currentLogin, loginIsPossible, launchStatus);
 		}
 	});
 }
@@ -405,8 +405,9 @@ function refresh() {
 }
 
 // Инициализация запуска рабочего окна
-function initialization(login, loginIsPossible, launchStatus) {
+function initialization(currentFio, login, loginIsPossible, launchStatus) {
 	console.log("Запуск приложения");
+	debugger
 	initLoader(loginForm, true);
 	function init() {
 		if (appData) {
@@ -415,7 +416,7 @@ function initialization(login, loginIsPossible, launchStatus) {
 				const tab = tabs[0];
 				if (tab) {
 					chrome.scripting.executeScript({
-						args: [`${login}`, loginIsPossible, launchStatus, appData],
+						args: [currentFio, login, loginIsPossible, launchStatus, appData],
 						target: { tabId: tab.id, allFrames: true },
 						func: launchApp,
 					});
@@ -429,7 +430,7 @@ function initialization(login, loginIsPossible, launchStatus) {
 	init();
 }
 
-function launchApp(login, loginIsPossible, launchStatus, appData) {
+function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	// Хранилище всех переменных приложения
 	const appVariables = {};
 	const resultsDefectsInputs = {
@@ -438,9 +439,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 	};
 	const representativesInputs = {
 		empty: true,
-		licaOt: [],
-		licaFio: [],
-		LicaDoljnost: []
 	};
 	const allRatesPercentsInputs = {};
 
@@ -463,7 +461,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 	const stylesLayout = appData.appLayout.stylesLayout;
 	const fakeSelectList = appData.appLayout.fakeSelectList;
 	const selectsValues = appData.defectsData;
-	const representatives = appData.representatives;
+	const representatives = appData.representativesData;
 
 	// Определение наличия iFrame на странице встраивания
 	appVariables.html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html") || document.querySelector("html");
@@ -518,7 +516,7 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		});
 	});
 
-	appVariables.userLogin.textContent = login;
+	appVariables.userLogin.textContent = `${currentFio}, ${login}`;
 
 	setInitialDate(appVariables.inputDate);
 
@@ -2045,13 +2043,19 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			appVariables[i]["LicaDoljnost"] = appVariables.signatoriesRows[i].querySelector("#comp_12341");
 			appVariables[i]["licaFio"] = appVariables.signatoriesRows[i].querySelector("#comp_12342");
 
-			if (representativesInputs.empty){
-				representativesInputs.LicaDoljnost.push(appVariables[i]["LicaDoljnost"]);
-				representativesInputs.licaOt.push(appVariables[i]["licaOt"]);
-				representativesInputs.licaFio.push(appVariables[i]["licaFio"])
-				representativesInputs.empty = false;
+			if (representativesInputs.empty) {
+				representativesInputs[i] = new Object();
+				representativesInputs[i]["LicaDoljnost"] = new Array();
+				representativesInputs[i]["licaOt"] = new Array();
+				representativesInputs[i]["licaFio"] = new Array();
+
+				representativesInputs[i]["LicaDoljnost"].push(appVariables[i]["LicaDoljnost"]);
+				representativesInputs[i]["licaOt"].push(appVariables[i]["licaOt"]);
+				representativesInputs[i]["licaFio"].push(appVariables[i]["licaFio"]);
 			}
 		}
+
+		representativesInputs.empty = false;
 
 		if (resultsDefectsInputs.empty) {
 			resultsDefectsInputs.inputs.push(appVariables.krovlyaDefecty);
@@ -3236,7 +3240,8 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 	function loadData() {
 		// Находим все поля в отчете
 		searchAllInputs();
-
+		setRepresentatives();
+		
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.pasteButton, appVariables.currentPage, "main", "Вставка отчета")) {
 			return;
@@ -3597,14 +3602,14 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		appVariables.recomendatciiPoDopRabotam.value = loadData["Выводы по результатам обследования"]["РЕКОМЕНДАЦИИ по ремонтно-восстановительным работам"];
 
 		// Подписывающие лица
-		for (let i = 1; i < appVariables.signatoriesRows.length; i++) {
-			if (!appVariables.signatoriesRows[i].querySelector("#comp_12340")) {
-				continue;
-			}
-			appVariables[i]["licaOt"].value = loadData["Подписывающие лица"]["Представители от"][i];
-			appVariables[i]["LicaDoljnost"].value = loadData["Подписывающие лица"]["Должность и наименование организации"][i];
-			appVariables[i]["licaFio"].value = loadData["Подписывающие лица"]["ФИО должностного лица"][i];
-		}
+		// for (let i = 1; i < appVariables.signatoriesRows.length; i++) {
+		// 	if (!appVariables.signatoriesRows[i].querySelector("#comp_12340")) {
+		// 		continue;
+		// 	}
+		// 	appVariables[i]["licaOt"].value = loadData["Подписывающие лица"]["Представители от"][i];
+		// 	appVariables[i]["LicaDoljnost"].value = loadData["Подписывающие лица"]["Должность и наименование организации"][i];
+		// 	appVariables[i]["licaFio"].value = loadData["Подписывающие лица"]["ФИО должностного лица"][i];
+		// }
 
 		localStorage.setItem("DataLoaded", JSON.stringify({ address: loadData.address.address }));
 
@@ -4173,12 +4178,6 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 			}
 		});
 
-		Object.keys(representativesInputs).forEach(key => {
-			representativesInputs[key].forEach(input => {
-				
-			})
-		})
-
 		appVariables.fakeSelectsButton.textContent = "Создано!";
 		appVariables.fakeSelectsButton.classList.add("main__button_done");
 		setTimeout(() => {
@@ -4187,18 +4186,53 @@ function launchApp(login, loginIsPossible, launchStatus, appData) {
 		}, 1500);
 	}
 
+	function setRepresentatives() {
+		Object.keys(representativesInputs).forEach((key) => {
+			for (let i = 1; i < Object.keys(representativesInputs[key]).length; i += 2) {
+				if (typeof representativesInputs[key] == "boolean") {
+					break;
+				}
+
+				const firstColName = Object.keys(representativesInputs[key])[i]; // licaOt
+				const secondColName = Object.keys(representativesInputs[key])[i - 1]; // LicaDoljnost
+				const thirdColName = Object.keys(representativesInputs[key])[i + 1]; // licaFio
+
+				const firstColInput = representativesInputs[key][firstColName][0];
+				const secondColInput = representativesInputs[key][secondColName][0];
+				const thirdColInput = representativesInputs[key][thirdColName][0];
+
+				switch (secondColInput.value) {
+					case "Директор" || "Генеральный директор": {
+						firstColInput.value = "ООО СпецСтройЭксперт"
+						thirdColInput.value = representatives["Генеральный директор"]
+						break;
+					}
+					case "Руководитель работ": {
+						firstColInput.value = "ООО СпецСтройЭксперт"
+						thirdColInput.value = representatives["Руководитель работ"]
+						break;
+					}
+					case "Исполнитель работ": {
+						firstColInput.value = "ООО СпецСтройЭксперт";
+						thirdColInput.value = currentFio;
+					}
+				}
+			}
+		});
+	}
+
 	function splitBySentences(text) {
-		if(text === ""){
-			return [""]
+		if (text === "") {
+			return [""];
 		}
 		const regex = /[.!?]\s+/g;
 		const sentences = text.trimStart().split(regex);
 		const clearedSentences = [];
-		for(let i = 0; i < sentences.length; i++){
-			clearedSentences.push(sentences[i].replace(".", ""))
+		for (let i = 0; i < sentences.length; i++) {
+			clearedSentences.push(sentences[i].replace(".", ""));
 		}
 		return clearedSentences;
-	  }
+	}
 
 	function openFakeSelect(selectList) {
 		if (appVariables.htmlBody.querySelector(".fakeSelect_opened")) {
