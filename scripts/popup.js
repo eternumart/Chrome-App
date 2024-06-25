@@ -3241,7 +3241,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		// Находим все поля в отчете
 		searchAllInputs();
 		setRepresentatives();
-		
+
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.pasteButton, appVariables.currentPage, "main", "Вставка отчета")) {
 			return;
@@ -4203,7 +4203,8 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 				switch (secondColInput.value) {
 					case "Директор" || "Генеральный директор": {
-						firstColInput.value = "ООО СпецСтройЭксперт"
+						firstColInput.value = "ООО СпецСтройЭксперт";
+						secondColInput.value = "Генеральный директор";
 						thirdColInput.value = representatives["Генеральный директор"]
 						break;
 					}
