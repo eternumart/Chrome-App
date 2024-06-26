@@ -134,7 +134,7 @@ function getCurrentIP() {
 }
 
 function randomFio() {
-	fioArr = ["А. Я. Забывчивый", "У. Е. Денюжкин", "Ф. Ф. Ристайлов", "Е. Б. Мамкович", "К. С. Игроманов", "Ж. Е. Кавказов"];
+	fioArr = ["А. Я. Забывчивый", "У. Е. Денюжкин", "Ф. Ф. Ристайлов", "Н. Н. Заиков", "К. С. Игроманов", "Ж. Е. Кавказов"];
 	const randomIndex = Math.floor(Math.random() * fioArr.length);
 	const randomValue = fioArr[randomIndex];
 
