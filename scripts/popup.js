@@ -33,8 +33,10 @@ const server = {
 		port: "3000",
 	},
 	out: {
-		ip: "82.149.216.198",
-		port: "57861",
+		//ip: "82.149.216.198",
+		//port: "57861",
+		ip: "127.0.0.1",
+		port: "3000",
 	},
 };
 
@@ -407,7 +409,6 @@ function refresh() {
 // Инициализация запуска рабочего окна
 function initialization(currentFio, login, loginIsPossible, launchStatus) {
 	console.log("Запуск приложения");
-	debugger
 	initLoader(loginForm, true);
 	function init() {
 		if (appData) {
@@ -462,6 +463,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	const fakeSelectList = appData.appLayout.fakeSelectList;
 	const selectsValues = appData.defectsData;
 	const representatives = appData.representativesData;
+	const availableFunctions = appData.functions;
 
 	// Определение наличия iFrame на странице встраивания
 	appVariables.html = document.querySelector("#formCanvas").contentWindow.document.querySelector("html") || document.querySelector("html");
@@ -2129,7 +2131,11 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	// Сохранение копии отчета в LocalStorage
 	function saveData() {
 		// обновляем все значения объекта переменных
-		searchAllInputs();
+		if (availableFunctions.searchAllInputs) {
+			searchAllInputs()
+		} else {
+			return;
+		}
 		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.copyButton, appVariables.currentPage, "main", "Копирование отчета")) {
 			return;
@@ -3239,8 +3245,16 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	// Подгрузка копии отчета из LocalStorage на страницу
 	function loadData() {
 		// Находим все поля в отчете
-		searchAllInputs();
-		setRepresentatives();
+		if (availableFunctions.searchAllInputs) {
+			searchAllInputs()
+		} else {
+			return;
+		}
+		if (availableFunctions.setRepresentatives) {
+			setRepresentatives();
+		} else {
+			return;
+		}
 
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.pasteButton, appVariables.currentPage, "main", "Вставка отчета")) {
@@ -3624,7 +3638,11 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	// Очистка полей отчета на странице
 	function clearData() {
 		// находим все инпуты в отчете
-		searchAllInputs();
+		if (availableFunctions.searchAllInputs) {
+			searchAllInputs()
+		} else {
+			return;
+		}
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.clearDataButton, appVariables.currentPage, "main", "Очистка отчета")) {
 			return;
@@ -3992,6 +4010,9 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	// Автоматическая загрузка фотографий на страницу
 	function downloadPhotos(evt) {
 		evt.preventDefault();
+		if (!availableFunctions.downloadPhotos) {
+			return;
+		}
 		// Если страница не подходит для вставки фото - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.submitButton, appVariables.currentPage, "photo", "Загрузить")) {
 			return;
@@ -4187,6 +4208,9 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	}
 
 	function setRepresentatives() {
+		if(!availableFunctions.setRepresentatives) {
+			return;
+		}
 		Object.keys(representativesInputs).forEach((key) => {
 			for (let i = 1; i < Object.keys(representativesInputs[key]).length; i += 2) {
 				if (typeof representativesInputs[key] == "boolean") {
@@ -4247,8 +4271,15 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	}
 
 	function setRatings() {
+		if(!availableFunctions.setRatings) {
+			return;
+		}
 		const ratesData = appData.ratesData;
-		searchAllInputs();
+		if (availableFunctions.searchAllInputs) {
+			searchAllInputs()
+		} else {
+			return;
+		}
 
 		for (let key in appVariables) {
 			if (key.includes("Ocenka") && !key.includes("Proshl")) {
@@ -4303,16 +4334,16 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 				conditions = ratesData[groupName][rowName];
 
 				for (let ocenka in conditions) {
-					if (conditions[ocenka] === "algorythm A") {
-						//algorythmA(allRatesPercentsInputs, input, groupName);
+					if (conditions[ocenka] === "algorythm A" && availableFunctions.algorythms) {
+						algorythmA(allRatesPercentsInputs, input, groupName);
 						return;
 					}
-					if (conditions[ocenka] === "algorythm B") {
-						//algorythmB(allRatesPercentsInputs, input, groupName);
+					if (conditions[ocenka] === "algorythm B" && availableFunctions.algorythms) {
+						algorythmB(allRatesPercentsInputs, input, groupName);
 						return;
 					}
-					if (conditions[ocenka] === "algorythm C") {
-						//algorythmC(allRatesPercentsInputs, input, groupName);
+					if (conditions[ocenka] === "algorythm C" && availableFunctions.algorythms) {
+						algorythmC(allRatesPercentsInputs, input, groupName);
 						return;
 					}
 				}
@@ -4353,6 +4384,10 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		}
 
 		function checkPercentValidity(value, input) {
+			const numRegexp = /^\d*$/;
+			if(!numRegexp.test(input.value)) {
+				input.value = "";
+			}
 			if (input.value === "") {
 				return;
 			}
@@ -4569,5 +4604,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		}
 	}
 
-	setRatings();
+	if(availableFunctions.setRatings) {
+		setRatings();
+	}
 }
