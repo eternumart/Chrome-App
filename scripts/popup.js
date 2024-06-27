@@ -4304,15 +4304,15 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 				for (let ocenka in conditions) {
 					if (conditions[ocenka] === "algorythm A") {
-						algorythmA(allRatesPercentsInputs, input, groupName);
+						//algorythmA(allRatesPercentsInputs, input, groupName);
 						return;
 					}
 					if (conditions[ocenka] === "algorythm B") {
-						algorythmB(allRatesPercentsInputs, input, groupName);
+						//algorythmB(allRatesPercentsInputs, input, groupName);
 						return;
 					}
 					if (conditions[ocenka] === "algorythm C") {
-						algorythmC(allRatesPercentsInputs, input, groupName);
+						//algorythmC(allRatesPercentsInputs, input, groupName);
 						return;
 					}
 				}
