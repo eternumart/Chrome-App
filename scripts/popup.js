@@ -3245,6 +3245,9 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 	// Подгрузка копии отчета из LocalStorage на страницу
 	function loadData() {
+		if(!availableFunctions.loadData) {
+			return;
+		}
 		// Находим все поля в отчете
 		searchAllInputs()
 		setRepresentatives();
@@ -3523,7 +3526,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		// Вентиляция
 		appVariables.ventilaciaDefecty.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Выявленные дефекты"];
 		appVariables.ventilaciaPosledneeObsled.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["№ и дата последнего обслед."];
-		appVariables.odsOrganizacia.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Специализированная организация"];
+		appVariables.ventilaciaOrganizacia.value = loadData["Результаты выборочного обследования"]["Вентиляция"]["Специализированная организация"];
 		clickGenerator(appVariables.ventilaciaOcenka, loadData["Результаты выборочного обследования"]["Вентиляция"]["Оценка"], true);
 
 		// Система промывки и прочистки стволов мусоропроводов
@@ -3630,6 +3633,9 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 	// Очистка полей отчета на странице
 	function clearData() {
+		if(!availableFunctions.clearData) {
+			return;
+		}
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.clearDataButton, appVariables.currentPage, "main", "Очистка отчета")) {
 			return;
