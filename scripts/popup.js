@@ -692,7 +692,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 	// Определение всех переменных для полей отчета
 	function searchAllInputs() {
-		if(!availableFunctions.searchAllInputs) {
+		if (!availableFunctions.searchAllInputs) {
 			return;
 		}
 		appVariables.area = appVariables.wholeAddress.split(",")[0];
@@ -2131,16 +2131,16 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 	// Сохранение копии отчета в LocalStorage
 	function saveData() {
-		if(!availableFunctions.saveData) {
+		if (!availableFunctions.saveData) {
 			return;
 		}
 		// Если страница не подходит для сохранения - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.copyButton, appVariables.currentPage, "main", "Копирование отчета")) {
 			return;
 		}
-		
+
 		// обновляем все значения объекта переменных
-		searchAllInputs()
+		searchAllInputs();
 
 		const data = {
 			address: {
@@ -3245,11 +3245,11 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 	// Подгрузка копии отчета из LocalStorage на страницу
 	function loadData() {
-		if(!availableFunctions.loadData) {
+		if (!availableFunctions.loadData) {
 			return;
 		}
 		// Находим все поля в отчете
-		searchAllInputs()
+		searchAllInputs();
 		setRepresentatives();
 
 		// Если страница не подходит для вставки - выдаем ошибку и выходим из функции
@@ -3633,15 +3633,15 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 	// Очистка полей отчета на странице
 	function clearData() {
-		if(!availableFunctions.clearData) {
+		if (!availableFunctions.clearData) {
 			return;
 		}
 		// Если страница не подходит для очистки - выдаем ошибку и выходим из функции
 		if (!buttonError(appVariables.clearDataButton, appVariables.currentPage, "main", "Очистка отчета")) {
 			return;
-		}		
+		}
 		// находим все инпуты в отчете
-		searchAllInputs()
+		searchAllInputs();
 
 		// РЕЗУЛЬТАТЫ ВЫБОРОЧНОГО ОБСЛЕДОВАНИЯ
 		// Крыша
@@ -4204,7 +4204,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	}
 
 	function setRepresentatives() {
-		if(!availableFunctions.setRepresentatives) {
+		if (!availableFunctions.setRepresentatives) {
 			return;
 		}
 		Object.keys(representativesInputs).forEach((key) => {
@@ -4225,12 +4225,12 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 					case "Директор" || "Генеральный директор": {
 						firstColInput.value = "ООО СпецСтройЭксперт";
 						secondColInput.value = "Генеральный директор";
-						thirdColInput.value = representatives["Генеральный директор"]
+						thirdColInput.value = representatives["Генеральный директор"];
 						break;
 					}
 					case "Руководитель работ": {
-						firstColInput.value = "ООО СпецСтройЭксперт"
-						thirdColInput.value = representatives["Руководитель работ"]
+						firstColInput.value = "ООО СпецСтройЭксперт";
+						thirdColInput.value = representatives["Руководитель работ"];
 						break;
 					}
 					case "Исполнитель работ": {
@@ -4267,11 +4267,11 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 	}
 
 	function setRatings() {
-		if(!availableFunctions.setRatings) {
+		if (!availableFunctions.setRatings) {
 			return;
 		}
 		const ratesData = appData.ratesData;
-		searchAllInputs()
+		searchAllInputs();
 
 		for (let key in appVariables) {
 			if (key.includes("Ocenka") && !key.includes("Proshl")) {
@@ -4325,26 +4325,35 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 				const valueToNumber = Number(value);
 				conditions = ratesData[groupName][rowName];
 
-				for (let ocenka in conditions) {
-					if (conditions[ocenka] === "algorythm A") {
-						algorythmA(allRatesPercentsInputs, input, groupName);
-						return;
-					}
-					if (conditions[ocenka] === "algorythm B") {
-						algorythmB(allRatesPercentsInputs, input, groupName);
-						return;
-					}
-					if (conditions[ocenka] === "algorythm C") {
-						algorythmC(allRatesPercentsInputs, input, groupName);
-						return;
+				if (availableFunctions.algorythms) {
+					for (let ocenka in conditions) {
+						if (conditions[ocenka] === "algorythm A") {
+							algorythmA(allRatesPercentsInputs, input, groupName);
+							return;
+						}
+						if (conditions[ocenka] === "algorythm B") {
+							algorythmB(allRatesPercentsInputs, input, groupName);
+							return;
+						}
+						if (conditions[ocenka] === "algorythm C") {
+							algorythmC(allRatesPercentsInputs, input, groupName);
+							return;
+						}
 					}
 				}
 
 				for (let ocenka in conditions) {
-					validPercent = conditions[ocenka].find((num) => num == valueToNumber);
+					try {
+						validPercent = conditions[ocenka].find((num) => num == valueToNumber);}
+					catch {
+						console.info("valid percent not found")
+					}
 					if (validPercent) {
 						rate = ocenka;
 					}
+				}
+				if(!rate) {
+					return;
 				}
 				const siblingItem = siblingInput.parentElement.querySelector("input");
 				if (siblingItem.value !== rate) {
@@ -4377,7 +4386,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 		function checkPercentValidity(value, input) {
 			const numRegexp = /^\d*$/;
-			if(!numRegexp.test(input.value)) {
+			if (!numRegexp.test(input.value)) {
 				input.value = "";
 			}
 			if (input.value === "") {
@@ -4428,7 +4437,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		}
 
 		function algorythmA(rowsInputs, input, groupName) {
-			if(!availableFunctions.algorythms) {
+			if (!availableFunctions.algorythms) {
 				return;
 			}
 			const rates = [];
@@ -4513,7 +4522,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		}
 
 		function algorythmB(rowsInputs, input, groupName) {
-			if(!availableFunctions.algorythms) {
+			if (!availableFunctions.algorythms) {
 				return;
 			}
 			const rates = [];
@@ -4559,7 +4568,7 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 		}
 
 		function algorythmC(rowsInputs, input, groupName) {
-			if(!availableFunctions.algorythms) {
+			if (!availableFunctions.algorythms) {
 				return;
 			}
 			const rates = [];
