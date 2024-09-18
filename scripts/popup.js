@@ -1,3 +1,4 @@
+const currentIP = "http://mjimanager.ru/";
 const formsTabs = document.querySelectorAll(".tabs__button");
 const formsAll = document.querySelectorAll(".auth__form");
 const authContainer = document.querySelector(".auth");
@@ -26,15 +27,8 @@ const serverError = document.querySelector(".server-error");
 
 const loader = document.querySelector(".loader");
 
-// Конфиг Out & Local // Временно. Далее в планах применение только с VPN. Уберем getCurrentIP
-const server = {
-	ip: "http://mjimanager.ru/",
-};
-
 let currentState = false;
-let currentIP = server.ip;
 let appData = undefined;
-let timeout = undefined;
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.contentScriptQuery == "Error") {
