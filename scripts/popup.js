@@ -28,18 +28,11 @@ const loader = document.querySelector(".loader");
 
 // Конфиг Out & Local // Временно. Далее в планах применение только с VPN. Уберем getCurrentIP
 const server = {
-	local: {
-		ip: "192.168.0.99",
-		port: "3000",
-	},
-	out: {
-		ip: "82.149.216.198",
-		port: "57861",
-	},
+	ip: "http://mjimanager.ru/",
 };
 
 let currentState = false;
-let currentIP = "";
+let currentIP = server.ip;
 let appData = undefined;
 let timeout = undefined;
 
@@ -71,7 +64,7 @@ formsTabs.forEach((tab) => {
 loggedLogin.addEventListener("click", showAccountInfo);
 accountFio.addEventListener("change", saveUserFio);
 
-getCurrentIP();
+initApplication();
 
 function showAccountInfo() {
 	accountInfo.classList.toggle("account_hidden");
@@ -105,32 +98,9 @@ function saveUserFio() {
 	});
 }
 
-function getCurrentIP() {
-	if (appData !== undefined) {
-		clearInterval(timeout);
-	}
-	if (currentIP !== "") {
-		return;
-	}
-	initLoader(loginForm, true);
-	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-		if (request.contentScriptQuery == "checkIP" && request.url !== undefined) {
-			currentIP = `http://${request.url}/`;
-			checkLogin(undefined, true, true);
-			getAppData();
-			console.log(`IP сервера: ${currentIP}`);
-
-			initLoader(loginForm, false);
-		}
-		if (request.url === undefined) {
-			timeout = setInterval(getCurrentIP, 3000);
-		}
-	});
-
-	chrome.runtime.sendMessage({
-		contentScriptQuery: "checkIP",
-		data: server,
-	});
+function initApplication() {
+	checkLogin(undefined, true, true);
+	getAppData();
 }
 
 function randomFio() {
@@ -314,6 +284,9 @@ function getAppData() {
 		data: "give me data",
 		url: `${currentIP}appdata`,
 	});
+	if (appData !== undefined) {
+		getAppData();
+	}
 }
 
 function generateID() {
@@ -4344,15 +4317,15 @@ function launchApp(currentFio, login, loginIsPossible, launchStatus, appData) {
 
 				for (let ocenka in conditions) {
 					try {
-						validPercent = conditions[ocenka].find((num) => num == valueToNumber);}
-					catch {
-						console.info("valid percent not found")
+						validPercent = conditions[ocenka].find((num) => num == valueToNumber);
+					} catch {
+						console.info("valid percent not found");
 					}
 					if (validPercent) {
 						rate = ocenka;
 					}
 				}
-				if(!rate) {
+				if (!rate) {
 					return;
 				}
 				const siblingItem = siblingInput.parentElement.querySelector("input");

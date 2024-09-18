@@ -121,50 +121,28 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				chrome.runtime.sendMessage(res);
 			});
 	}
-	if (request.contentScriptQuery == "checkIP") {
-		const variants = request.data;
-		let result = undefined;
-
-		fetch(`http://${variants.local.ip}:${variants.local.port}/checkip`, {
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		})
-			.then(checkResponse)
-			.then((res) => {
-				result = res.IP;
-				if (result !== undefined) {
-					chrome.runtime.sendMessage({
-						contentScriptQuery: "checkIP",
-						url: res.IP,
-					});
-				}
-			})
-			.catch((err) => {
-				console.log("Внешний IP");
-			});
-
-		fetch(`http://${variants.out.ip}:${variants.out.port}/checkip`, {
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		})
-			.then(checkResponse)
-			.then((res) => {
-				result = res.IP;
-				if (result !== undefined) {
-					chrome.runtime.sendMessage({
-						contentScriptQuery: "checkIP",
-						url: res.IP,
-					});
-				}
-			})
-			.catch((err) => {
-				console.log("Локальный IP");
-			});
-	}
+	// if (request.contentScriptQuery == "initApplication") {
+	// 	let result = undefined;
+	// 	fetch(`${request.url}/checkip`, {
+	// 		method: "GET",
+	// 		headers: {
+	// 			"Content-Type": "application/json",
+	// 		},
+	// 	})
+	// 		.then(checkResponse)
+	// 		.then((res) => {
+	// 			result = res.IP;
+	// 			if (result !== undefined) {
+	// 				chrome.runtime.sendMessage({
+	// 					contentScriptQuery: "initApplication",
+	// 					url: res.IP,
+	// 				});
+	// 			}
+	// 		})
+	// 		.catch((err) => {
+	// 			console.log(err);
+	// 		});
+	// }
 });
 
 function checkResponse(res) {
