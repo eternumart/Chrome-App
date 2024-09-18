@@ -5,3 +5,9 @@ _site/
 *.rar
 *.zip
 *.7z
+*.tar.bz2
+*.tar.gz
+*.tar
+*.iso
+*.img
+*.log
