@@ -316,8 +316,9 @@
 }
 .mji-manager-app .logged__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
+  flex-direction: column;
 }
 .mji-manager-app .logged__user, .mji-manager-app .logged__login {
   margin: 0 5px 0 0;
@@ -332,6 +333,7 @@
   background: transparent;
   cursor: pointer;
   transition: 0.3s;
+  padding: 0;
 }
 .mji-manager-app .logged__login:hover {
   opacity: 0.7;

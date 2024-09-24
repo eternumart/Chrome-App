@@ -263,6 +263,7 @@ function checkLogin(log, loginIsPossible, launchStatus) {
 			initialization(currentFio, currentLogin, loginIsPossible, launchStatus);
 		}
 	});
+	initLoader(loginForm, false);
 }
 
 // Получаем данные о дефектах и верстку приложения с бекенда
